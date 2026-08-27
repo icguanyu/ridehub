@@ -1,0 +1,659 @@
+openapi: 3.0.3
+info:
+  title: RideHub API
+  version: 1.0.0
+  description: |
+    司機接駁服務預約系統 MVP。
+
+    - 司機以「手機 + 密碼」登入（帳密存於 Supabase Auth），取得後端簽發的 JWT。
+    - 需登入的端點帶 `Authorization: Bearer <token>`，且只能操作自己的 `driverId`。
+    - 客人為匿名：以司機的 `driverId` 建立預約，取得 `statusToken` 後憑此查詢狀態。
+servers:
+  - url: https://ridehub-api-239173126142.asia-east1.run.app/api/v1
+    description: Production (Cloud Run)
+  - url: http://localhost:3000/api/v1
+    description: 本機開發
+
+tags:
+  - name: Health
+  - name: Auth
+  - name: Driver
+  - name: Booking
+
+security: []
+
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: 存活檢查
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean, example: true }
+                  service: { type: string, example: ridehub-backend }
+                  env: { type: string, example: production }
+                  time: { type: string, format: date-time }
+
+  /health/db:
+    get:
+      tags: [Health]
+      summary: 檢查 Supabase 連線
+      responses:
+        '200':
+          description: 連線正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean, example: true }
+                  db: { type: string, example: connected }
+        '503':
+          description: 連線失敗
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean, example: false }
+                  db: { type: string, example: error }
+                  message: { type: string }
+
+  /drivers/auth/register:
+    post:
+      tags: [Auth]
+      summary: 司機註冊
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, phone, email, password]
+              properties:
+                name: { type: string, maxLength: 100, example: 王小明 }
+                phone: { type: string, pattern: '^09\d{8}$', example: '0912345678' }
+                email: { type: string, format: email, example: ming@example.com }
+                password: { type: string, minLength: 8, maxLength: 72 }
+      responses:
+        '201':
+          description: 註冊成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  driver: { $ref: '#/components/schemas/DriverSummary' }
+                  token: { type: string }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '409':
+          description: 手機或 email 已註冊
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /drivers/auth/login:
+    post:
+      tags: [Auth]
+      summary: 司機登入
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phone, password]
+              properties:
+                phone: { type: string, pattern: '^09\d{8}$' }
+                password: { type: string }
+      responses:
+        '200':
+          description: 登入成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  driver: { $ref: '#/components/schemas/DriverPrivate' }
+                  token: { type: string, description: 後端簽發的 API JWT }
+                  supabase:
+                    type: object
+                    description: Supabase session（供前端日後直連 Realtime）
+                    properties:
+                      accessToken: { type: string }
+                      refreshToken: { type: string }
+                      expiresAt: { type: integer }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401':
+          description: 手機或密碼錯誤
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /drivers/{driverId}/public:
+    get:
+      tags: [Driver]
+      summary: 司機公開資訊（客人端用，免登入）
+      parameters:
+        - $ref: '#/components/parameters/DriverId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DriverPublic' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /drivers/{driverId}:
+    get:
+      tags: [Driver]
+      summary: 取得司機完整資料（本人）
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/DriverId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DriverPrivate' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [Driver]
+      summary: 編輯服務資訊（本人）
+      description: 僅接受下列白名單欄位，傳入其他欄位會回 400。
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/DriverId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                name: { type: string, maxLength: 100 }
+                serviceDescription: { type: string, maxLength: 2000, nullable: true }
+                serviceAreas: { type: string, maxLength: 500, nullable: true, example: 新竹市,竹科園區 }
+                carType: { type: string, maxLength: 50, nullable: true }
+                carPlate: { type: string, maxLength: 20, nullable: true }
+                basePrice: { type: number, minimum: 0, nullable: true }
+                pricePerKm: { type: number, minimum: 0, nullable: true }
+      responses:
+        '200':
+          description: 更新後的資料
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DriverPrivate' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /drivers/{driverId}/bind-line:
+    post:
+      tags: [Driver]
+      summary: 綁定 LINE User ID（本人）
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/DriverId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [lineId]
+              properties:
+                lineId: { type: string, maxLength: 100, example: U1234567890abcdef1234567890abcdef }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, example: true }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /drivers/{driverId}/availability:
+    get:
+      tags: [Driver]
+      summary: 取得營運時間設定（本人）
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/DriverId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Availability' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    put:
+      tags: [Driver]
+      summary: 更新營運時間設定（本人）
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/DriverId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                operatingHoursStart: { type: string, pattern: '^([01]\d|2[0-3]):[0-5]\d$', example: '08:00' }
+                operatingHoursEnd: { type: string, pattern: '^([01]\d|2[0-3]):[0-5]\d$', example: '20:00' }
+                maxDailyBookings: { type: integer, minimum: 1, maximum: 100, example: 10 }
+      responses:
+        '200':
+          description: 更新後的設定
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Availability' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /drivers/{driverId}/bookings:
+    get:
+      tags: [Driver]
+      summary: 司機的預約列表（本人）
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/DriverId'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, accepted, rejected, completed, cancelled]
+        - name: month
+          in: query
+          description: YYYY-MM
+          schema: { type: string, pattern: '^\d{4}-\d{2}$' }
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: pageSize
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  bookings:
+                    type: array
+                    items: { $ref: '#/components/schemas/BookingItem' }
+                  pagination:
+                    type: object
+                    properties:
+                      total: { type: integer }
+                      page: { type: integer }
+                      pageSize: { type: integer }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /drivers/{driverId}/stats:
+    get:
+      tags: [Driver]
+      summary: 月統計（本人）
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/DriverId'
+        - name: month
+          in: query
+          description: YYYY-MM，預設當月
+          schema: { type: string, pattern: '^\d{4}-\d{2}$' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Stats' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /bookings:
+    post:
+      tags: [Booking]
+      summary: 客人建立預約（匿名）
+      description: |
+        會驗證司機存在、日期不可早於今天、須在營運時間內、當日名額未滿，
+        計算預估車資後建立 `pending` 預約，並嘗試通知司機。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [driverId, customerName, customerPhone, pickupLocation, destination, bookingDate, bookingTime]
+              properties:
+                driverId: { type: string, format: uuid }
+                customerName: { type: string, maxLength: 100 }
+                customerPhone: { type: string, pattern: '^09\d{8}$' }
+                customerLineId: { type: string, maxLength: 100 }
+                pickupLocation: { type: string, maxLength: 200 }
+                destination: { type: string, maxLength: 200 }
+                bookingDate: { type: string, format: date, example: '2026-09-01' }
+                bookingTime: { type: string, pattern: '^([01]\d|2[0-3]):[0-5]\d$', example: '14:00' }
+                passengerCount: { type: integer, minimum: 1, maximum: 20, default: 1 }
+                specialRequests: { type: string, maxLength: 2000 }
+                estimatedDistanceKm:
+                  type: number
+                  minimum: 0
+                  maximum: 2000
+                  description: 選填；有給則車資 = base_price + price_per_km × 距離
+      responses:
+        '201':
+          description: 預約已建立
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  booking:
+                    type: object
+                    properties:
+                      id: { type: string, format: uuid }
+                      status: { type: string, example: pending }
+                      estimatedPrice: { type: number, example: 450 }
+                      statusToken:
+                        type: string
+                        description: 查詢預約狀態用的憑證
+                      message: { type: string }
+                  notified:
+                    oneOf:
+                      - { type: string, enum: [line, sms] }
+                      - { type: boolean, enum: [false] }
+                    description: 成功通知司機的管道；未設定金鑰時為 false
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404':
+          description: 找不到司機
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '409':
+          description: 該日預約已額滿
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /bookings/{bookingId}:
+    get:
+      tags: [Booking]
+      summary: 客人查詢預約狀態
+      description: 需帶建立預約時取得的 `statusToken`。僅 `accepted` 狀態才回傳司機聯絡方式。
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: token
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  booking: { $ref: '#/components/schemas/BookingWithDriver' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '403':
+          description: token 無效
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /bookings/{bookingId}/accept:
+    put:
+      tags: [Booking]
+      summary: 司機接受預約
+      description: 僅該預約的司機、且狀態為 `pending` 時可操作。成功後通知客人。
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  booking: { $ref: '#/components/schemas/BookingItem' }
+                  message: { type: string }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409':
+          description: 預約非 pending 狀態
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /bookings/{bookingId}/reject:
+    put:
+      tags: [Booking]
+      summary: 司機拒絕預約
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                reason: { type: string, maxLength: 500, example: 該時段已有預約 }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  booking: { $ref: '#/components/schemas/BookingItem' }
+                  message: { type: string }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409':
+          description: 預約非 pending 狀態
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: 登入 `/drivers/auth/login` 取得的 `token`
+
+  parameters:
+    DriverId:
+      name: driverId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+
+  responses:
+    BadRequest:
+      description: 欄位驗證失敗
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Unauthorized:
+      description: 未授權（缺 token 或 token 無效）
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Forbidden:
+      description: 沒有權限（非本人 / 非該預約司機）
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    NotFound:
+      description: 找不到資源
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            message: { type: string }
+            details:
+              type: object
+              additionalProperties: true
+              description: 欄位驗證錯誤時的細節（key 為欄位名）
+            stack: { type: string, description: 僅開發環境回傳 }
+
+    DriverSummary:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        phone: { type: string }
+
+    DriverPrivate:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        phone: { type: string }
+        email: { type: string, nullable: true }
+        lineId: { type: string, nullable: true }
+        serviceDescription: { type: string, nullable: true }
+        serviceAreas: { type: string, nullable: true }
+        carType: { type: string, nullable: true }
+        carPlate: { type: string, nullable: true }
+        basePrice: { type: number, nullable: true }
+        pricePerKm: { type: number, nullable: true }
+        operatingHoursStart: { type: string, nullable: true, example: '08:00' }
+        operatingHoursEnd: { type: string, nullable: true, example: '20:00' }
+        maxDailyBookings: { type: integer }
+        isVerified: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    DriverPublic:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        serviceDescription: { type: string, nullable: true }
+        serviceAreas: { type: string, nullable: true }
+        carType: { type: string, nullable: true }
+        carPlate: { type: string, nullable: true }
+        basePrice: { type: number, nullable: true }
+        pricePerKm: { type: number, nullable: true }
+        operatingHoursStart: { type: string, nullable: true }
+        operatingHoursEnd: { type: string, nullable: true }
+        isVerified: { type: boolean }
+
+    Availability:
+      type: object
+      properties:
+        operatingHoursStart: { type: string, nullable: true, example: '08:00' }
+        operatingHoursEnd: { type: string, nullable: true, example: '20:00' }
+        maxDailyBookings: { type: integer, example: 10 }
+        bookedTodayCount: { type: integer, description: 今日已佔用名額的預約數 }
+
+    Stats:
+      type: object
+      properties:
+        month: { type: string, example: '2026-08' }
+        totalBookings: { type: integer }
+        acceptedBookings: { type: integer }
+        totalCustomers: { type: integer, description: 不重複客人數 }
+        totalRevenue: { type: number }
+        avgRating: { type: number, example: 4.7 }
+
+    BookingItem:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        driverId: { type: string, format: uuid }
+        customerName: { type: string }
+        customerPhone: { type: string }
+        customerLineId: { type: string, nullable: true }
+        pickupLocation: { type: string }
+        destination: { type: string }
+        bookingDate: { type: string, format: date }
+        bookingTime: { type: string, example: '14:00' }
+        passengerCount: { type: integer }
+        specialRequests: { type: string, nullable: true }
+        estimatedPrice: { type: number, nullable: true }
+        status:
+          type: string
+          enum: [pending, accepted, rejected, completed, cancelled]
+        rejectedReason: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        completedAt: { type: string, format: date-time, nullable: true }
+
+    BookingWithDriver:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        status:
+          type: string
+          enum: [pending, accepted, rejected, completed, cancelled]
+        customerName: { type: string }
+        customerPhone: { type: string }
+        pickupLocation: { type: string }
+        destination: { type: string }
+        bookingDate: { type: string, format: date }
+        bookingTime: { type: string }
+        passengerCount: { type: integer }
+        specialRequests: { type: string, nullable: true }
+        estimatedPrice: { type: number, nullable: true }
+        rejectedReason: { type: string, nullable: true }
+        driverName: { type: string, nullable: true }
+        driverPhone:
+          type: string
+          nullable: true
+          description: 僅 status = accepted 時提供
+        driverLineId:
+          type: string
+          nullable: true
+          description: 僅 status = accepted 時提供
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }

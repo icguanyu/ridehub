@@ -8,11 +8,21 @@
 
 ```
 ridehub/
-├── backend/    # Node.js + Express API (/api/v1)
-├── frontend/   # React + Vite + TailwindCSS
+├── backend/    # Node.js + Express API (/api/v1)；Swagger 文件在 /api/v1/docs
+├── frontend/   # React + Vite + Mantine
 ├── supabase/   # DB migrations & 設定
+├── DEPLOY.md   # 部署指南（Cloud Run + Cloudflare Pages）
+├── TESTING.md  # 測試說明
 └── driver_booking_system_prompt.md   # 開發規格
 ```
+
+## 上線位置
+
+| | 網址 |
+|---|---|
+| 前端 | <https://ridehub-2h3.pages.dev> |
+| 後端 API | <https://ridehub-api-239173126142.asia-east1.run.app/api/v1> |
+| API 文件 | `<後端>/api/v1/docs` |
 
 ## 技術棧
 

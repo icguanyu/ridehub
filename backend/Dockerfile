@@ -11,8 +11,9 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 
-# 複製原始碼
+# 複製原始碼與 API 文件
 COPY src ./src
+COPY openapi.yaml ./openapi.yaml
 
 # 以非 root 執行
 USER node

@@ -10,6 +10,15 @@ cp .env.example .env   # 填入 Supabase / JWT / LINE 等金鑰
 npm run dev            # http://localhost:3000（--watch 自動重啟）
 ```
 
+## API 文件（Swagger）
+
+| 路徑 | 說明 |
+|------|------|
+| `/api/v1/docs` | Swagger UI（可互動測試）|
+| `/api/v1/openapi.json` | OpenAPI 3 規格（JSON）|
+
+規格原始檔：[`openapi.yaml`](openapi.yaml)。
+
 ## 已完成的端點
 
 | Method | Path | 說明 |
