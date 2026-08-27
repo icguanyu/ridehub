@@ -26,10 +26,10 @@ ridehub/
 
 ## 開發進度
 
-- [ ] 0. 專案初始化
-- [ ] 1. Supabase 專案 + DB schema
-- [ ] 2. 後端骨架
-- [ ] 3. 認證 API
+- [x] 0. 專案初始化
+- [x] 1. Supabase 專案 + DB schema
+- [x] 2. 後端骨架
+- [x] 3. 認證 API
 - [ ] 4. 司機 API
 - [ ] 5. 客人預約 API
 - [ ] 6. LINE 推播 + SMS 備援
