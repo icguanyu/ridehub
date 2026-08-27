@@ -128,3 +128,28 @@ export async function getBookingById(bookingId) {
   if (!data) throw ApiError.notFound('找不到預約');
   return data;
 }
+
+// 司機回應預約（接受 / 拒絕）。只有 pending 可操作，且需為該預約的司機本人。
+export async function respondToBooking(bookingId, driverId, { accept, reason }) {
+  const booking = await getBookingById(bookingId);
+  if (booking.driver_id !== driverId) throw ApiError.forbidden('這不是你的預約');
+  if (booking.status !== BOOKING_STATUS.PENDING) {
+    throw ApiError.conflict(`預約目前為「${booking.status}」，無法變更`);
+  }
+
+  const patch = accept
+    ? { status: BOOKING_STATUS.ACCEPTED }
+    : { status: BOOKING_STATUS.REJECTED, rejected_reason: reason ?? null };
+
+  const { data, error } = await supabaseAdmin
+    .from('bookings')
+    .update(patch)
+    .eq('id', bookingId)
+    .eq('status', BOOKING_STATUS.PENDING) // 樂觀鎖：避免競態重複處理
+    .select('*')
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) throw ApiError.conflict('預約狀態已被變更，請重新整理');
+
+  return data;
+}

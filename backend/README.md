@@ -14,10 +14,27 @@ npm run dev            # http://localhost:3000（--watch 自動重啟）
 
 | Method | Path | 說明 |
 |--------|------|------|
-| GET | `/api/v1/health` | 存活檢查 |
-| GET | `/api/v1/health/db` | 檢查 Supabase 連線 |
-| POST | `/api/v1/drivers/auth/register` | 司機註冊（name, phone, email, password）→ `{ driver, token }` |
-| POST | `/api/v1/drivers/auth/login` | 司機登入（phone, password）→ `{ driver, token, supabase }` |
+| GET | `/api/v1/health` · `/health/db` | 存活檢查 / Supabase 連線 |
+| POST | `/api/v1/drivers/auth/register` | 司機註冊 → `{ driver, token }` |
+| POST | `/api/v1/drivers/auth/login` | 司機登入（phone + password）→ `{ driver, token, supabase }` |
+| GET·PUT | `/api/v1/drivers/:id` | 讀取 / 編輯服務資訊 🔒 |
+| POST | `/api/v1/drivers/:id/bind-line` | 綁定 LINE ID 🔒 |
+| GET·PUT | `/api/v1/drivers/:id/availability` | 營運時間 + 每日名額 🔒 |
+| GET | `/api/v1/drivers/:id/bookings` | 預約列表（status / month / 分頁）🔒 |
+| GET | `/api/v1/drivers/:id/stats` | 當月統計 🔒 |
+| POST | `/api/v1/bookings` | 客人匿名建立預約 → `{ booking, statusToken }` |
+| GET | `/api/v1/bookings/:id?token=` | 客人查預約狀態（accepted 才揭露司機聯絡方式）|
+| PUT | `/api/v1/bookings/:id/accept` | 司機接受 🔒 → 通知客人 |
+| PUT | `/api/v1/bookings/:id/reject` | 司機拒絕（body: reason）🔒 → 通知客人 |
+
+🔒 = 需 `Authorization: Bearer <token>`
+
+## 通知（LINE / SMS）
+
+- `POST /bookings` 成功後通知司機；`accept` / `reject` 後通知客人。
+- 順序：LINE push →（失敗或無 LINE ID）Twilio SMS →（都沒設定）記為 `skipped`。
+- 每次結果寫入 `notifications_log`；通知失敗**不影響**主流程。
+- 未填 `LINE_CHANNEL_ACCESS_TOKEN` / Twilio 金鑰時自動略過，填了即生效。
 
 ## 認證機制
 
