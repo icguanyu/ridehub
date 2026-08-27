@@ -184,7 +184,7 @@ paths:
               properties:
                 name: { type: string, maxLength: 100 }
                 serviceDescription: { type: string, maxLength: 2000, nullable: true }
-                serviceAreas: { type: string, maxLength: 500, nullable: true, example: 新竹市,竹科園區 }
+                serviceAreas: { type: string, maxLength: 500, nullable: true, example: '新竹市,竹科園區' }
                 carType: { type: string, maxLength: 50, nullable: true }
                 carPlate: { type: string, maxLength: 20, nullable: true }
                 basePrice: { type: number, minimum: 0, nullable: true }
