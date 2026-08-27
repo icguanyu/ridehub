@@ -1,14 +1,21 @@
 import { useState } from 'react';
 import { Stack, Title, SegmentedControl, Pagination, Group, Text } from '@mantine/core';
 import { useCurrentDriverId } from '@/hooks/useAuth';
-import { useDriverBookings, useAcceptBooking, useRejectBooking } from '@/hooks/useBookings';
+import {
+  useDriverBookings,
+  useAcceptBooking,
+  useRejectBooking,
+  useQuoteBooking,
+} from '@/hooks/useBookings';
 import BookingCard from '@/components/BookingCard';
 import RejectBookingModal from '@/components/RejectBookingModal';
+import QuoteModal from '@/components/QuoteModal';
 import Spinner from '@/components/Spinner';
 import { notifyOk, notifyErr } from '@/lib/notify';
 
 const FILTERS = [
   { label: '待確認', value: 'pending' },
+  { label: '報價中', value: 'quoted' },
   { label: '已接受', value: 'accepted' },
   { label: '已完成', value: 'completed' },
   { label: '全部', value: 'all' },
@@ -20,6 +27,7 @@ export default function BookingList() {
   const [filter, setFilter] = useState('pending');
   const [page, setPage] = useState(1);
   const [rejecting, setRejecting] = useState(null);
+  const [quoting, setQuoting] = useState(null);
 
   const status = filter === 'all' ? undefined : filter;
   const { data, isLoading, isFetching } = useDriverBookings(driverId, {
@@ -29,6 +37,8 @@ export default function BookingList() {
   });
   const accept = useAcceptBooking();
   const reject = useRejectBooking();
+  const quote = useQuoteBooking();
+  const busy = accept.isPending || reject.isPending || quote.isPending;
 
   const totalPages = Math.max(1, Math.ceil((data?.pagination.total ?? 0) / PAGE_SIZE));
 
@@ -55,6 +65,18 @@ export default function BookingList() {
       },
     );
 
+  const doQuote = ({ price, note }) =>
+    quote.mutate(
+      { bookingId: quoting.id, price, note },
+      {
+        onSuccess: (r) => {
+          notifyOk(r.message || '報價已送出');
+          setQuoting(null);
+        },
+        onError: (e) => notifyErr(e),
+      },
+    );
+
   return (
     <Stack gap="md">
       <Title order={4}>預約列表</Title>
@@ -69,9 +91,10 @@ export default function BookingList() {
               key={b.id}
               booking={b}
               actionable
-              busy={accept.isPending || reject.isPending}
+              busy={busy}
               onAccept={doAccept}
               onReject={(bk) => setRejecting(bk)}
+              onQuote={(bk) => setQuoting(bk)}
             />
           ))}
         </Stack>
@@ -93,6 +116,13 @@ export default function BookingList() {
         busy={reject.isPending}
         onClose={() => setRejecting(null)}
         onConfirm={doReject}
+      />
+      <QuoteModal
+        opened={Boolean(quoting)}
+        booking={quoting}
+        busy={quote.isPending}
+        onClose={() => setQuoting(null)}
+        onConfirm={doQuote}
       />
     </Stack>
   );

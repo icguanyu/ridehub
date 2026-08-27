@@ -1,5 +1,6 @@
 export const BOOKING_STATUS = Object.freeze({
   PENDING: 'pending',
+  QUOTED: 'quoted',
   ACCEPTED: 'accepted',
   REJECTED: 'rejected',
   COMPLETED: 'completed',
@@ -8,9 +9,17 @@ export const BOOKING_STATUS = Object.freeze({
 
 export const BOOKING_STATUS_VALUES = Object.values(BOOKING_STATUS);
 
+export const TRIP_TYPE = Object.freeze({
+  ONE_WAY: 'one_way',
+  ROUND_TRIP: 'round_trip',
+});
+
+export const TRIP_TYPE_VALUES = Object.values(TRIP_TYPE);
+
 // 佔用當日名額的狀態（用於營運量能計算）
 export const ACTIVE_BOOKING_STATUSES = [
   BOOKING_STATUS.PENDING,
+  BOOKING_STATUS.QUOTED,
   BOOKING_STATUS.ACCEPTED,
   BOOKING_STATUS.COMPLETED,
 ];

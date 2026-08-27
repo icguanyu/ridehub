@@ -14,6 +14,7 @@ import {
   Group,
   Divider,
   Anchor,
+  SegmentedControl,
 } from '@mantine/core';
 import { DateInput, TimeInput } from '@mantine/dates';
 import { useForm } from '@mantine/form';
@@ -34,10 +35,13 @@ export default function CustomerBooking() {
       customerName: '',
       customerPhone: '',
       customerLineId: '',
+      tripType: 'one_way',
       pickupLocation: '',
       destination: '',
       bookingDate: null,
       bookingTime: '',
+      returnDate: null,
+      returnTime: '',
       passengerCount: 1,
       estimatedDistanceKm: '',
       specialRequests: '',
@@ -49,19 +53,37 @@ export default function CustomerBooking() {
       destination: (v) => (v.trim() ? null : '請輸入目的地'),
       bookingDate: (v) => (v ? null : '請選擇日期'),
       bookingTime: (v) => (v ? null : '請選擇時間'),
+      returnDate: (v, values) =>
+        values.tripType !== 'round_trip'
+          ? null
+          : !v
+            ? '請選擇回程日期'
+            : values.bookingDate && dayjs(v).isBefore(dayjs(values.bookingDate), 'day')
+              ? '回程不可早於去程'
+              : null,
+      returnTime: (v, values) =>
+        values.tripType !== 'round_trip' ? null : v ? null : '請選擇回程時間',
     },
   });
+
+  const isRoundTrip = form.values.tripType === 'round_trip';
 
   const priceBreakdown = useMemo(() => {
     if (!driver) return null;
     const base = Number(driver.basePrice ?? 0);
     const perKm = Number(driver.pricePerKm ?? 0);
     const km = Number(form.values.estimatedDistanceKm || 0);
-    const distanceFee = Math.round(perKm * km);
-    return { base: Math.round(base), distanceFee, total: Math.round(base) + distanceFee };
-  }, [driver, form.values.estimatedDistanceKm]);
+    const oneWay = Math.round(base + perKm * km);
+    const mult = isRoundTrip ? 2 : 1;
+    return { oneWay, mult, total: oneWay * mult };
+  }, [driver, form.values.estimatedDistanceKm, isRoundTrip]);
 
-  if (isLoading) return <Center mih="100vh"><Spinner /></Center>;
+  if (isLoading)
+    return (
+      <Center mih="100vh">
+        <Spinner />
+      </Center>
+    );
   if (isError)
     return (
       <Center mih="100vh" px="md">
@@ -74,12 +96,17 @@ export default function CustomerBooking() {
       driverId,
       customerName: v.customerName.trim(),
       customerPhone: v.customerPhone,
+      tripType: v.tripType,
       pickupLocation: v.pickupLocation.trim(),
       destination: v.destination.trim(),
       bookingDate: dayjs(v.bookingDate).format('YYYY-MM-DD'),
       bookingTime: v.bookingTime,
       passengerCount: Number(v.passengerCount) || 1,
     };
+    if (v.tripType === 'round_trip') {
+      payload.returnDate = dayjs(v.returnDate).format('YYYY-MM-DD');
+      payload.returnTime = v.returnTime;
+    }
     if (v.customerLineId.trim()) payload.customerLineId = v.customerLineId.trim();
     if (v.specialRequests.trim()) payload.specialRequests = v.specialRequests.trim();
     if (v.estimatedDistanceKm !== '') payload.estimatedDistanceKm = Number(v.estimatedDistanceKm);
@@ -106,6 +133,15 @@ export default function CustomerBooking() {
                 </Text>
               </div>
 
+              <SegmentedControl
+                fullWidth
+                data={[
+                  { label: '單程', value: 'one_way' },
+                  { label: '往返', value: 'round_trip' },
+                ]}
+                {...form.getInputProps('tripType')}
+              />
+
               <Group grow>
                 <TextInput label="您的名字" withAsterisk {...form.getInputProps('customerName')} />
                 <TextInput
@@ -122,16 +158,31 @@ export default function CustomerBooking() {
               />
               <TextInput label="上車地點" withAsterisk {...form.getInputProps('pickupLocation')} />
               <TextInput label="目的地" withAsterisk {...form.getInputProps('destination')} />
+
               <Group grow>
                 <DateInput
-                  label="日期"
+                  label="去程日期"
                   withAsterisk
                   valueFormat="YYYY-MM-DD"
                   minDate={new Date()}
                   {...form.getInputProps('bookingDate')}
                 />
-                <TimeInput label="時間" withAsterisk {...form.getInputProps('bookingTime')} />
+                <TimeInput label="去程時間" withAsterisk {...form.getInputProps('bookingTime')} />
               </Group>
+
+              {isRoundTrip && (
+                <Group grow>
+                  <DateInput
+                    label="回程日期"
+                    withAsterisk
+                    valueFormat="YYYY-MM-DD"
+                    minDate={form.values.bookingDate || new Date()}
+                    {...form.getInputProps('returnDate')}
+                  />
+                  <TimeInput label="回程時間" withAsterisk {...form.getInputProps('returnTime')} />
+                </Group>
+              )}
+
               <Group grow>
                 <NumberInput
                   label="人數"
@@ -157,23 +208,25 @@ export default function CustomerBooking() {
                 <Card bg="brand.0" p="sm" radius="sm" withBorder>
                   <Group justify="space-between">
                     <Text size="sm" c="dimmed">
-                      基礎價格
+                      單程預估
                     </Text>
-                    <Text size="sm">{fmtMoney(priceBreakdown.base)}</Text>
+                    <Text size="sm">{fmtMoney(priceBreakdown.oneWay)}</Text>
                   </Group>
-                  <Group justify="space-between">
-                    <Text size="sm" c="dimmed">
-                      距離估算費
-                    </Text>
-                    <Text size="sm">{fmtMoney(priceBreakdown.distanceFee)}</Text>
-                  </Group>
+                  {isRoundTrip && (
+                    <Group justify="space-between">
+                      <Text size="sm" c="dimmed">
+                        往返 × 2
+                      </Text>
+                      <Text size="sm">{fmtMoney(priceBreakdown.total)}</Text>
+                    </Group>
+                  )}
                   <Divider my={6} />
                   <Group justify="space-between">
                     <Text fw={600}>預估合計</Text>
                     <Text fw={700}>{fmtMoney(priceBreakdown.total)}</Text>
                   </Group>
                   <Text size="xs" c="dimmed" mt={4}>
-                    實際金額以司機確認為準
+                    實際金額以司機確認為準，司機可能重新報價
                   </Text>
                 </Card>
               )}

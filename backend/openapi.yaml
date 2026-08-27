@@ -279,7 +279,7 @@ paths:
           in: query
           schema:
             type: string
-            enum: [pending, accepted, rejected, completed, cancelled]
+            enum: [pending, quoted, accepted, rejected, completed, cancelled]
         - name: month
           in: query
           description: YYYY-MM
@@ -337,6 +337,8 @@ paths:
       description: |
         會驗證司機存在、日期不可早於今天、須在營運時間內、當日名額未滿，
         計算預估車資後建立 `pending` 預約，並嘗試通知司機。
+        `tripType=round_trip` 時 `returnDate` / `returnTime` 必填，回程可跨日，
+        且去程日與回程日各佔一個名額。
       requestBody:
         required: true
         content:
@@ -350,17 +352,29 @@ paths:
                 customerName: { type: string, maxLength: 100 }
                 customerPhone: { type: string, pattern: '^09\d{8}$' }
                 customerLineId: { type: string, maxLength: 100 }
+                tripType:
+                  type: string
+                  enum: [one_way, round_trip]
+                  default: one_way
                 pickupLocation: { type: string, maxLength: 200 }
                 destination: { type: string, maxLength: 200 }
                 bookingDate: { type: string, format: date, example: '2026-09-01' }
                 bookingTime: { type: string, pattern: '^([01]\d|2[0-3]):[0-5]\d$', example: '14:00' }
+                returnDate:
+                  type: string
+                  format: date
+                  description: 往返必填；不可早於 bookingDate
+                returnTime:
+                  type: string
+                  pattern: '^([01]\d|2[0-3]):[0-5]\d$'
+                  description: 往返必填；同日時需晚於 bookingTime
                 passengerCount: { type: integer, minimum: 1, maximum: 20, default: 1 }
                 specialRequests: { type: string, maxLength: 2000 }
                 estimatedDistanceKm:
                   type: number
                   minimum: 0
                   maximum: 2000
-                  description: 選填；有給則車資 = base_price + price_per_km × 距離
+                  description: 選填；車資 = (base_price + price_per_km × 距離)，往返再 ×2
       responses:
         '201':
           description: 預約已建立
@@ -374,10 +388,11 @@ paths:
                     properties:
                       id: { type: string, format: uuid }
                       status: { type: string, example: pending }
+                      tripType: { type: string, enum: [one_way, round_trip] }
                       estimatedPrice: { type: number, example: 450 }
                       statusToken:
                         type: string
-                        description: 查詢預約狀態用的憑證
+                        description: 查詢預約狀態、回應報價用的憑證
                       message: { type: string }
                   notified:
                     oneOf:
@@ -490,6 +505,119 @@ paths:
         '403': { $ref: '#/components/responses/Forbidden' }
         '409':
           description: 預約非 pending 狀態
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /bookings/{bookingId}/quote:
+    put:
+      tags: [Booking]
+      summary: 司機重新報價
+      description: 僅該預約的司機、且狀態為 `pending` 時可操作。`pending` → `quoted`，並通知客人。
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [price]
+              properties:
+                price: { type: number, minimum: 0, exclusiveMinimum: true, example: 800 }
+                note: { type: string, maxLength: 500, example: 往返含等候一小時 }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  booking: { $ref: '#/components/schemas/BookingItem' }
+                  message: { type: string }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409':
+          description: 預約非 pending 狀態
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /bookings/{bookingId}/quote/accept:
+    put:
+      tags: [Booking]
+      summary: 客人同意司機報價
+      description: 需帶 `statusToken`。`quoted` → `accepted`，成交價為司機報價，並通知司機。
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: token
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  booking: { $ref: '#/components/schemas/BookingWithDriver' }
+                  message: { type: string }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '403':
+          description: token 無效
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '409':
+          description: 目前沒有待確認的報價
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /bookings/{bookingId}/quote/decline:
+    put:
+      tags: [Booking]
+      summary: 客人不同意司機報價
+      description: 需帶 `statusToken`。`quoted` → `cancelled`，並通知司機。
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: token
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  booking: { $ref: '#/components/schemas/BookingWithDriver' }
+                  message: { type: string }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '403':
+          description: token 無效
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '409':
+          description: 目前沒有待確認的報價
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Error' }
@@ -614,16 +742,26 @@ components:
         customerName: { type: string }
         customerPhone: { type: string }
         customerLineId: { type: string, nullable: true }
+        tripType: { type: string, enum: [one_way, round_trip] }
         pickupLocation: { type: string }
         destination: { type: string }
         bookingDate: { type: string, format: date }
         bookingTime: { type: string, example: '14:00' }
+        returnDate: { type: string, format: date, nullable: true, description: 往返才有 }
+        returnTime: { type: string, nullable: true, example: '18:00' }
         passengerCount: { type: integer }
         specialRequests: { type: string, nullable: true }
-        estimatedPrice: { type: number, nullable: true }
+        estimatedPrice: { type: number, nullable: true, description: 建立時的基礎報價 }
+        quotedPrice: { type: number, nullable: true, description: 司機重新報價的金額 }
+        quotedAt: { type: string, format: date-time, nullable: true }
+        quoteNote: { type: string, nullable: true }
+        agreedPrice:
+          type: number
+          nullable: true
+          description: 成交價 = quotedPrice ?? estimatedPrice
         status:
           type: string
-          enum: [pending, accepted, rejected, completed, cancelled]
+          enum: [pending, quoted, accepted, rejected, completed, cancelled]
         rejectedReason: { type: string, nullable: true }
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
@@ -635,16 +773,23 @@ components:
         id: { type: string, format: uuid }
         status:
           type: string
-          enum: [pending, accepted, rejected, completed, cancelled]
+          enum: [pending, quoted, accepted, rejected, completed, cancelled]
+        tripType: { type: string, enum: [one_way, round_trip] }
         customerName: { type: string }
         customerPhone: { type: string }
         pickupLocation: { type: string }
         destination: { type: string }
         bookingDate: { type: string, format: date }
         bookingTime: { type: string }
+        returnDate: { type: string, format: date, nullable: true }
+        returnTime: { type: string, nullable: true }
         passengerCount: { type: integer }
         specialRequests: { type: string, nullable: true }
         estimatedPrice: { type: number, nullable: true }
+        quotedPrice: { type: number, nullable: true }
+        quoteNote: { type: string, nullable: true }
+        quotedAt: { type: string, format: date-time, nullable: true }
+        agreedPrice: { type: number, nullable: true }
         rejectedReason: { type: string, nullable: true }
         driverName: { type: string, nullable: true }
         driverPhone:

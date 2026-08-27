@@ -34,3 +34,21 @@ function useRespond(action) {
 
 export const useAcceptBooking = () => useRespond('accept');
 export const useRejectBooking = () => useRespond('reject');
+
+// 司機重新報價
+export function useQuoteBooking() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ bookingId, price, note }) => {
+      const { data } = await api.put(`/bookings/${bookingId}/quote`, {
+        price,
+        note: note || undefined,
+      });
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['bookings'] });
+      qc.invalidateQueries({ queryKey: ['stats'] });
+    },
+  });
+}

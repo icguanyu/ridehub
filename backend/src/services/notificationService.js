@@ -2,7 +2,14 @@
 // 任何通知失敗都不得中斷主要 API 流程。
 import { supabaseAdmin } from '../config/supabase.js';
 import { logger } from '../utils/logger.js';
-import { pushText, newBookingText, acceptedText, rejectedText } from './lineService.js';
+import {
+  pushText,
+  newBookingText,
+  acceptedText,
+  rejectedText,
+  quotedText,
+  quoteRespondedText,
+} from './lineService.js';
 import { sendSMS } from './smsService.js';
 
 async function logNotification(entry) {
@@ -71,6 +78,42 @@ export async function notifyCustomerBookingResult(booking, driver, { accepted, r
     recipient_line_id: booking.customer_line_id ?? null,
     recipient_type: 'customer',
     notification_type: accepted ? 'booking_accepted' : 'booking_rejected',
+    status: logStatus(result),
+    error_message: result.error ?? null,
+  });
+  return result;
+}
+
+// 司機重新報價 → 通知客人
+export async function notifyCustomerQuote(booking, driver) {
+  const result = await deliver({
+    lineId: booking.customer_line_id,
+    phone: booking.customer_phone,
+    text: quotedText(driver, booking),
+  });
+  await logNotification({
+    booking_id: booking.id,
+    recipient_line_id: booking.customer_line_id ?? null,
+    recipient_type: 'customer',
+    notification_type: 'booking_quoted',
+    status: logStatus(result),
+    error_message: result.error ?? null,
+  });
+  return result;
+}
+
+// 客人回應報價 → 通知司機
+export async function notifyDriverQuoteResponse(booking, driver, { accepted }) {
+  const result = await deliver({
+    lineId: driver.line_id,
+    phone: driver.phone,
+    text: quoteRespondedText(booking, accepted),
+  });
+  await logNotification({
+    booking_id: booking.id,
+    recipient_line_id: driver.line_id ?? null,
+    recipient_type: 'driver',
+    notification_type: accepted ? 'quote_accepted' : 'quote_declined',
     status: logStatus(result),
     error_message: result.error ?? null,
   });

@@ -13,12 +13,20 @@ import {
   Alert,
   CopyButton,
 } from '@mantine/core';
-import { useBookingStatus } from '@/hooks/useCustomer';
+import { useBookingStatus, useRespondToQuote } from '@/hooks/useCustomer';
 import Spinner from '@/components/Spinner';
-import { fmtMoney, fmtDateTime, STATUS_LABEL, STATUS_COLOR } from '@/lib/format';
+import {
+  fmtMoney,
+  fmtDateTime,
+  STATUS_LABEL,
+  STATUS_COLOR,
+  TRIP_TYPE_LABEL,
+} from '@/lib/format';
+import { notifyOk, notifyErr } from '@/lib/notify';
 
 const STATUS_HINT = {
   pending: '預約已送出，等待司機確認（司機通常會在 24 小時內回覆）。',
+  quoted: '司機提出了新的報價，請於下方確認是否接受。',
   accepted: '司機已接受！以下是聯絡方式，出發前可先聯繫。',
   rejected: '很抱歉，司機無法接受這次預約。',
   completed: '行程已完成，感謝搭乘。',
@@ -30,8 +38,16 @@ export default function BookingConfirmation() {
   const [sp] = useSearchParams();
   const token = sp.get('token');
   const { data: b, isLoading, isError, refetch, isFetching } = useBookingStatus(bookingId, token);
+  const respond = useRespondToQuote(bookingId, token);
 
   const shareUrl = window.location.href;
+  const isRoundTrip = b?.tripType === 'round_trip';
+
+  const doRespond = (accept) =>
+    respond.mutate(accept, {
+      onSuccess: () => notifyOk(accept ? '已同意報價，預約成立' : '已取消預約'),
+      onError: (e) => notifyErr(e),
+    });
 
   return (
     <Center mih="100vh" px="md" py="xl">
@@ -72,15 +88,23 @@ export default function BookingConfirmation() {
                     行程
                   </Text>
                   <Text size="sm">
-                    {b.pickupLocation} → {b.destination}
+                    {TRIP_TYPE_LABEL[b.tripType] ?? '單程'}・{b.pickupLocation} → {b.destination}
                   </Text>
                 </Group>
                 <Group justify="space-between">
                   <Text size="sm" c="dimmed">
-                    時間
+                    去程
                   </Text>
                   <Text size="sm">{fmtDateTime(b.bookingDate, b.bookingTime)}</Text>
                 </Group>
+                {isRoundTrip && (
+                  <Group justify="space-between">
+                    <Text size="sm" c="dimmed">
+                      回程
+                    </Text>
+                    <Text size="sm">{fmtDateTime(b.returnDate, b.returnTime)}</Text>
+                  </Group>
+                )}
                 <Group justify="space-between">
                   <Text size="sm" c="dimmed">
                     人數
@@ -89,10 +113,17 @@ export default function BookingConfirmation() {
                 </Group>
                 <Group justify="space-between">
                   <Text size="sm" c="dimmed">
-                    預估車資
+                    {b.quotedPrice != null ? '司機報價' : '預估車資'}
                   </Text>
-                  <Text size="sm">{fmtMoney(b.estimatedPrice)}</Text>
+                  <Text size="sm" fw={b.quotedPrice != null ? 700 : 400}>
+                    {fmtMoney(b.quotedPrice ?? b.estimatedPrice)}
+                  </Text>
                 </Group>
+                {b.quotedPrice != null && (
+                  <Text size="xs" c="dimmed">
+                    （原預估 {fmtMoney(b.estimatedPrice)}）
+                  </Text>
+                )}
 
                 {b.status === 'rejected' && b.rejectedReason && (
                   <Text size="sm" c="red">
@@ -101,6 +132,35 @@ export default function BookingConfirmation() {
                 )}
               </Stack>
             </Card>
+
+            {b.status === 'quoted' && (
+              <Card withBorder radius="md" p="lg">
+                <Stack gap="sm">
+                  <Title order={4}>司機報價</Title>
+                  <Text size="lg" fw={700}>
+                    {fmtMoney(b.quotedPrice)}
+                  </Text>
+                  {b.quoteNote && (
+                    <Text size="sm" c="dimmed">
+                      司機說明：{b.quoteNote}
+                    </Text>
+                  )}
+                  <Group grow mt="xs">
+                    <Button color="green" loading={respond.isPending} onClick={() => doRespond(true)}>
+                      同意報價
+                    </Button>
+                    <Button
+                      variant="light"
+                      color="red"
+                      loading={respond.isPending}
+                      onClick={() => doRespond(false)}
+                    >
+                      不同意
+                    </Button>
+                  </Group>
+                </Stack>
+              </Card>
+            )}
 
             {b.status === 'accepted' && (
               <Card withBorder radius="md" p="lg">

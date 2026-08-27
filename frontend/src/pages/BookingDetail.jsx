@@ -2,9 +2,15 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Stack, Title, Button, Text, Card, Group } from '@mantine/core';
 import { useCurrentDriverId } from '@/hooks/useAuth';
-import { useDriverBookings, useAcceptBooking, useRejectBooking } from '@/hooks/useBookings';
+import {
+  useDriverBookings,
+  useAcceptBooking,
+  useRejectBooking,
+  useQuoteBooking,
+} from '@/hooks/useBookings';
 import BookingCard from '@/components/BookingCard';
 import RejectBookingModal from '@/components/RejectBookingModal';
+import QuoteModal from '@/components/QuoteModal';
 import Spinner from '@/components/Spinner';
 import { notifyOk, notifyErr } from '@/lib/notify';
 
@@ -15,7 +21,9 @@ export default function BookingDetail() {
   const { data, isLoading } = useDriverBookings(driverId, { pageSize: 100 });
   const accept = useAcceptBooking();
   const reject = useRejectBooking();
+  const quote = useQuoteBooking();
   const [rejecting, setRejecting] = useState(false);
+  const [quoting, setQuoting] = useState(false);
 
   if (isLoading) return <Spinner />;
 
@@ -44,7 +52,7 @@ export default function BookingDetail() {
       <BookingCard
         booking={booking}
         actionable
-        busy={accept.isPending || reject.isPending}
+        busy={accept.isPending || reject.isPending || quote.isPending}
         onAccept={(b) =>
           accept.mutate(
             { bookingId: b.id },
@@ -52,6 +60,7 @@ export default function BookingDetail() {
           )
         }
         onReject={() => setRejecting(true)}
+        onQuote={() => setQuoting(true)}
       />
 
       <Card withBorder radius="md" p="md">
@@ -78,6 +87,24 @@ export default function BookingDetail() {
               onSuccess: (r) => {
                 notifyOk(r.message || '已拒絕');
                 setRejecting(false);
+              },
+              onError: (e) => notifyErr(e),
+            },
+          )
+        }
+      />
+      <QuoteModal
+        opened={quoting}
+        booking={booking}
+        busy={quote.isPending}
+        onClose={() => setQuoting(false)}
+        onConfirm={({ price, note }) =>
+          quote.mutate(
+            { bookingId: booking.id, price, note },
+            {
+              onSuccess: (r) => {
+                notifyOk(r.message || '報價已送出');
+                setQuoting(false);
               },
               onError: (e) => notifyErr(e),
             },

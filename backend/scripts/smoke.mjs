@@ -56,6 +56,8 @@ const rand = Math.floor(Math.random() * 1e6);
 const phone = `09${String(rand).padStart(8, '0')}`.slice(0, 10);
 const email = `smoke_${rand}@ridehub.test`;
 const tomorrow = new Date(Date.now() + 864e5).toISOString().slice(0, 10);
+const dayAfter = new Date(Date.now() + 2 * 864e5).toISOString().slice(0, 10);
+const day3 = new Date(Date.now() + 3 * 864e5).toISOString().slice(0, 10);
 const yesterday = new Date(Date.now() - 864e5).toISOString().slice(0, 10);
 
 let driverId;
@@ -196,6 +198,79 @@ async function run() {
   check('統計：本月接單 2', stats.body?.totalBookings === 2, `got ${stats.body?.totalBookings}`);
   check('統計：成交 1（僅 accepted）', stats.body?.acceptedBookings === 1, `got ${stats.body?.acceptedBookings}`);
   check('統計：收入 450', stats.body?.totalRevenue === 450, `got ${stats.body?.totalRevenue}`);
+
+  // ── 往返行程 ──
+  const rtMissing = await req('POST', '/bookings', {
+    body: baseBooking({ bookingDate: dayAfter, tripType: 'round_trip' }),
+  });
+  check('往返未填回程回 400', rtMissing.status === 400);
+
+  const rtBadDate = await req('POST', '/bookings', {
+    body: baseBooking({
+      bookingDate: dayAfter,
+      tripType: 'round_trip',
+      returnDate: tomorrow,
+      returnTime: '18:00',
+    }),
+  });
+  check('回程早於去程回 400', rtBadDate.status === 400);
+
+  const rt = await req('POST', '/bookings', {
+    body: baseBooking({
+      bookingDate: dayAfter,
+      bookingTime: '09:00',
+      tripType: 'round_trip',
+      returnDate: dayAfter,
+      returnTime: '18:00',
+      estimatedDistanceKm: 10,
+    }),
+  });
+  check('建立往返預約 201', rt.status === 201, `got ${rt.status}`);
+  check('往返車資 = (250 + 20×10) × 2 = 900', rt.body?.booking?.estimatedPrice === 900, `got ${rt.body?.booking?.estimatedPrice}`);
+  check('回傳 tripType = round_trip', rt.body?.booking?.tripType === 'round_trip');
+
+  const rtStatus = await req('GET', `/bookings/${rt.body.booking.id}?token=${rt.body.booking.statusToken}`);
+  check('往返查詢帶回 returnDate / returnTime', rtStatus.body?.booking?.returnDate === dayAfter && rtStatus.body?.booking?.returnTime === '18:00');
+
+  // ── 司機重新報價 → 客人回應 ──
+  const bq = await req('POST', '/bookings', { body: baseBooking({ bookingDate: day3, bookingTime: '10:00' }) });
+  const bqId = bq.body.booking.id;
+  const bqToken = bq.body.booking.statusToken;
+
+  const quote = await req('PUT', `/bookings/${bqId}/quote`, {
+    token: driverToken,
+    body: { price: 777, note: '含等候一小時' },
+  });
+  check('司機重新報價 200 / 狀態 quoted', quote.status === 200 && quote.body?.booking?.status === 'quoted', `got ${quote.status}`);
+  check('報價金額寫入 quotedPrice', quote.body?.booking?.quotedPrice === 777);
+
+  const quoteAgain = await req('PUT', `/bookings/${bqId}/quote`, { token: driverToken, body: { price: 800 } });
+  check('已報價後再報價回 409', quoteAgain.status === 409);
+
+  const qStatus = await req('GET', `/bookings/${bqId}?token=${bqToken}`);
+  check('客人查詢看到 quoted + 報價 + 說明', qStatus.body?.booking?.status === 'quoted' && qStatus.body?.booking?.quotedPrice === 777 && qStatus.body?.booking?.quoteNote === '含等候一小時');
+
+  const qBadToken = await req('PUT', `/bookings/${bqId}/quote/accept?token=nope`);
+  check('客人回應報價錯 token 回 403', qBadToken.status === 403);
+
+  const qAccept = await req('PUT', `/bookings/${bqId}/quote/accept?token=${bqToken}`);
+  check('客人同意報價 200 / 狀態 accepted', qAccept.status === 200 && qAccept.body?.booking?.status === 'accepted', `got ${qAccept.status}`);
+  check('成交價 agreedPrice = 777', qAccept.body?.booking?.agreedPrice === 777, `got ${qAccept.body?.booking?.agreedPrice}`);
+  check('同意後揭露司機電話', qAccept.body?.booking?.driverPhone === phone);
+
+  const qAcceptAgain = await req('PUT', `/bookings/${bqId}/quote/accept?token=${bqToken}`);
+  check('非 quoted 狀態回應報價回 409', qAcceptAgain.status === 409);
+
+  // decline 路徑
+  const bq2 = await req('POST', '/bookings', { body: baseBooking({ bookingDate: day3, bookingTime: '11:00' }) });
+  await req('PUT', `/bookings/${bq2.body.booking.id}/quote`, { token: driverToken, body: { price: 999 } });
+  const qDecline = await req('PUT', `/bookings/${bq2.body.booking.id}/quote/decline?token=${bq2.body.booking.statusToken}`);
+  check('客人不同意報價 200 / 狀態 cancelled', qDecline.status === 200 && qDecline.body?.booking?.status === 'cancelled', `got ${qDecline.status}`);
+
+  // ── 統計（含往返與報價成交）──
+  const stats2 = await req('GET', `/drivers/${driverId}/stats?month=${tomorrow.slice(0, 7)}`, { token: driverToken });
+  check('統計2：成交 2（accept + quote-accept）', stats2.body?.acceptedBookings === 2, `got ${stats2.body?.acceptedBookings}`);
+  check('統計2：收入 450 + 777 = 1227', stats2.body?.totalRevenue === 1227, `got ${stats2.body?.totalRevenue}`);
 
   function baseBooking(over = {}) {
     return {

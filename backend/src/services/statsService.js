@@ -1,6 +1,7 @@
 import { supabaseAdmin } from '../config/supabase.js';
 import { monthRange } from '../utils/dates.js';
 import { FULFILLED_BOOKING_STATUSES } from '../constants.js';
+import { agreedPrice } from '../utils/pricing.js';
 
 // MVP：直接由 bookings / booking_ratings 即時計算當月統計。
 // （driver_stats 預先彙總表保留給日後排程使用。）
@@ -9,7 +10,7 @@ export async function getDriverStats(driverId, month) {
 
   const { data: bookings, error } = await supabaseAdmin
     .from('bookings')
-    .select('id, status, customer_phone, estimated_price')
+    .select('id, status, customer_phone, estimated_price, quoted_price')
     .eq('driver_id', driverId)
     .gte('booking_date', start)
     .lt('booking_date', endExclusive);
@@ -20,7 +21,7 @@ export async function getDriverStats(driverId, month) {
   const totalBookings = bookings.length;
   const acceptedBookings = fulfilled.length;
   const totalCustomers = new Set(bookings.map((b) => b.customer_phone)).size;
-  const totalRevenue = fulfilled.reduce((sum, b) => sum + Number(b.estimated_price ?? 0), 0);
+  const totalRevenue = fulfilled.reduce((sum, b) => sum + Number(agreedPrice(b) ?? 0), 0);
 
   let avgRating = 0;
   const ids = bookings.map((b) => b.id);

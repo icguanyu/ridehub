@@ -29,13 +29,24 @@ export async function pushText(toLineId, text) {
 }
 
 // ── 訊息樣板 ─────────────────────────
+const hm = (t) => String(t).slice(0, 5);
+
+function tripLines(b) {
+  const lines = [
+    `行程：${b.trip_type === 'round_trip' ? '往返' : '單程'}`,
+    `去程：${b.booking_date} ${hm(b.booking_time)}  ${b.pickup_location} → ${b.destination}`,
+  ];
+  if (b.trip_type === 'round_trip') {
+    lines.push(`回程：${b.return_date} ${hm(b.return_time)}  ${b.destination} → ${b.pickup_location}`);
+  }
+  return lines;
+}
+
 export function newBookingText(b) {
   return [
     '📋 新預約',
     `客人：${b.customer_name}（${b.customer_phone}）`,
-    `時間：${b.booking_date} ${String(b.booking_time).slice(0, 5)}`,
-    `上車：${b.pickup_location}`,
-    `目的地：${b.destination}`,
+    ...tripLines(b),
     `人數：${b.passenger_count} 人`,
     b.special_requests ? `備註：${b.special_requests}` : null,
     `預估：NT$${b.estimated_price ?? 0}`,
@@ -45,13 +56,14 @@ export function newBookingText(b) {
 }
 
 export function acceptedText(driver, b) {
+  const price = b.quoted_price ?? b.estimated_price ?? 0;
   return [
     '✅ 司機已接受您的預約',
     `司機：${driver.name}`,
     `電話：${driver.phone}`,
     driver.line_id ? `LINE：${driver.line_id}` : null,
-    `時間：${b.booking_date} ${String(b.booking_time).slice(0, 5)}`,
-    `上車：${b.pickup_location} → ${b.destination}`,
+    ...tripLines(b),
+    `車資：NT$${price}`,
   ]
     .filter(Boolean)
     .join('\n');
@@ -62,8 +74,34 @@ export function rejectedText(driver, b, reason) {
     '❌ 很抱歉，司機無法接受這筆預約',
     `司機：${driver.name}`,
     reason ? `原因：${reason}` : null,
-    `原預約：${b.booking_date} ${String(b.booking_time).slice(0, 5)} ${b.pickup_location} → ${b.destination}`,
+    `原預約：${b.booking_date} ${hm(b.booking_time)} ${b.pickup_location} → ${b.destination}`,
     '請另尋其他時段或司機，謝謝。',
+  ]
+    .filter(Boolean)
+    .join('\n');
+}
+
+// 司機重新報價 → 通知客人
+export function quotedText(driver, b) {
+  return [
+    '💬 司機提出新報價',
+    `司機：${driver.name}`,
+    `原預估：NT$${b.estimated_price ?? 0}`,
+    `新報價：NT$${b.quoted_price}`,
+    b.quote_note ? `司機留言：${b.quote_note}` : null,
+    '請到預約狀態頁確認是否接受此報價。',
+  ]
+    .filter(Boolean)
+    .join('\n');
+}
+
+// 客人回應報價 → 通知司機
+export function quoteRespondedText(b, accepted) {
+  return [
+    accepted ? '✅ 客人已同意您的報價' : '❌ 客人不同意報價，預約已取消',
+    `客人：${b.customer_name}（${b.customer_phone}）`,
+    ...tripLines(b),
+    accepted ? `成交車資：NT$${b.quoted_price ?? b.estimated_price}` : null,
   ]
     .filter(Boolean)
     .join('\n');

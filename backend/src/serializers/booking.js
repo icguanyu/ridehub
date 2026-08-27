@@ -1,4 +1,5 @@
 // DB bookings 列 → API 物件。
+import { agreedPrice } from '../utils/pricing.js';
 
 const hhmm = (t) => (t ? String(t).slice(0, 5) : null);
 
@@ -9,13 +10,20 @@ export function bookingItem(row) {
     customerName: row.customer_name,
     customerPhone: row.customer_phone,
     customerLineId: row.customer_line_id,
+    tripType: row.trip_type,
     pickupLocation: row.pickup_location,
     destination: row.destination,
     bookingDate: row.booking_date,
     bookingTime: hhmm(row.booking_time),
+    returnDate: row.return_date,
+    returnTime: hhmm(row.return_time),
     passengerCount: row.passenger_count,
     specialRequests: row.special_requests,
     estimatedPrice: row.estimated_price,
+    quotedPrice: row.quoted_price,
+    quotedAt: row.quoted_at,
+    quoteNote: row.quote_note,
+    agreedPrice: agreedPrice(row),
     status: row.status,
     rejectedReason: row.rejected_reason,
     createdAt: row.created_at,
@@ -29,6 +37,7 @@ export function bookingCreated(row) {
   return {
     id: row.id,
     status: row.status,
+    tripType: row.trip_type,
     estimatedPrice: row.estimated_price,
   };
 }
@@ -36,23 +45,30 @@ export function bookingCreated(row) {
 // 客人查詢狀態：預約 + 司機聯絡資訊（driver 已 join）
 export function bookingWithDriver(row) {
   const d = row.drivers || {};
+  const revealDriver = row.status === 'accepted';
   return {
     id: row.id,
     status: row.status,
+    tripType: row.trip_type,
     customerName: row.customer_name,
     customerPhone: row.customer_phone,
     pickupLocation: row.pickup_location,
     destination: row.destination,
     bookingDate: row.booking_date,
     bookingTime: hhmm(row.booking_time),
+    returnDate: row.return_date,
+    returnTime: hhmm(row.return_time),
     passengerCount: row.passenger_count,
     specialRequests: row.special_requests,
     estimatedPrice: row.estimated_price,
+    quotedPrice: row.quoted_price,
+    quoteNote: row.quote_note,
+    quotedAt: row.quoted_at,
+    agreedPrice: agreedPrice(row),
     rejectedReason: row.rejected_reason,
     driverName: d.name ?? null,
-    // 只有司機已接受時才揭露聯絡方式
-    driverPhone: row.status === 'accepted' ? d.phone ?? null : null,
-    driverLineId: row.status === 'accepted' ? d.line_id ?? null : null,
+    driverPhone: revealDriver ? d.phone ?? null : null,
+    driverLineId: revealDriver ? d.line_id ?? null : null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
