@@ -27,6 +27,21 @@ npm run dev               # http://localhost:5173
 
 🔒 = `ProtectedRoute`，未登入導向 `/login`
 
+## 環境變數
+
+前端只有一個「必要」變數（Vite 會在 **build 時** 內嵌，需 `VITE_` 前綴）：
+
+| 變數 | 用途 | 本機 | 正式 |
+|------|------|------|------|
+| `VITE_API_BASE_URL` | 後端 API base（**含 `/api/v1`**）| `http://localhost:3000/api/v1` | `https://<後端網域>/api/v1` |
+| `VITE_SUPABASE_URL` | 目前**未使用**，保留給日後 Realtime | — | — |
+| `VITE_SUPABASE_ANON_KEY` | 同上 | — | — |
+
+- 本機：複製 `.env.example` → `.env`（`.env` 已 gitignore）。
+- Cloudflare Pages：專案 Settings → Environment variables 設 `VITE_API_BASE_URL`
+  （Production 與 Preview 各設一次）；Build command `npm run build`、Output `dist`、Root `frontend`。
+- `public/_redirects` 已加入 SPA fallback，讓 `/driver/:id` 等深層連結不會 404。
+
 ## 結構
 
 ```
