@@ -1,0 +1,12 @@
+# 上傳到 Cloud Build 時要排除的檔案
+.git
+.gitignore
+node_modules
+npm-debug.log*
+.env
+.env.*
+!.env.example
+scripts
+README.md
+coverage
+*.log
