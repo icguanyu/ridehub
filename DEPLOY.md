@@ -84,12 +84,12 @@ gcloud run deploy "$SERVICE" \
   --cpu 1 \
   --min-instances 0 \
   --max-instances 3 \
-  --set-env-vars "NODE_ENV=production,SUPABASE_URL=https://pvdtpcgdtfoudqhhqwsr.supabase.co,SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB2ZHRwY2dkdGZvdWRxaGhxd3NyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4MjI2NTQsImV4cCI6MjEwMzM5ODY1NH0.bCCHojc5KWYdcb5gqNTpqVc3AdsTss-uO90CdsSxlqQ,CORS_ORIGINS=http://localhost:5173" \
+  --set-env-vars "NODE_ENV=production,SUPABASE_URL=https://pvdtpcgdtfoudqhhqwsr.supabase.co,SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB2ZHRwY2dkdGZvdWRxaGhxd3NyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4MjI2NTQsImV4cCI6MjEwMzM5ODY1NH0.bCCHojc5KWYdcb5gqNTpqVc3AdsTss-uO90CdsSxlqQ,CORS_ORIGINS=https://ridehub-2h3.pages.dev,http://localhost:5173" \
   --set-secrets "JWT_SECRET=JWT_SECRET:latest,SUPABASE_SERVICE_KEY=SUPABASE_SERVICE_KEY:latest"
 ```
 
 - 第一次會問是否建立 Artifact Registry repo `cloud-run-source-deploy` → 選 **Y**。
-- `CORS_ORIGINS` 先填 localhost，等前端上線後（步驟 B）再更新成 Pages 網域。
+- `CORS_ORIGINS` 已含正式前端 `https://ridehub-2h3.pages.dev`（多個來源用逗號分隔）。
 - `SUPABASE_ANON_KEY` / `SUPABASE_URL` 非機密，用一般環境變數即可。
 
 ### A3. 部署後檢查
@@ -131,37 +131,37 @@ gcloud run services update "$SERVICE" --region "$REGION" \
 
 ## B. 前端：Cloudflare Pages
 
-1. Cloudflare Dashboard → **Workers & Pages** → **Create** → **Pages** → **Connect to Git** → 選 `icguanyu/ridehub`
-2. 建置設定：
-   | 欄位 | 值 |
-   |------|-----|
-   | Framework preset | None（或 Vite）|
-   | Build command | `npm run build` |
-   | Build output directory | `dist` |
-   | Root directory | `frontend` |
-3. **Environment variables**（Production 與 Preview 各設一次）：
+> 已部署完成：**<https://ridehub-2h3.pages.dev/>**
+> 專案設定（Connect to Git、Build command `npm run build`、Output `dist`、Root `frontend`）已完成。
+
+**剩下要做的：設定 API 位址並重新部署**
+
+1. Cloudflare Dashboard → Workers & Pages → `ridehub` 專案 → **Settings** → **Environment variables**
+2. Production 新增（等後端 A3 拿到 Cloud Run 網址後）：
    ```
-   VITE_API_BASE_URL = https://ridehub-api-xxxxx.asia-east1.run.app/api/v1
+   VITE_API_BASE_URL = https://<你的 Cloud Run 網址>/api/v1
    ```
-   （用步驟 A3 的 `$API_URL` 加上 `/api/v1`）
-4. **Save and Deploy**，完成後會得到 `https://ridehub-xxx.pages.dev`
-5. `public/_redirects` 已內含 SPA fallback，深層連結不會 404。
+   例：`https://ridehub-api-xxxxxxxx.asia-east1.run.app/api/v1`
+3. 因為 Vite 是 **build 時** 內嵌變數，設完要 **重新部署一次**：
+   Deployments 分頁 → 最新一筆 → **⋯ → Retry deployment**（或往 `main` 再 push 一個 commit）。
 
 ### B1. 回頭更新後端 CORS
 
+後端部署時 `CORS_ORIGINS` 已含 `https://ridehub-2h3.pages.dev`。
+若之後網域有變或要加自訂網域：
+
 ```bash
 gcloud run services update ridehub-api --region asia-east1 \
-  --update-env-vars "CORS_ORIGINS=https://ridehub-xxx.pages.dev"
+  --update-env-vars "CORS_ORIGINS=https://ridehub-2h3.pages.dev,https://app.yourdomain.com"
 ```
 
-多個來源用逗號分隔，例如同時保留自訂網域：
-`CORS_ORIGINS=https://ridehub-xxx.pages.dev,https://app.yourdomain.com`
+（Console 操作：Cloud Run → `ridehub-api` → 編輯並部署新的修訂版本 → 變數與密鑰）
 
 ---
 
 ## C. 端到端驗收
 
-1. 開 `https://ridehub-xxx.pages.dev/signup` 註冊一個司機
+1. 開 <https://ridehub-2h3.pages.dev/signup> 註冊一個司機
 2. 設定服務資訊、營運時間，複製專屬連結
 3. 用無痕視窗開該連結 → 送出一筆預約
 4. 回司機後台 → 接受 → 客人狀態頁重新整理應顯示「已接受」+ 司機電話
