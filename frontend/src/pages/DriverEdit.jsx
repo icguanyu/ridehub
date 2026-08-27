@@ -16,7 +16,8 @@ import {
 import { QRCodeCanvas } from 'qrcode.react';
 import { useForm } from '@mantine/form';
 import { useCurrentDriverId } from '@/hooks/useAuth';
-import { useDriver, useUpdateDriver, useBindLine } from '@/hooks/useDriver';
+import { useDriver, useUpdateDriver } from '@/hooks/useDriver';
+import LineBindingCard from '@/components/LineBindingCard';
 import Spinner from '@/components/Spinner';
 import { notifyOk, notifyErr } from '@/lib/notify';
 
@@ -26,7 +27,6 @@ export default function DriverEdit() {
   const driverId = useCurrentDriverId();
   const { data, isLoading } = useDriver(driverId);
   const update = useUpdateDriver(driverId);
-  const bindLine = useBindLine(driverId);
 
   const form = useForm({
     initialValues: {
@@ -38,11 +38,6 @@ export default function DriverEdit() {
       basePrice: '',
       pricePerKm: '',
     },
-  });
-
-  const lineForm = useForm({
-    initialValues: { lineId: '' },
-    validate: { lineId: (v) => (v.trim() ? null : '請輸入 LINE User ID') },
   });
 
   useEffect(() => {
@@ -57,7 +52,6 @@ export default function DriverEdit() {
         pricePerKm: data.pricePerKm ?? '',
       });
       form.resetDirty();
-      lineForm.setValues({ lineId: data.lineId ?? '' });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data]);
@@ -76,13 +70,6 @@ export default function DriverEdit() {
     };
     update.mutate(patch, {
       onSuccess: () => notifyOk('服務資訊已更新'),
-      onError: (e) => notifyErr(e),
-    });
-  });
-
-  const submitLine = lineForm.onSubmit((v) => {
-    bindLine.mutate(v.lineId.trim(), {
-      onSuccess: () => notifyOk('LINE 已綁定'),
       onError: (e) => notifyErr(e),
     });
   });
@@ -136,24 +123,7 @@ export default function DriverEdit() {
         </form>
       </Card>
 
-      <Card withBorder radius="md" p="lg">
-        <form onSubmit={submitLine}>
-          <Stack>
-            <Title order={4}>LINE 通知</Title>
-            <Text size="sm" c="dimmed">
-              綁定後，新預約會即時推播到你的 LINE。User ID 可從 LINE Official Account Manager 取得。
-            </Text>
-            <TextInput
-              label="LINE User ID"
-              placeholder="U1234567890abcdef..."
-              {...lineForm.getInputProps('lineId')}
-            />
-            <Button type="submit" loading={bindLine.isPending} variant="light">
-              綁定 LINE
-            </Button>
-          </Stack>
-        </form>
-      </Card>
+      <LineBindingCard driverId={driverId} />
 
       <Card withBorder radius="md" p="lg">
         <Stack gap="xs">

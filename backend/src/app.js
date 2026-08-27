@@ -33,7 +33,15 @@ export function createApp() {
       credentials: true,
     }),
   );
-  app.use(express.json({ limit: '1mb' }));
+  // 保留原始 body 供 LINE webhook 簽章驗證
+  app.use(
+    express.json({
+      limit: '1mb',
+      verify: (req, _res, buf) => {
+        if (req.originalUrl === '/api/v1/line/webhook') req.rawBody = buf;
+      },
+    }),
+  );
   app.use(express.urlencoded({ extended: true }));
   app.use(morgan(config.isProd ? 'combined' : 'dev'));
 

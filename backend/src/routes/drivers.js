@@ -21,6 +21,7 @@ import {
   getStatsValidator,
   getPublicProfile,
 } from '../controllers/driverController.js';
+import { createLinkCode } from '../controllers/lineController.js';
 
 export const driversRouter = Router();
 
@@ -38,6 +39,7 @@ driversRouter.get('/:driverId', getMe);
 driversRouter.put('/:driverId', updateProfileValidator, updateProfile);
 
 driversRouter.post('/:driverId/bind-line', bindLineValidator, bindLine);
+driversRouter.post('/:driverId/line/link-code', createLinkCode);
 
 driversRouter.get('/:driverId/availability', getAvailabilityHandler);
 driversRouter.put('/:driverId/availability', updateAvailabilityValidator, updateAvailabilityHandler);

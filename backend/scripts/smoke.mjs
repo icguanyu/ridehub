@@ -10,6 +10,7 @@
  *   npm run smoke  (from backend/)
  *   API_BASE=http://localhost:3000/api/v1 npm run smoke  (from backend/)
  */
+import crypto from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
 import WebSocket from 'ws';
 
@@ -271,6 +272,44 @@ async function run() {
   const stats2 = await req('GET', `/drivers/${driverId}/stats?month=${tomorrow.slice(0, 7)}`, { token: driverToken });
   check('統計2：成交 2（accept + quote-accept）', stats2.body?.acceptedBookings === 2, `got ${stats2.body?.acceptedBookings}`);
   check('統計2：收入 450 + 777 = 1227', stats2.body?.totalRevenue === 1227, `got ${stats2.body?.totalRevenue}`);
+
+  // ── LINE 綁定碼 + webhook（需 migration 0004 + LINE_CHANNEL_SECRET）──
+  const codeRes = await req('POST', `/drivers/${driverId}/line/link-code`, { token: driverToken });
+  if (codeRes.status === 200 && process.env.LINE_CHANNEL_SECRET) {
+    check('產生綁定碼 200 / 6 碼', /^[A-Z2-9]{6}$/.test(codeRes.body?.code || ''), `got ${codeRes.body?.code}`);
+
+    const fakeUser = 'Usmoketestwebhook00000000000000';
+    const evt = JSON.stringify({
+      events: [
+        {
+          type: 'message',
+          replyToken: '00000000000000000000000000000000',
+          source: { type: 'user', userId: fakeUser },
+          message: { type: 'text', text: codeRes.body.code },
+        },
+      ],
+    });
+    const sig = crypto.createHmac('sha256', process.env.LINE_CHANNEL_SECRET).update(evt).digest('base64');
+    const wh = await fetch(`${API}/line/webhook`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-line-signature': sig },
+      body: evt,
+    });
+    check('webhook 正確簽章回 200', wh.status === 200, `got ${wh.status}`);
+
+    const whBad = await fetch(`${API}/line/webhook`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-line-signature': 'bad' },
+      body: evt,
+    });
+    check('webhook 錯誤簽章回 401', whBad.status === 401);
+
+    await new Promise((r) => setTimeout(r, 1200)); // 等事件非同步處理
+    const after = await req('GET', `/drivers/${driverId}`, { token: driverToken });
+    check('webhook 依綁定碼綁定 line_id', after.body?.lineId === fakeUser, `got ${after.body?.lineId}`);
+  } else {
+    results.push('  ⏭  LINE 綁定碼 / webhook 測試略過（需 migration 0004 + LINE_CHANNEL_SECRET）');
+  }
 
   function baseBooking(over = {}) {
     return {

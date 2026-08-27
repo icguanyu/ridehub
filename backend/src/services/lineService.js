@@ -3,29 +3,38 @@ import { config } from '../config/index.js';
 import { logger } from '../utils/logger.js';
 
 const PUSH_URL = 'https://api.line.me/v2/bot/message/push';
+const REPLY_URL = 'https://api.line.me/v2/bot/message/reply';
 
-// 回傳 { skipped } 或 { ok } ；失敗則 throw。
+async function callLine(url, payload) {
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${config.line.accessToken}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    throw new Error(`LINE API ${res.status}: ${body}`);
+  }
+  return { ok: true };
+}
+
+// 主動推播。回傳 { skipped } 或 { ok } ；失敗則 throw。
 export async function pushText(toLineId, text) {
   if (!config.line.enabled) {
     logger.warn('LINE 未設定，略過推播');
     return { skipped: true };
   }
   if (!toLineId) return { skipped: true };
+  return callLine(PUSH_URL, { to: toLineId, messages: [{ type: 'text', text }] });
+}
 
-  const res = await fetch(PUSH_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${config.line.accessToken}`,
-    },
-    body: JSON.stringify({ to: toLineId, messages: [{ type: 'text', text }] }),
-  });
-
-  if (!res.ok) {
-    const body = await res.text().catch(() => '');
-    throw new Error(`LINE push 失敗 ${res.status}: ${body}`);
-  }
-  return { ok: true };
+// 回覆 webhook 事件（用 replyToken，免費且不計入推播額度）
+export async function replyText(replyToken, text) {
+  if (!config.line.enabled || !replyToken) return { skipped: true };
+  return callLine(REPLY_URL, { replyToken, messages: [{ type: 'text', text }] });
 }
 
 // ── 訊息樣板 ─────────────────────────

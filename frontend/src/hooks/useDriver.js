@@ -39,6 +39,15 @@ export function useBindLine(driverId) {
   });
 }
 
+export function useCreateLineLinkCode(driverId) {
+  return useMutation({
+    mutationFn: async () => {
+      const { data } = await api.post(`/drivers/${driverId}/line/link-code`);
+      return data; // { code, expiresAt, ttlMinutes, addFriendUrl, instructions }
+    },
+  });
+}
+
 export function useAvailability(driverId) {
   return useQuery({
     queryKey: ['availability', driverId],

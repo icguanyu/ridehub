@@ -16,6 +16,7 @@ const schema = z.object({
 
   LINE_CHANNEL_ACCESS_TOKEN: z.string().optional().default(''),
   LINE_CHANNEL_SECRET: z.string().optional().default(''),
+  LINE_ADD_FRIEND_URL: z.string().optional().default(''), // 官方帳號加好友連結（lin.ee / line.me）
 
   TWILIO_ACCOUNT_SID: z.string().optional().default(''),
   TWILIO_AUTH_TOKEN: z.string().optional().default(''),
@@ -55,8 +56,12 @@ export const config = {
   line: {
     accessToken: env.LINE_CHANNEL_ACCESS_TOKEN,
     channelSecret: env.LINE_CHANNEL_SECRET,
+    addFriendUrl: env.LINE_ADD_FRIEND_URL,
     get enabled() {
       return Boolean(env.LINE_CHANNEL_ACCESS_TOKEN);
+    },
+    get webhookEnabled() {
+      return Boolean(env.LINE_CHANNEL_SECRET);
     },
   },
 

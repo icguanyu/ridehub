@@ -19,6 +19,7 @@ tags:
   - name: Auth
   - name: Driver
   - name: Booking
+  - name: Line
 
 security: []
 
@@ -223,6 +224,32 @@ paths:
                 type: object
                 properties:
                   success: { type: boolean, example: true }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /drivers/{driverId}/line/link-code:
+    post:
+      tags: [Driver]
+      summary: 產生 LINE 綁定碼（本人）
+      description: |
+        回傳一組 6 碼、30 分鐘有效的綁定碼。司機加官方帳號好友後把此碼傳給它，
+        webhook 收到即把該司機的 line_id 綁定。
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/DriverId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code: { type: string, example: 'A7K9QP' }
+                  expiresAt: { type: string, format: date-time }
+                  ttlMinutes: { type: integer, example: 30 }
+                  addFriendUrl: { type: string, nullable: true }
+                  instructions: { type: string }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
 
@@ -621,6 +648,19 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Error' }
+
+  /line/webhook:
+    post:
+      tags: [Line]
+      summary: LINE Messaging API webhook（供 LINE 平台呼叫）
+      description: |
+        非供前端使用。以 `x-line-signature`（HMAC-SHA256 + channel secret）驗證，
+        驗證失敗回 401，其餘一律回 200。目前處理：
+        - `follow`：回覆歡迎與綁定說明
+        - `message`（text）：把內容當綁定碼比對，成功則綁定司機並回覆確認
+      responses:
+        '200': { description: 已接收（LINE 平台驗證亦回此） }
+        '401': { description: 簽章驗證失敗 }
 
 components:
   securitySchemes:

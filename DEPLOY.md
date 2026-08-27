@@ -115,16 +115,56 @@ gcloud run services update "$SERVICE" --region "$REGION" \
   --update-env-vars "CORS_ORIGINS=https://你的-pages-網域"
 ```
 
-### A5.（選用）加 LINE / SMS 金鑰
+### A5. 啟用 LINE 通知 + webhook
 
-拿到 LINE / Twilio 金鑰後：
+#### 1) 先套用 migration 0004（綁定碼欄位）
+
+Supabase SQL Editor 執行 [`supabase/migrations/20260827000004_line_link_code.sql`](supabase/migrations/20260827000004_line_link_code.sql)。
+
+#### 2) 建立 secrets 並掛到 Cloud Run
+
 ```bash
-printf '%s' "LINE Channel Access Token" | gcloud secrets create LINE_CHANNEL_ACCESS_TOKEN --data-file=-
-printf '%s' "LINE Channel Secret"       | gcloud secrets create LINE_CHANNEL_SECRET --data-file=-
-# 記得跑 A1 的 add-iam-policy-binding 授權這兩個新 secret
+printf '%s' "你的 Channel Access Token" | gcloud secrets create LINE_CHANNEL_ACCESS_TOKEN --data-file=-
+printf '%s' "你的 Channel Secret"       | gcloud secrets create LINE_CHANNEL_SECRET --data-file=-
+
+# 授權執行身分讀取（同 A1）
+for S in LINE_CHANNEL_ACCESS_TOKEN LINE_CHANNEL_SECRET; do
+  gcloud secrets add-iam-policy-binding "$S" \
+    --member="serviceAccount:${RUNTIME_SA}" --role="roles/secretmanager.secretAccessor"
+done
 
 gcloud run services update "$SERVICE" --region "$REGION" \
-  --update-secrets "LINE_CHANNEL_ACCESS_TOKEN=LINE_CHANNEL_ACCESS_TOKEN:latest,LINE_CHANNEL_SECRET=LINE_CHANNEL_SECRET:latest"
+  --update-secrets "LINE_CHANNEL_ACCESS_TOKEN=LINE_CHANNEL_ACCESS_TOKEN:latest,LINE_CHANNEL_SECRET=LINE_CHANNEL_SECRET:latest" \
+  --update-env-vars "LINE_ADD_FRIEND_URL=https://lin.ee/你的官方帳號連結"
+```
+
+`LINE_ADD_FRIEND_URL` 非機密，用一般環境變數即可（顯示在司機綁定畫面的加好友 QR / 連結）。
+
+#### 3) LINE Developers Console 設定 webhook
+
+Messaging API channel → **Messaging API** 分頁：
+
+| 項目 | 值 |
+|------|-----|
+| Webhook URL | `https://ridehub-api-239173126142.asia-east1.run.app/api/v1/line/webhook` |
+| Use webhook | **開啟** |
+| 按 **Verify** | 應顯示 Success（回 200）|
+| Auto-reply messages | **關閉**（避免和我們的回覆重複）|
+| Greeting messages | 可留著或關閉 |
+
+#### 4) 司機綁定流程（設定完成後）
+
+司機後台 → 服務資訊 → LINE 通知 → **產生綁定碼** → 加官方帳號好友 → 把 6 碼傳給官方帳號 → 自動綁定，之後新預約即時推播。
+
+#### （選用）Twilio 簡訊備援
+
+```bash
+printf '%s' "SID"   | gcloud secrets create TWILIO_ACCOUNT_SID --data-file=-
+printf '%s' "TOKEN" | gcloud secrets create TWILIO_AUTH_TOKEN --data-file=-
+# 一樣跑 add-iam-policy-binding，然後：
+gcloud run services update "$SERVICE" --region "$REGION" \
+  --update-secrets "TWILIO_ACCOUNT_SID=TWILIO_ACCOUNT_SID:latest,TWILIO_AUTH_TOKEN=TWILIO_AUTH_TOKEN:latest" \
+  --update-env-vars "TWILIO_PHONE_NUMBER=+886..."
 ```
 
 ---
