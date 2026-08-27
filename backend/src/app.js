@@ -6,6 +6,7 @@ import morgan from 'morgan';
 import { config } from './config/index.js';
 import { apiRouter } from './routes/index.js';
 import { notFound, errorHandler } from './middlewares/errorHandler.js';
+import { makeCorsOrigin } from './utils/corsOrigin.js';
 
 export function createApp() {
   const app = express();
@@ -13,7 +14,7 @@ export function createApp() {
   app.use(helmet());
   app.use(
     cors({
-      origin: config.corsOrigins.length ? config.corsOrigins : true,
+      origin: config.corsOrigins.length ? makeCorsOrigin(config.corsOrigins) : true,
       credentials: true,
     }),
   );
