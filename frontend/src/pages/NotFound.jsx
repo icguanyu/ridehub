@@ -1,13 +1,18 @@
 import { Link } from 'react-router-dom';
+import { Center, Stack, Text, Button } from '@mantine/core';
 
 export default function NotFound() {
   return (
-    <div className="mx-auto max-w-md px-4 py-20 text-center">
-      <div className="text-5xl font-bold text-slate-300">404</div>
-      <p className="mt-3 text-slate-600">找不到這個頁面</p>
-      <Link to="/" className="btn-primary mt-6">
-        回首頁
-      </Link>
-    </div>
+    <Center mih="70vh" px="md">
+      <Stack align="center" gap="xs">
+        <Text fw={700} size={48} c="gray.4">
+          404
+        </Text>
+        <Text c="dimmed">找不到這個頁面</Text>
+        <Button component={Link} to="/" mt="md">
+          回首頁
+        </Button>
+      </Stack>
+    </Center>
   );
 }
