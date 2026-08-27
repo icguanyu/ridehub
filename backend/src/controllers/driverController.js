@@ -13,7 +13,7 @@ import {
 } from '../services/driverService.js';
 import { listDriverBookings } from '../services/bookingService.js';
 import { getDriverStats } from '../services/statsService.js';
-import { driverPrivate } from '../serializers/driver.js';
+import { driverPrivate, driverPublic } from '../serializers/driver.js';
 import { bookingItem } from '../serializers/booking.js';
 
 const monthParam = z
@@ -25,6 +25,12 @@ const monthParam = z
 export const getMe = asyncHandler(async (req, res) => {
   const driver = await getDriverById(req.params.driverId);
   res.json(driverPrivate(driver));
+});
+
+// ── GET /drivers/:driverId/public（無需登入）──
+export const getPublicProfile = asyncHandler(async (req, res) => {
+  const driver = await getDriverById(req.params.driverId);
+  res.json(driverPublic(driver));
 });
 
 // ── PUT /drivers/:driverId ────────────

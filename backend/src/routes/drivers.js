@@ -19,6 +19,7 @@ import {
   listBookingsValidator,
   getStats,
   getStatsValidator,
+  getPublicProfile,
 } from '../controllers/driverController.js';
 
 export const driversRouter = Router();
@@ -26,6 +27,9 @@ export const driversRouter = Router();
 // ── 認證（公開）──────────────────────
 driversRouter.post('/auth/register', registerValidator, register);
 driversRouter.post('/auth/login', loginValidator, login);
+
+// ── 公開：客人端顯示司機資訊（須在下方 auth 守衛之前）──
+driversRouter.get('/:driverId/public', getPublicProfile);
 
 // ── 以下皆需登入，且只能操作自己的 driverId ──
 driversRouter.use('/:driverId', requireDriverAuth, requireSelf);

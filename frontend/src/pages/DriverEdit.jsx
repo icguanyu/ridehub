@@ -9,10 +9,11 @@ import {
   Button,
   Group,
   Select,
-  Divider,
   Text,
   CopyButton,
+  Center,
 } from '@mantine/core';
+import { QRCodeCanvas } from 'qrcode.react';
 import { useForm } from '@mantine/form';
 import { useCurrentDriverId } from '@/hooks/useAuth';
 import { useDriver, useUpdateDriver, useBindLine } from '@/hooks/useDriver';
@@ -170,10 +171,14 @@ export default function DriverEdit() {
               )}
             </CopyButton>
           </Group>
-          <Divider my="xs" />
-          <Text size="xs" c="dimmed">
-            QR Code 產生會在 Step 9 的客人端頁面一併加入。
-          </Text>
+          <Center mt="sm">
+            <Stack align="center" gap={4}>
+              <QRCodeCanvas value={shareUrl} size={160} />
+              <Text size="xs" c="dimmed">
+                客人掃碼即可預約
+              </Text>
+            </Stack>
+          </Center>
         </Stack>
       </Card>
     </Stack>
