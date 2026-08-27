@@ -1,0 +1,59 @@
+import { Navigate, Route, Routes } from 'react-router-dom';
+import ProtectedRoute from '@/components/ProtectedRoute';
+import DashboardLayout from '@/components/DashboardLayout';
+
+import DriverLogin from '@/pages/auth/DriverLogin';
+import DriverSignup from '@/pages/auth/DriverSignup';
+import DriverDashboard from '@/pages/DriverDashboard';
+import DriverEdit from '@/pages/DriverEdit';
+import DriverAvailability from '@/pages/DriverAvailability';
+import BookingList from '@/pages/BookingList';
+import BookingDetail from '@/pages/BookingDetail';
+import DriverPublic from '@/pages/DriverPublic';
+import CustomerBooking from '@/pages/CustomerBooking';
+import BookingConfirmation from '@/pages/BookingConfirmation';
+import NotFound from '@/pages/NotFound';
+
+function CenteredPage({ children }) {
+  return (
+    <div className="flex min-h-screen items-center justify-center px-4">
+      <div className="w-full max-w-sm">
+        <div className="mb-6 text-center text-2xl font-bold text-brand-600">RideHub</div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+
+      <Route path="/login" element={<CenteredPage><DriverLogin /></CenteredPage>} />
+      <Route path="/signup" element={<CenteredPage><DriverSignup /></CenteredPage>} />
+
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<DriverDashboard />} />
+        <Route path="bookings" element={<BookingList />} />
+        <Route path="bookings/:bookingId" element={<BookingDetail />} />
+        <Route path="edit" element={<DriverEdit />} />
+        <Route path="availability" element={<DriverAvailability />} />
+      </Route>
+
+      {/* 客人端（無需登入）*/}
+      <Route path="/driver/:driverId" element={<DriverPublic />} />
+      <Route path="/driver/:driverId/book" element={<CustomerBooking />} />
+      <Route path="/booking/:bookingId" element={<BookingConfirmation />} />
+
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+}
