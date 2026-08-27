@@ -1,5 +1,8 @@
 // 把 DB 的 snake_case 欄位轉成 API 的 camelCase。
 
+// Postgres TIME "HH:MM:SS" → "HH:MM"
+const hhmm = (t) => (t ? String(t).slice(0, 5) : null);
+
 export function driverSummary(row) {
   return { id: row.id, name: row.name, phone: row.phone };
 }
@@ -17,8 +20,8 @@ export function driverPrivate(row) {
     carPlate: row.car_plate,
     basePrice: row.base_price,
     pricePerKm: row.price_per_km,
-    operatingHoursStart: row.operating_hours_start,
-    operatingHoursEnd: row.operating_hours_end,
+    operatingHoursStart: hhmm(row.operating_hours_start),
+    operatingHoursEnd: hhmm(row.operating_hours_end),
     maxDailyBookings: row.max_daily_bookings,
     isVerified: row.is_verified,
     createdAt: row.created_at,
@@ -37,8 +40,8 @@ export function driverPublic(row) {
     carPlate: row.car_plate,
     basePrice: row.base_price,
     pricePerKm: row.price_per_km,
-    operatingHoursStart: row.operating_hours_start,
-    operatingHoursEnd: row.operating_hours_end,
+    operatingHoursStart: hhmm(row.operating_hours_start),
+    operatingHoursEnd: hhmm(row.operating_hours_end),
     isVerified: row.is_verified,
   };
 }

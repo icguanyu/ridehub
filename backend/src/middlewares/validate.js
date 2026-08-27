@@ -12,7 +12,10 @@ export const validate = (schemas) => (req, _res, next) => {
     next();
   } catch (err) {
     if (err?.name === 'ZodError') {
-      return next(ApiError.badRequest('欄位驗證失敗', err.flatten().fieldErrors));
+      const flat = err.flatten();
+      const details = { ...flat.fieldErrors };
+      if (flat.formErrors.length) details._ = flat.formErrors;
+      return next(ApiError.badRequest('欄位驗證失敗', details));
     }
     next(err);
   }
