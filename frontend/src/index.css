@@ -1,3 +1,7 @@
+:root {
+  --mantine-color-body: #faf7eb;
+}
+
 html,
 body,
 #root {
@@ -9,5 +13,5 @@ body {
   font-family:
     system-ui, -apple-system, 'Segoe UI', 'Noto Sans TC', 'PingFang TC',
     'Microsoft JhengHei', sans-serif;
-  background: var(--mantine-color-gray-0);
+  background: #faf7eb;
 }

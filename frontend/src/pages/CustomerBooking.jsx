@@ -93,7 +93,7 @@ export default function CustomerBooking() {
   return (
     <Center mih="100vh" px="md" py="xl">
       <Box w="100%" maw={460}>
-        <Text ta="center" fw={700} size="xl" c="blue.6" mb="lg">
+        <Text ta="center" fw={700} size="xl" c="brand.7" mb="lg">
           RideHub
         </Text>
         <Card withBorder shadow="sm" radius="md" p="lg">
@@ -154,7 +154,7 @@ export default function CustomerBooking() {
               />
 
               {priceBreakdown && (
-                <Card bg="gray.0" p="sm" radius="sm">
+                <Card bg="brand.0" p="sm" radius="sm" withBorder>
                   <Group justify="space-between">
                     <Text size="sm" c="dimmed">
                       基礎價格

@@ -28,7 +28,7 @@ export default function DashboardLayout() {
       <AppShell.Header>
         <Group h="100%" px="md" justify="space-between">
           <Group gap="xs">
-            <Text fw={700} c="blue.6">
+            <Text fw={700} c="brand.7">
               RideHub
             </Text>
             <Text size="xs" c="dimmed">

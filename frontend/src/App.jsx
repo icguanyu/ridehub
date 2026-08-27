@@ -20,7 +20,7 @@ function CenteredPage({ children }) {
     <Center mih="100vh" px="md">
       <Box w="100%" maw={380}>
         <Stack gap="lg">
-          <Text ta="center" fw={700} size="xl" c="blue.6">
+          <Text ta="center" fw={700} size="xl" c="brand.7">
             RideHub
           </Text>
           {children}

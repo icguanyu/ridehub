@@ -48,7 +48,7 @@ export default function DriverDashboard() {
   return (
     <Stack gap="lg">
       {needsSetup && (
-        <Alert color="yellow" title="完成基本設定">
+        <Alert color="sun" title="完成基本設定">
           <Group justify="space-between">
             <Text size="sm">建議先填寫定價、營運時間並綁定 LINE，才能正常收單。</Text>
             <Button size="xs" component={Link} to="/dashboard/edit">
