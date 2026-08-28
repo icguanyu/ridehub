@@ -37,6 +37,7 @@ export default function DriverEdit() {
       carPlate: '',
       basePrice: '',
       pricePerKm: '',
+      lineDisplayId: '',
     },
   });
 
@@ -50,6 +51,7 @@ export default function DriverEdit() {
         carPlate: data.carPlate ?? '',
         basePrice: data.basePrice ?? '',
         pricePerKm: data.pricePerKm ?? '',
+        lineDisplayId: data.lineDisplayId ?? '',
       });
       form.resetDirty();
     }
@@ -67,6 +69,7 @@ export default function DriverEdit() {
       carPlate: v.carPlate || null,
       basePrice: v.basePrice === '' ? null : Number(v.basePrice),
       pricePerKm: v.pricePerKm === '' ? null : Number(v.pricePerKm),
+      lineDisplayId: v.lineDisplayId.trim() || null,
     };
     update.mutate(patch, {
       onSuccess: () => notifyOk('服務資訊已更新'),
@@ -116,6 +119,11 @@ export default function DriverEdit() {
                 {...form.getInputProps('pricePerKm')}
               />
             </Group>
+            <TextInput
+              label="LINE ID（選填，客人預約成功後可加好友）"
+              placeholder="例如：@mylineid 或 mylineid"
+              {...form.getInputProps('lineDisplayId')}
+            />
             <Button type="submit" loading={update.isPending}>
               儲存
             </Button>

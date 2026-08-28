@@ -17,6 +17,7 @@ export function driverPrivate(row) {
     carPlate: row.car_plate,
     basePrice: row.base_price,
     pricePerKm: row.price_per_km,
+    lineDisplayId: row.line_display_id ?? null,
     maxDailyBookings: row.max_daily_bookings,
     isVerified: row.is_verified,
     createdAt: row.created_at,

@@ -178,10 +178,28 @@ export default function BookingConfirmation() {
                   <Text size="sm" c="#DCE9DC" className="mono">
                     電話：{b.driverPhone}
                   </Text>
-                  {b.driverLineId && (
-                    <Text size="sm" c="#DCE9DC">
-                      LINE：{b.driverLineId}
-                    </Text>
+                  {b.driverLineDisplayId && (
+                    <Group gap={8} align="center">
+                      <Text size="sm" c="#DCE9DC">
+                        LINE：{b.driverLineDisplayId}
+                      </Text>
+                      <Button
+                        component="a"
+                        href={
+                          b.driverLineDisplayId.startsWith('@')
+                            ? `https://line.me/R/ti/p/${encodeURIComponent(b.driverLineDisplayId)}`
+                            : `https://line.me/ti/p/~${encodeURIComponent(b.driverLineDisplayId)}`
+                        }
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        size="xs"
+                        variant="white"
+                        color="dark"
+                        px={10}
+                      >
+                        加好友
+                      </Button>
+                    </Group>
                   )}
                 </Stack>
               </Card>

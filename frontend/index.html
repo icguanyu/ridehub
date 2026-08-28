@@ -13,8 +13,33 @@
       rel="stylesheet"
     />
     <title>RideHub 接駁預約</title>
+    <style>
+      #splash {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        overflow: hidden;
+        transition: opacity 0.35s ease;
+      }
+      #splash.done {
+        opacity: 0;
+        pointer-events: none;
+      }
+      #splash img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+      }
+    </style>
   </head>
   <body>
+    <div id="splash">
+      <picture>
+        <source media="(min-width: 768px)" srcset="/splash-pc.jpg" />
+        <img src="/splash-mobile.jpg" alt="" />
+      </picture>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

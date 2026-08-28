@@ -83,7 +83,7 @@ export function bookingWithDriver(row) {
     rejectedReason: row.rejected_reason,
     driverName: d.name ?? null,
     driverPhone: revealDriver ? d.phone ?? null : null,
-    driverLineId: revealDriver ? d.line_id ?? null : null,
+    driverLineDisplayId: revealDriver ? d.line_display_id ?? null : null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

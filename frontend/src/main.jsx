@@ -26,3 +26,14 @@ createRoot(document.getElementById('root')).render(
     </MantineProvider>
   </StrictMode>,
 );
+
+// 等 React 完成第一次繪製後淡出 splash
+const splash = document.getElementById('splash');
+if (splash) {
+  requestAnimationFrame(() =>
+    requestAnimationFrame(() => {
+      splash.classList.add('done');
+      splash.addEventListener('transitionend', () => splash.remove(), { once: true });
+    }),
+  );
+}
