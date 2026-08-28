@@ -16,13 +16,13 @@ import TripRoute, { TripTypeBadge } from '@/components/TripRoute';
 import RejectBookingModal from '@/components/RejectBookingModal';
 import QuoteModal from '@/components/QuoteModal';
 import Spinner from '@/components/Spinner';
-import { fmtMoney } from '@/lib/format';
+import { fmtMoney, fmtDate, fmtDateFull } from '@/lib/format';
 import { notifyOk, notifyErr } from '@/lib/notify';
 
 const OUTSTANDING = ['pending', 'quoted'];
 
 function todayISO() {
-  return new Date().toISOString().slice(0, 10);
+  return new Date().toLocaleDateString('sv-SE'); // 本地時區 YYYY-MM-DD
 }
 
 function minutesUntil(date, time) {
@@ -45,6 +45,7 @@ function TripCard({ booking, showNav, showContact, showComplete, onComplete, bus
   const badge = getCountdownBadge(b);
   const time = (b.bookingTime ?? '').slice(0, 5);
   const isRoundTrip = b.tripType === 'round_trip';
+  const isToday = b.bookingDate === todayISO();
   const hasActions = showNav || showContact || showComplete;
 
   const openNav = () => {
@@ -56,12 +57,19 @@ function TripCard({ booking, showNav, showContact, showComplete, onComplete, bus
     <Box style={{ border: '1px solid #E4E0D0', borderRadius: 16, padding: '14px 16px', background: '#FFFFFF' }}>
       <Group justify="space-between" mb={8} wrap="nowrap">
         <Group gap={8} wrap="nowrap" align="center">
-          <Text
-            fw={700}
-            style={{ fontFamily: "'Outfit', sans-serif", fontSize: 22, letterSpacing: '-0.02em', lineHeight: 1 }}
-          >
-            {time}
-          </Text>
+          <div>
+            {!isToday && (
+              <Text size="xs" c="dimmed" style={{ fontWeight: 600, lineHeight: 1.2 }}>
+                {fmtDate(b.bookingDate)}
+              </Text>
+            )}
+            <Text
+              fw={700}
+              style={{ fontFamily: "'Outfit', sans-serif", fontSize: 22, letterSpacing: '-0.02em', lineHeight: 1 }}
+            >
+              {time}
+            </Text>
+          </div>
           {isRoundTrip && <TripTypeBadge tripType={b.tripType} />}
         </Group>
         <Badge color={badge.color} variant={badge.variant} size="md">
@@ -204,6 +212,18 @@ export default function DriverDashboard() {
 
   return (
     <Stack gap="md">
+      <Text
+        fw={700}
+        style={{
+          fontFamily: "'Outfit', sans-serif",
+          fontSize: 20,
+          letterSpacing: '-0.01em',
+          color: '#0F3D2E',
+        }}
+      >
+        {fmtDateFull(t)}
+      </Text>
+
       {needsSetup && (
         <Alert color="sun" title="完成基本設定">
           <Group justify="space-between">
