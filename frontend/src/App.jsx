@@ -1,7 +1,8 @@
-import { Route, Routes } from 'react-router-dom';
+import { Route, Routes, Outlet } from 'react-router-dom';
 import { Center, Stack, Box } from '@mantine/core';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import DashboardLayout from '@/components/DashboardLayout';
+import SiteFooter from '@/components/SiteFooter';
 import Wordmark from '@/components/Wordmark';
 
 import DriverLogin from '@/pages/auth/DriverLogin';
@@ -15,6 +16,8 @@ import DriverPublic from '@/pages/DriverPublic';
 import CustomerBooking from '@/pages/CustomerBooking';
 import BookingConfirmation from '@/pages/BookingConfirmation';
 import HomePage from '@/pages/HomePage';
+import PrivacyPolicy from '@/pages/legal/PrivacyPolicy';
+import Disclaimer from '@/pages/legal/Disclaimer';
 import NotFound from '@/pages/NotFound';
 
 function CenteredPage({ children }) {
@@ -30,13 +33,36 @@ function CenteredPage({ children }) {
   );
 }
 
+// 公開頁面共用外框：內容 + 全站底部法律連結
+function PublicLayout() {
+  return (
+    <>
+      <Outlet />
+      <SiteFooter />
+    </>
+  );
+}
+
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<HomePage />} />
+      <Route element={<PublicLayout />}>
+        <Route path="/" element={<HomePage />} />
 
-      <Route path="/login" element={<CenteredPage><DriverLogin /></CenteredPage>} />
-      <Route path="/signup" element={<CenteredPage><DriverSignup /></CenteredPage>} />
+        <Route path="/login" element={<CenteredPage><DriverLogin /></CenteredPage>} />
+        <Route path="/signup" element={<CenteredPage><DriverSignup /></CenteredPage>} />
+
+        {/* 客人端（無需登入）*/}
+        <Route path="/driver/:driverId" element={<DriverPublic />} />
+        <Route path="/driver/:driverId/book" element={<CustomerBooking />} />
+        <Route path="/booking/:bookingId" element={<BookingConfirmation />} />
+
+        {/* 法律頁 */}
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/disclaimer" element={<Disclaimer />} />
+
+        <Route path="*" element={<NotFound />} />
+      </Route>
 
       <Route
         path="/dashboard"
@@ -52,13 +78,6 @@ export default function App() {
         <Route path="edit" element={<DriverEdit />} />
         <Route path="availability" element={<DriverAvailability />} />
       </Route>
-
-      {/* 客人端（無需登入）*/}
-      <Route path="/driver/:driverId" element={<DriverPublic />} />
-      <Route path="/driver/:driverId/book" element={<CustomerBooking />} />
-      <Route path="/booking/:bookingId" element={<BookingConfirmation />} />
-
-      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }

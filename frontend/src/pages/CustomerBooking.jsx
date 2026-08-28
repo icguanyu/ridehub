@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   Center,
   Box,
@@ -262,6 +262,17 @@ export default function CustomerBooking() {
               <Button type="submit" size="md" loading={createBooking.isPending} fullWidth>
                 確認預約
               </Button>
+              <Text size="xs" c="dimmed" ta="center">
+                點擊「確認預約」即表示您已閱讀並同意{' '}
+                <Anchor component={Link} to="/privacy" target="_blank" inherit>
+                  隱私權政策
+                </Anchor>{' '}
+                與{' '}
+                <Anchor component={Link} to="/disclaimer" target="_blank" inherit>
+                  免責聲明
+                </Anchor>
+                。RideHub 僅為媒合平台，不參與交易亦不負責乘車安全。
+              </Text>
               <Anchor
                 size="xs"
                 ta="center"

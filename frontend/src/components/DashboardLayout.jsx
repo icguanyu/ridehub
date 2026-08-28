@@ -1,5 +1,5 @@
-import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { AppShell, Group, UnstyledButton, Text, ActionIcon, Container, Tooltip } from '@mantine/core';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { AppShell, Group, UnstyledButton, Text, ActionIcon, Container, Tooltip, Anchor } from '@mantine/core';
 import { useAuthStore } from '@/store/authStore';
 import Wordmark from '@/components/Wordmark';
 
@@ -124,6 +124,15 @@ export default function DashboardLayout() {
       <AppShell.Main>
         <Container size="sm" px={0}>
           <Outlet />
+          <Group justify="center" gap={10} mt="xl" pt="md" style={{ borderTop: '1px solid #E4E0D0' }}>
+            <Anchor component={Link} to="/privacy" size="xs" c="dimmed">
+              隱私權政策
+            </Anchor>
+            <Text size="xs" c="dimmed">·</Text>
+            <Anchor component={Link} to="/disclaimer" size="xs" c="dimmed">
+              免責聲明
+            </Anchor>
+          </Group>
         </Container>
       </AppShell.Main>
 
