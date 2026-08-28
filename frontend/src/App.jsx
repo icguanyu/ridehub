@@ -1,4 +1,5 @@
-import { Route, Routes, Outlet } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Route, Routes, Outlet, useLocation } from 'react-router-dom';
 import { Center, Stack, Box } from '@mantine/core';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -19,6 +20,12 @@ import HomePage from '@/pages/HomePage';
 import PrivacyPolicy from '@/pages/legal/PrivacyPolicy';
 import Disclaimer from '@/pages/legal/Disclaimer';
 import NotFound from '@/pages/NotFound';
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  return null;
+}
 
 function CenteredPage({ children }) {
   return (
@@ -45,39 +52,42 @@ function PublicLayout() {
 
 export default function App() {
   return (
-    <Routes>
-      <Route element={<PublicLayout />}>
-        <Route path="/" element={<HomePage />} />
+    <>
+      <ScrollToTop />
+      <Routes>
+        <Route element={<PublicLayout />}>
+          <Route path="/" element={<HomePage />} />
 
-        <Route path="/login" element={<CenteredPage><DriverLogin /></CenteredPage>} />
-        <Route path="/signup" element={<CenteredPage><DriverSignup /></CenteredPage>} />
+          <Route path="/login" element={<CenteredPage><DriverLogin /></CenteredPage>} />
+          <Route path="/signup" element={<CenteredPage><DriverSignup /></CenteredPage>} />
 
-        {/* 客人端（無需登入）*/}
-        <Route path="/driver/:driverId" element={<DriverPublic />} />
-        <Route path="/driver/:driverId/book" element={<CustomerBooking />} />
-        <Route path="/booking/:bookingId" element={<BookingConfirmation />} />
+          {/* 客人端（無需登入）*/}
+          <Route path="/driver/:driverId" element={<DriverPublic />} />
+          <Route path="/driver/:driverId/book" element={<CustomerBooking />} />
+          <Route path="/booking/:bookingId" element={<BookingConfirmation />} />
 
-        {/* 法律頁 */}
-        <Route path="/privacy" element={<PrivacyPolicy />} />
-        <Route path="/disclaimer" element={<Disclaimer />} />
+          {/* 法律頁 */}
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/disclaimer" element={<Disclaimer />} />
 
-        <Route path="*" element={<NotFound />} />
-      </Route>
+          <Route path="*" element={<NotFound />} />
+        </Route>
 
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute>
-            <DashboardLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<DriverDashboard />} />
-        <Route path="bookings" element={<BookingList />} />
-        <Route path="bookings/:bookingId" element={<BookingDetail />} />
-        <Route path="edit" element={<DriverEdit />} />
-        <Route path="availability" element={<DriverAvailability />} />
-      </Route>
-    </Routes>
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<DriverDashboard />} />
+          <Route path="bookings" element={<BookingList />} />
+          <Route path="bookings/:bookingId" element={<BookingDetail />} />
+          <Route path="edit" element={<DriverEdit />} />
+          <Route path="availability" element={<DriverAvailability />} />
+        </Route>
+      </Routes>
+    </>
   );
 }

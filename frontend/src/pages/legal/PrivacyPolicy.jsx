@@ -38,7 +38,7 @@ export default function PrivacyPolicy() {
 
       <Section heading="想查詢或刪除資料">
         <P>
-          寄信到 <Anchor href="mailto:[聯絡信箱]">[聯絡信箱]</Anchor>，
+          寄信到 <Anchor href="mailto:icguanyu@gmail.com">icguanyu@gmail.com</Anchor>，
           就可以要求查詢、更正或刪除你的資料。刪除後可能就無法繼續使用服務。
         </P>
       </Section>

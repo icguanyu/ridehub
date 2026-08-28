@@ -43,7 +43,7 @@ export default function Disclaimer() {
       </Section>
 
       <Section heading="聯絡我們">
-        <P>有任何問題，來信 [聯絡信箱]。本頁若有更新會直接公告於此。</P>
+        <P>有任何問題，來信 icguanyu@gmail.com。本頁若有更新會直接公告於此。</P>
       </Section>
     </LegalPage>
   );
