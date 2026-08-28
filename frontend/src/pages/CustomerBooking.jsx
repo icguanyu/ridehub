@@ -263,15 +263,16 @@ export default function CustomerBooking() {
                 確認預約
               </Button>
               <Text size="xs" c="dimmed" ta="center">
-                點擊「確認預約」即表示您已閱讀並同意{' '}
-                <Anchor component={Link} to="/privacy" target="_blank" inherit>
-                  隱私權政策
+                送出即表示你了解 RideHub 只是免費媒合工具，乘車安全與費用由你和司機自行負責。
+                詳見{' '}
+                <Anchor component={Link} to="/disclaimer" target="_blank" inherit>
+                  使用須知
                 </Anchor>{' '}
                 與{' '}
-                <Anchor component={Link} to="/disclaimer" target="_blank" inherit>
-                  免責聲明
+                <Anchor component={Link} to="/privacy" target="_blank" inherit>
+                  隱私說明
                 </Anchor>
-                。RideHub 僅為媒合平台，不參與交易亦不負責乘車安全。
+                。
               </Text>
               <Anchor
                 size="xs"

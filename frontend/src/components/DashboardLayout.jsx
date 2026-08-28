@@ -126,11 +126,11 @@ export default function DashboardLayout() {
           <Outlet />
           <Group justify="center" gap={10} mt="xl" pt="md" style={{ borderTop: '1px solid #E4E0D0' }}>
             <Anchor component={Link} to="/privacy" size="xs" c="dimmed">
-              隱私權政策
+              隱私說明
             </Anchor>
             <Text size="xs" c="dimmed">·</Text>
             <Anchor component={Link} to="/disclaimer" size="xs" c="dimmed">
-              免責聲明
+              使用須知
             </Anchor>
           </Group>
         </Container>
