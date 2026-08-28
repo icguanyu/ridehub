@@ -14,6 +14,8 @@ import {
   quoteAccept,
   quoteDecline,
   quoteResponseValidator,
+  cancel,
+  cancelValidator,
   searchValidator,
   searchByPhone,
 } from '../controllers/bookingController.js';
@@ -33,7 +35,8 @@ bookingsRouter.get('/:bookingId', getStatusValidator, getStatus);
 bookingsRouter.put('/:bookingId/quote/accept', quoteResponseValidator, quoteAccept);
 bookingsRouter.put('/:bookingId/quote/decline', quoteResponseValidator, quoteDecline);
 
-// 司機接受 / 拒絕 / 重新報價（需登入）
+// 司機接受 / 拒絕 / 重新報價 / 取消（需登入）
 bookingsRouter.put('/:bookingId/accept', requireDriverAuth, acceptValidator, accept);
 bookingsRouter.put('/:bookingId/reject', requireDriverAuth, rejectValidator, reject);
 bookingsRouter.put('/:bookingId/quote', requireDriverAuth, quoteValidator, quote);
+bookingsRouter.put('/:bookingId/cancel', requireDriverAuth, cancelValidator, cancel);

@@ -201,8 +201,8 @@ export default function DriverDashboard() {
           <Spinner />
         ) : upcoming.length > 0 ? (
           <Stack gap="sm">
-            {upcoming.map((b, i) => (
-              <TripCard key={b.id} booking={b} showActions={i === 0} />
+            {upcoming.map((b) => (
+              <TripCard key={b.id} booking={b} showActions />
             ))}
           </Stack>
         ) : (

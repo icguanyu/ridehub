@@ -26,7 +26,9 @@ export default function DriverPublic() {
     <Center mih="100vh" px="md" py="xl">
       <Box w="100%" maw={420}>
         <Center mb="lg">
-          <Wordmark size={30} withMark markSize={38} slogan />
+          <Link to="/" style={{ textDecoration: 'none' }}>
+            <Wordmark size={30} withMark markSize={38} slogan />
+          </Link>
         </Center>
 
         {isLoading ? (

@@ -209,7 +209,6 @@ export default function CustomerBooking() {
               <Group grow>
                 <NumberInput
                   label="人數"
-                  withAsterisk
                   min={1}
                   max={20}
                   {...form.getInputProps('passengerCount')}

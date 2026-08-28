@@ -7,6 +7,7 @@ import {
   newBookingText,
   acceptedText,
   rejectedText,
+  cancelledText,
   quotedText,
   quoteRespondedText,
 } from './lineService.js';
@@ -78,6 +79,24 @@ export async function notifyCustomerBookingResult(booking, driver, { accepted, r
     recipient_line_id: booking.customer_line_id ?? null,
     recipient_type: 'customer',
     notification_type: accepted ? 'booking_accepted' : 'booking_rejected',
+    status: logStatus(result),
+    error_message: result.error ?? null,
+  });
+  return result;
+}
+
+// 司機取消預約 → 通知客人
+export async function notifyCustomerCancellation(booking, driver, reason) {
+  const result = await deliver({
+    lineId: booking.customer_line_id,
+    phone: booking.customer_phone,
+    text: cancelledText(driver, booking, reason),
+  });
+  await logNotification({
+    booking_id: booking.id,
+    recipient_line_id: booking.customer_line_id ?? null,
+    recipient_type: 'customer',
+    notification_type: 'booking_cancelled',
     status: logStatus(result),
     error_message: result.error ?? null,
   });

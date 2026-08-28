@@ -9,45 +9,25 @@ import {
   Badge,
   Code,
   Anchor,
-  Collapse,
-  TextInput,
   Divider,
   CopyButton,
 } from '@mantine/core';
 import { QRCodeCanvas } from 'qrcode.react';
-import { useForm } from '@mantine/form';
-import { useCreateLineLinkCode, useBindLine, useDriver } from '@/hooks/useDriver';
+import { useCreateLineLinkCode, useDriver } from '@/hooks/useDriver';
 import { notifyOk, notifyErr } from '@/lib/notify';
 
 export default function LineBindingCard({ driverId }) {
   const { data: driver, refetch, isFetching } = useDriver(driverId);
   const createCode = useCreateLineLinkCode(driverId);
-  const bindLine = useBindLine(driverId);
   const [code, setCode] = useState(null);
-  const [showManual, setShowManual] = useState(false);
 
   const linked = Boolean(driver?.lineId);
-
-  const manualForm = useForm({
-    initialValues: { lineId: '' },
-    validate: { lineId: (v) => (v.trim() ? null : '請輸入 LINE User ID') },
-  });
 
   const genCode = () =>
     createCode.mutate(undefined, {
       onSuccess: (d) => setCode(d),
       onError: (e) => notifyErr(e),
     });
-
-  const submitManual = manualForm.onSubmit((v) =>
-    bindLine.mutate(v.lineId.trim(), {
-      onSuccess: () => {
-        notifyOk('LINE 已綁定');
-        setShowManual(false);
-      },
-      onError: (e) => notifyErr(e),
-    }),
-  );
 
   return (
     <Card withBorder radius="md" p="lg">
@@ -143,25 +123,6 @@ export default function LineBindingCard({ driverId }) {
             </Stack>
           </Card>
         )}
-
-        <Anchor size="xs" c="dimmed" onClick={() => setShowManual((s) => !s)} component="button" type="button">
-          {showManual ? '收起' : '進階：直接輸入 LINE User ID'}
-        </Anchor>
-        <Collapse in={showManual}>
-          <form onSubmit={submitManual}>
-            <Group align="end">
-              <TextInput
-                flex={1}
-                label="LINE User ID"
-                placeholder="U1234567890abcdef..."
-                {...manualForm.getInputProps('lineId')}
-              />
-              <Button type="submit" variant="light" loading={bindLine.isPending}>
-                綁定
-              </Button>
-            </Group>
-          </form>
-        </Collapse>
       </Stack>
     </Card>
   );

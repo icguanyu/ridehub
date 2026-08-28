@@ -8,12 +8,14 @@ import {
   respondToBooking,
   quoteBooking,
   respondToQuote,
+  cancelBooking,
   searchBookingsByPhone,
 } from '../services/bookingService.js';
 import { getDriverById } from '../services/driverService.js';
 import {
   notifyDriverNewBooking,
   notifyCustomerBookingResult,
+  notifyCustomerCancellation,
   notifyCustomerQuote,
   notifyDriverQuoteResponse,
 } from '../services/notificationService.js';
@@ -136,6 +138,29 @@ export const reject = asyncHandler(async (req, res) => {
   res.json({
     booking: bookingItem(booking),
     message: notify.ok ? `已透過 ${notify.channel} 通知客人` : '已拒絕（客人通知發送失敗或未設定）',
+  });
+});
+
+// ── PUT /bookings/:bookingId/cancel ──（司機取消，理由必填）
+export const cancelValidator = validate({
+  params: bookingIdParam,
+  body: z
+    .object({ reason: z.string().trim().min(1, '請填寫取消理由').max(500) })
+    .strict(),
+});
+
+export const cancel = asyncHandler(async (req, res) => {
+  const booking = await cancelBooking(req.params.bookingId, req.auth.driverId, {
+    reason: req.body.reason,
+  });
+  const driver = await getDriverById(booking.driver_id);
+  const notify = await notifyCustomerCancellation(booking, driver, req.body.reason).catch((e) => {
+    logger.error('notifyCustomerCancellation 例外', e);
+    return { ok: false, channel: 'none' };
+  });
+  res.json({
+    booking: bookingItem(booking),
+    message: notify.ok ? `已透過 ${notify.channel} 通知客人` : '已取消（客人通知發送失敗或未設定）',
   });
 });
 

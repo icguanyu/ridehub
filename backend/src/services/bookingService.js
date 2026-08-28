@@ -3,7 +3,14 @@ import { monthRange, todayISO } from '../utils/dates.js';
 import { ApiError } from '../utils/ApiError.js';
 import { getDriverById } from './driverService.js';
 import { estimatePrice } from '../utils/pricing.js';
-import { ACTIVE_BOOKING_STATUSES, BOOKING_STATUS, TRIP_TYPE } from '../constants.js';
+import {
+  ACTIVE_BOOKING_STATUSES,
+  BOOKING_STATUS,
+  CANCELLABLE_BOOKING_STATUSES,
+  TRIP_TYPE,
+} from '../constants.js';
+
+const hm = (t) => String(t).slice(0, 5);
 
 // 司機的預約列表：可依 status、month（YYYY-MM）過濾，分頁。
 export async function listDriverBookings(driverId, { status, month, page = 1, pageSize = 20 }) {
@@ -79,7 +86,7 @@ export async function createBooking(input) {
     if (returnDate < bookingDate) {
       throw ApiError.badRequest('回程日期不可早於去程');
     }
-    if (returnDate === bookingDate && hhmm(returnTime) <= hhmm(bookingTime)) {
+    if (returnDate === bookingDate && hm(returnTime) <= hm(bookingTime)) {
       throw ApiError.badRequest('同日回程時間需晚於去程時間');
     }
   }
@@ -124,7 +131,7 @@ export async function createBooking(input) {
 export async function getBookingWithDriver(bookingId) {
   const { data, error } = await supabaseAdmin
     .from('bookings')
-    .select('*, drivers ( name, phone, line_id )')
+    .select('*, drivers ( name, phone, line_id, line_display_id )')
     .eq('id', bookingId)
     .maybeSingle();
   if (error) throw error;
@@ -200,6 +207,31 @@ export async function quoteBooking(bookingId, driverId, { price, note }) {
     })
     .eq('id', bookingId)
     .eq('status', BOOKING_STATUS.PENDING)
+    .select('*')
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) throw ApiError.conflict('預約狀態已被變更，請重新整理');
+
+  return data;
+}
+
+// 司機取消預約（帶理由）：pending / quoted / accepted → cancelled
+export async function cancelBooking(bookingId, driverId, { reason }) {
+  const booking = await getBookingById(bookingId);
+  if (booking.driver_id !== driverId) throw ApiError.forbidden('這不是你的預約');
+  if (!CANCELLABLE_BOOKING_STATUSES.includes(booking.status)) {
+    throw ApiError.conflict(`預約目前為「${booking.status}」，無法取消`);
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from('bookings')
+    .update({
+      status: BOOKING_STATUS.CANCELLED,
+      cancelled_reason: reason,
+      cancelled_at: new Date().toISOString(),
+    })
+    .eq('id', bookingId)
+    .in('status', CANCELLABLE_BOOKING_STATUSES) // 樂觀鎖
     .select('*')
     .maybeSingle();
   if (error) throw error;

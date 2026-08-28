@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c ' *)",
+      "Read(//c/Users/user/.claude/projects/c--Users-user-Desktop-ridehub/**)",
+      "Read(//c/Users/user/.claude/projects/**)"
+    ]
+  }
+}

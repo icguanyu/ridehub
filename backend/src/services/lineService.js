@@ -90,6 +90,19 @@ export function rejectedText(driver, b, reason) {
     .join('\n');
 }
 
+// 司機取消已成立的預約 → 通知客人
+export function cancelledText(driver, b, reason) {
+  return [
+    '⚠️ 司機已取消這筆預約',
+    `司機：${driver.name}`,
+    reason ? `取消原因：${reason}` : null,
+    ...tripLines(b),
+    '造成不便敬請見諒，可另尋其他時段或司機。',
+  ]
+    .filter(Boolean)
+    .join('\n');
+}
+
 // 司機重新報價 → 通知客人
 export function quotedText(driver, b) {
   return [

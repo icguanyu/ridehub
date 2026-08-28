@@ -44,11 +44,11 @@ function IconClock({ active }) {
   );
 }
 
-function IconBell() {
+function IconHome() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4A6152" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+      <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5Z" />
+      <path d="M9 21V12h6v9" />
     </svg>
   );
 }
@@ -98,9 +98,11 @@ export default function DashboardLayout() {
         <Group h="100%" px="md" justify="space-between">
           <Wordmark size={20} withMark markSize={26} />
           <Group gap={2}>
-            <ActionIcon variant="subtle" color="gray" size="lg" aria-label="通知">
-              <IconBell />
-            </ActionIcon>
+            <Tooltip label="前往首頁" withArrow position="bottom-end">
+              <ActionIcon variant="subtle" color="gray" size="lg" aria-label="前往首頁" onClick={() => navigate('/')}>
+                <IconHome />
+              </ActionIcon>
+            </Tooltip>
             <Tooltip label="登出" withArrow position="bottom-end">
               <ActionIcon
                 variant="subtle"
