@@ -52,6 +52,8 @@ export function bookingSearchItem(row, statusToken) {
     destination: row.destination,
     bookingDate: row.booking_date,
     bookingTime: hhmm(row.booking_time),
+    returnDate: row.return_date,
+    returnTime: hhmm(row.return_time),
     driverName: row.drivers?.name ?? null,
     statusToken,
   };

@@ -143,7 +143,9 @@ export async function getBookingWithDriver(bookingId) {
 export async function searchBookingsByPhone(phone) {
   const { data, error } = await supabaseAdmin
     .from('bookings')
-    .select('id, status, trip_type, pickup_location, destination, booking_date, booking_time, drivers(name)')
+    .select(
+      'id, status, trip_type, pickup_location, destination, booking_date, booking_time, return_date, return_time, drivers(name)',
+    )
     .eq('customer_phone', phone)
     .order('booking_date', { ascending: false })
     .order('booking_time', { ascending: false })

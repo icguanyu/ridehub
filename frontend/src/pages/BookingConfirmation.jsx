@@ -16,13 +16,8 @@ import {
 import { useBookingStatus, useRespondToQuote } from '@/hooks/useCustomer';
 import Spinner from '@/components/Spinner';
 import Wordmark from '@/components/Wordmark';
-import {
-  fmtMoney,
-  fmtDateTime,
-  STATUS_LABEL,
-  STATUS_COLOR,
-  TRIP_TYPE_LABEL,
-} from '@/lib/format';
+import TripRoute, { TripTypeBadge } from '@/components/TripRoute';
+import { fmtMoney, STATUS_LABEL, STATUS_COLOR } from '@/lib/format';
 import { notifyOk, notifyErr } from '@/lib/notify';
 
 const STATUS_HINT = {
@@ -42,7 +37,6 @@ export default function BookingConfirmation() {
   const respond = useRespondToQuote(bookingId, token);
 
   const shareUrl = window.location.href;
-  const isRoundTrip = b?.tripType === 'round_trip';
 
   const doRespond = (accept) =>
     respond.mutate(accept, {
@@ -73,9 +67,12 @@ export default function BookingConfirmation() {
               <Stack gap="sm">
                 <Group justify="space-between">
                   <Title order={3}>預約狀態</Title>
-                  <Badge size="lg" color={STATUS_COLOR[b.status]} variant="light">
-                    {STATUS_LABEL[b.status] ?? b.status}
-                  </Badge>
+                  <Group gap={6}>
+                    <TripTypeBadge tripType={b.tripType} />
+                    <Badge size="lg" color={STATUS_COLOR[b.status]} variant="light">
+                      {STATUS_LABEL[b.status] ?? b.status}
+                    </Badge>
+                  </Group>
                 </Group>
 
                 <Alert color={STATUS_COLOR[b.status]} variant="light">
@@ -84,32 +81,8 @@ export default function BookingConfirmation() {
 
                 <Divider />
 
-                <Group justify="space-between">
-                  <Text size="sm" c="dimmed">
-                    行程
-                  </Text>
-                  <Text size="sm">
-                    {TRIP_TYPE_LABEL[b.tripType] ?? '單程'}・{b.pickupLocation} → {b.destination}
-                  </Text>
-                </Group>
-                <Group justify="space-between">
-                  <Text size="sm" c="dimmed">
-                    去程
-                  </Text>
-                  <Text size="sm" className="mono">
-                    {fmtDateTime(b.bookingDate, b.bookingTime)}
-                  </Text>
-                </Group>
-                {isRoundTrip && (
-                  <Group justify="space-between">
-                    <Text size="sm" c="dimmed">
-                      回程
-                    </Text>
-                    <Text size="sm" className="mono">
-                      {fmtDateTime(b.returnDate, b.returnTime)}
-                    </Text>
-                  </Group>
-                )}
+                <TripRoute booking={b} />
+
                 <Group justify="space-between">
                   <Text size="sm" c="dimmed">
                     人數

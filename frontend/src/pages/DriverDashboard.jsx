@@ -6,6 +6,7 @@ import { useDriverBookings, useAcceptBooking, useRejectBooking, useQuoteBooking 
 import { useDriverStats } from '@/hooks/useStats';
 import { useDriver } from '@/hooks/useDriver';
 import BookingCard from '@/components/BookingCard';
+import TripRoute, { TripTypeBadge } from '@/components/TripRoute';
 import RejectBookingModal from '@/components/RejectBookingModal';
 import QuoteModal from '@/components/QuoteModal';
 import Spinner from '@/components/Spinner';
@@ -33,25 +34,11 @@ function getCountdownBadge(booking) {
   return { label: '已確認', color: 'brand', variant: 'outline' };
 }
 
-function PinIcon() {
-  return (
-    <svg
-      width="14" height="14" viewBox="0 0 24 24"
-      fill="none" stroke="#2E7D32" strokeWidth="2.5"
-      strokeLinecap="round" strokeLinejoin="round"
-      style={{ flex: 'none', marginTop: 2 }}
-      aria-hidden
-    >
-      <path d="M12 21s7-6.4 7-11a7 7 0 1 0-14 0c0 4.6 7 11 7 11Z" />
-      <circle cx="12" cy="10" r="2.6" />
-    </svg>
-  );
-}
-
 function TripCard({ booking, showActions }) {
   const b = booking;
   const badge = getCountdownBadge(b);
   const time = (b.bookingTime ?? '').slice(0, 5);
+  const isRoundTrip = b.tripType === 'round_trip';
 
   const openNav = () => {
     const q = encodeURIComponent(b.pickupLocation);
@@ -61,23 +48,23 @@ function TripCard({ booking, showActions }) {
   return (
     <Box style={{ border: '1px solid #E4E0D0', borderRadius: 16, padding: '14px 16px', background: '#FFFFFF' }}>
       <Group justify="space-between" mb={8} wrap="nowrap">
-        <Text
-          fw={700}
-          style={{ fontFamily: "'Outfit', sans-serif", fontSize: 22, letterSpacing: '-0.02em', lineHeight: 1 }}
-        >
-          {time}
-        </Text>
+        <Group gap={8} wrap="nowrap" align="center">
+          <Text
+            fw={700}
+            style={{ fontFamily: "'Outfit', sans-serif", fontSize: 22, letterSpacing: '-0.02em', lineHeight: 1 }}
+          >
+            {time}
+          </Text>
+          {isRoundTrip && <TripTypeBadge tripType={b.tripType} />}
+        </Group>
         <Badge color={badge.color} variant={badge.variant} size="md">
           {badge.label}
         </Badge>
       </Group>
 
-      <Group gap={6} align="flex-start" mb={4} wrap="nowrap">
-        <PinIcon />
-        <Text size="sm" fw={500} style={{ lineHeight: 1.4 }}>
-          {b.pickupLocation} → {b.destination}
-        </Text>
-      </Group>
+      <Box mb={6}>
+        <TripRoute booking={b} timeMode="omitOutbound" />
+      </Box>
 
       <Text size="sm" c="dimmed" mb={showActions ? 12 : 0}>
         {b.customerName} · {b.passengerCount}人

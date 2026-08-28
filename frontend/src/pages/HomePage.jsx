@@ -14,6 +14,7 @@ import {
 } from '@mantine/core';
 import { Link, useNavigate } from 'react-router-dom';
 import Wordmark from '@/components/Wordmark';
+import TripRoute, { TripTypeBadge } from '@/components/TripRoute';
 import { useBookingSearch } from '@/hooks/useCustomer';
 import { STATUS_LABEL, STATUS_COLOR, fmtDateTime } from '@/lib/format';
 import Spinner from '@/components/Spinner';
@@ -26,17 +27,9 @@ function ArrowIcon() {
   );
 }
 
-function PinIcon() {
-  return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2E7D32" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flex: 'none', marginTop: 2 }} aria-hidden>
-      <path d="M12 21s7-6.4 7-11a7 7 0 1 0-14 0c0 4.6 7 11 7 11Z" />
-      <circle cx="12" cy="10" r="2.6" />
-    </svg>
-  );
-}
-
 function BookingRow({ booking }) {
   const navigate = useNavigate();
+  const isRoundTrip = booking.tripType === 'round_trip';
 
   const go = () => navigate(`/booking/${booking.id}?token=${booking.statusToken}`);
 
@@ -57,9 +50,12 @@ function BookingRow({ booking }) {
         onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#E4E0D0')}
       >
         <Group justify="space-between" mb={6} wrap="nowrap">
-          <Text size="sm" fw={600} className="mono">
-            {fmtDateTime(booking.bookingDate, booking.bookingTime)}
-          </Text>
+          <Group gap={8} wrap="nowrap" align="center">
+            <Text size="sm" fw={600} className="mono">
+              {fmtDateTime(booking.bookingDate, booking.bookingTime)}
+            </Text>
+            {isRoundTrip && <TripTypeBadge tripType={booking.tripType} />}
+          </Group>
           <Group gap={6} wrap="nowrap">
             <Badge color={STATUS_COLOR[booking.status]} variant="light" size="sm">
               {STATUS_LABEL[booking.status] ?? booking.status}
@@ -70,15 +66,12 @@ function BookingRow({ booking }) {
           </Group>
         </Group>
 
-        <Group gap={5} align="flex-start" wrap="nowrap" mb={booking.driverName ? 4 : 0}>
-          <PinIcon />
-          <Text size="sm" style={{ lineHeight: 1.4 }}>
-            {booking.pickupLocation} → {booking.destination}
-          </Text>
-        </Group>
+        <Box mb={booking.driverName ? 4 : 0}>
+          <TripRoute booking={booking} timeMode="omitOutbound" />
+        </Box>
 
         {booking.driverName && (
-          <Text size="xs" c="dimmed" ml={18}>
+          <Text size="xs" c="dimmed" ml={24}>
             司機：{booking.driverName}
           </Text>
         )}
