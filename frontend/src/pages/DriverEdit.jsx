@@ -5,7 +5,7 @@ import {
   Title,
   TextInput,
   Textarea,
-  NumberInput,
+  Input,
   Button,
   Group,
   Select,
@@ -28,6 +28,14 @@ export default function DriverEdit() {
   const { data, isLoading } = useDriver(driverId);
   const update = useUpdateDriver(driverId);
 
+  const validatePrice = (v) => {
+    if (v === '' || v === null || v === undefined) return null;
+    if (String(v).trim() === '') return '不可為純空白';
+    if (Number(v) < 0) return '不可為負值';
+    if (isNaN(Number(v))) return '請輸入有效數字';
+    return null;
+  };
+
   const form = useForm({
     initialValues: {
       name: '',
@@ -38,6 +46,10 @@ export default function DriverEdit() {
       basePrice: '',
       pricePerKm: '',
       lineDisplayId: '',
+    },
+    validate: {
+      basePrice: validatePrice,
+      pricePerKm: validatePrice,
     },
   });
 
@@ -108,16 +120,28 @@ export default function DriverEdit() {
               <TextInput label="車牌" placeholder="ABC-1234" {...form.getInputProps('carPlate')} />
             </Group>
             <Group grow>
-              <NumberInput
-                label="基礎價格 (NT$)"
-                min={0}
-                {...form.getInputProps('basePrice')}
-              />
-              <NumberInput
-                label="每公里加價 (NT$)"
-                min={0}
-                {...form.getInputProps('pricePerKm')}
-              />
+              <Input.Wrapper label="基礎價格 (NT$)" error={form.errors.basePrice}>
+                <Input
+                  component="input"
+                  type="number"
+                  min={0}
+                  step="any"
+                  value={form.values.basePrice}
+                  onChange={(e) => form.setFieldValue('basePrice', e.target.value)}
+                  error={!!form.errors.basePrice}
+                />
+              </Input.Wrapper>
+              <Input.Wrapper label="每公里加價 (NT$)" error={form.errors.pricePerKm}>
+                <Input
+                  component="input"
+                  type="number"
+                  min={0}
+                  step="any"
+                  value={form.values.pricePerKm}
+                  onChange={(e) => form.setFieldValue('pricePerKm', e.target.value)}
+                  error={!!form.errors.pricePerKm}
+                />
+              </Input.Wrapper>
             </Group>
             <TextInput
               label="LINE ID（選填，客人預約成功後可加好友）"

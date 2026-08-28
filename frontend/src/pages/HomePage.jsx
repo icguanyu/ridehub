@@ -136,7 +136,7 @@ export default function HomePage() {
                 <TextInput
                   flex={1}
                   placeholder="0912345678"
-                  inputMode="numeric"
+                  inputMode="tel"
                   value={inputPhone}
                   onChange={(e) => setInputPhone(e.target.value.trim())}
                   error={phoneError}
