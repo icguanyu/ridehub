@@ -1,5 +1,5 @@
 import { Card, Group, Text, Badge, Stack, Button } from '@mantine/core';
-import { fmtMoney, fmtDateTime, STATUS_LABEL, STATUS_COLOR, TRIP_TYPE_LABEL } from '@/lib/format';
+import { fmtMoney, fmtDateTime, STATUS_LABEL, STATUS_COLOR } from '@/lib/format';
 
 function PinIcon() {
   return (
@@ -21,6 +21,86 @@ function PinIcon() {
   );
 }
 
+function RoundTripIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width={11}
+      height={11}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M17 2l4 4-4 4" />
+      <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+      <path d="M7 22l-4-4 4-4" />
+      <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+    </svg>
+  );
+}
+
+// 單程：單行路線 + 時間
+function OneWayRoute({ booking }) {
+  const b = booking;
+  return (
+    <Group gap={8} align="flex-start" wrap="nowrap">
+      <PinIcon />
+      <div>
+        <Text size="sm" fw={500}>
+          {b.pickupLocation} → {b.destination}
+        </Text>
+        <Text size="sm" c="dimmed" className="mono">
+          {fmtDateTime(b.bookingDate, b.bookingTime)}
+        </Text>
+      </div>
+    </Group>
+  );
+}
+
+// 往返：雙點時間軸（實心=去程、空心=回程）
+function RoundTripRoute({ booking }) {
+  const b = booking;
+  return (
+    <Group gap={10} align="stretch" wrap="nowrap">
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 4 }}>
+        <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#2E7D32', flex: 'none' }} />
+        <span style={{ width: 2, flex: 1, background: '#CDE0CE', margin: '3px 0', minHeight: 18 }} />
+        <span
+          style={{
+            width: 9,
+            height: 9,
+            borderRadius: '50%',
+            border: '2px solid #2E7D32',
+            background: '#fff',
+            flex: 'none',
+          }}
+        />
+      </div>
+      <Stack gap={10} style={{ flex: 1 }}>
+        <div>
+          <Text size="sm" fw={500}>
+            {b.pickupLocation} → {b.destination}
+          </Text>
+          <Text size="xs" c="dimmed" className="mono">
+            去程 · {fmtDateTime(b.bookingDate, b.bookingTime)}
+          </Text>
+        </div>
+        <div>
+          <Text size="sm" fw={500}>
+            {b.destination} → {b.pickupLocation}
+          </Text>
+          <Text size="xs" c="dimmed" className="mono">
+            回程 · {b.returnDate ? fmtDateTime(b.returnDate, b.returnTime) : '待定'}
+          </Text>
+        </div>
+      </Stack>
+    </Group>
+  );
+}
+
 export default function BookingCard({ booking, onAccept, onReject, onQuote, busy, actionable }) {
   const b = booking;
   const isRoundTrip = b.tripType === 'round_trip';
@@ -31,27 +111,28 @@ export default function BookingCard({ booking, onAccept, onReject, onQuote, busy
         <Group justify="space-between" wrap="nowrap">
           <Group gap={8}>
             <Text fw={700}>{b.customerName}</Text>
-            <Badge variant="outline" color={isRoundTrip ? 'brand' : 'gray'} size="sm">
-              {TRIP_TYPE_LABEL[b.tripType] ?? '單程'}
-            </Badge>
+            {isRoundTrip ? (
+              <Badge
+                variant="filled"
+                color="brand"
+                size="sm"
+                leftSection={<RoundTripIcon />}
+                styles={{ label: { display: 'flex', alignItems: 'center', gap: 4 } }}
+              >
+                往返
+              </Badge>
+            ) : (
+              <Badge variant="outline" color="gray" size="sm">
+                單程
+              </Badge>
+            )}
           </Group>
           <Badge color={STATUS_COLOR[b.status]} variant="light">
             {STATUS_LABEL[b.status] ?? b.status}
           </Badge>
         </Group>
 
-        <Group gap={8} align="flex-start" wrap="nowrap">
-          <PinIcon />
-          <div>
-            <Text size="sm" fw={500}>
-              {b.pickupLocation} → {b.destination}
-            </Text>
-            <Text size="sm" c="dimmed" className="mono">
-              去程 {fmtDateTime(b.bookingDate, b.bookingTime)}
-              {isRoundTrip && b.returnDate ? `　回程 ${fmtDateTime(b.returnDate, b.returnTime)}` : ''}
-            </Text>
-          </div>
-        </Group>
+        {isRoundTrip ? <RoundTripRoute booking={b} /> : <OneWayRoute booking={b} />}
 
         <Group gap="lg">
           <Text size="sm" c="dimmed">
