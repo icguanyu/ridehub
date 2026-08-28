@@ -16,7 +16,7 @@ import TripRoute, { TripTypeBadge } from '@/components/TripRoute';
 import RejectBookingModal from '@/components/RejectBookingModal';
 import QuoteModal from '@/components/QuoteModal';
 import Spinner from '@/components/Spinner';
-import { fmtMoney, fmtDate, fmtDateFull } from '@/lib/format';
+import { fmtMoney, fmtDateFull } from '@/lib/format';
 import { notifyOk, notifyErr } from '@/lib/notify';
 
 const OUTSTANDING = ['pending', 'quoted'];
@@ -57,19 +57,12 @@ function TripCard({ booking, showNav, showContact, showComplete, onComplete, bus
     <Box style={{ border: '1px solid #E4E0D0', borderRadius: 16, padding: '14px 16px', background: '#FFFFFF' }}>
       <Group justify="space-between" mb={8} wrap="nowrap">
         <Group gap={8} wrap="nowrap" align="center">
-          <div>
-            {!isToday && (
-              <Text size="xs" c="dimmed" style={{ fontWeight: 600, lineHeight: 1.2 }}>
-                {fmtDate(b.bookingDate)}
-              </Text>
-            )}
-            <Text
-              fw={700}
-              style={{ fontFamily: "'Outfit', sans-serif", fontSize: 22, letterSpacing: '-0.02em', lineHeight: 1 }}
-            >
-              {time}
-            </Text>
-          </div>
+          <Text
+            fw={700}
+            style={{ fontFamily: "'Outfit', sans-serif", fontSize: 22, letterSpacing: '-0.02em', lineHeight: 1 }}
+          >
+            {time}
+          </Text>
           {isRoundTrip && <TripTypeBadge tripType={b.tripType} />}
         </Group>
         <Badge color={badge.color} variant={badge.variant} size="md">
@@ -78,7 +71,7 @@ function TripCard({ booking, showNav, showContact, showComplete, onComplete, bus
       </Group>
 
       <Box mb={6}>
-        <TripRoute booking={b} timeMode="omitOutbound" />
+        <TripRoute booking={b} timeMode={isToday ? 'omitOutbound' : 'full'} />
       </Box>
 
       <Text size="sm" c="dimmed" mb={hasActions ? 12 : 0}>
