@@ -34,11 +34,12 @@ function getCountdownBadge(booking) {
   return { label: '已確認', color: 'brand', variant: 'outline' };
 }
 
-function TripCard({ booking, showActions }) {
+function TripCard({ booking, showNav, showContact }) {
   const b = booking;
   const badge = getCountdownBadge(b);
   const time = (b.bookingTime ?? '').slice(0, 5);
   const isRoundTrip = b.tripType === 'round_trip';
+  const hasActions = showNav || showContact;
 
   const openNav = () => {
     const q = encodeURIComponent(b.pickupLocation);
@@ -66,24 +67,27 @@ function TripCard({ booking, showActions }) {
         <TripRoute booking={b} timeMode="omitOutbound" />
       </Box>
 
-      <Text size="sm" c="dimmed" mb={showActions ? 12 : 0}>
+      <Text size="sm" c="dimmed" mb={hasActions ? 12 : 0}>
         {b.customerName} · {b.passengerCount}人
       </Text>
 
-      {showActions && (
+      {hasActions && (
         <Group gap={8}>
-          <Button flex={1} color="brand" size="sm" onClick={openNav}>
-            開始導航
-          </Button>
-          {b.customerPhone ? (
-            <Button flex={1} variant="default" size="sm" component="a" href={`tel:${b.customerPhone}`}>
-              聯絡乘客
-            </Button>
-          ) : (
-            <Button flex={1} variant="default" size="sm" disabled>
-              聯絡乘客
+          {showNav && (
+            <Button flex={1} color="brand" size="sm" onClick={openNav}>
+              開始導航
             </Button>
           )}
+          {showContact &&
+            (b.customerPhone ? (
+              <Button flex={1} variant="default" size="sm" component="a" href={`tel:${b.customerPhone}`}>
+                聯絡乘客
+              </Button>
+            ) : (
+              <Button flex={1} variant="default" size="sm" disabled>
+                聯絡乘客
+              </Button>
+            ))}
         </Group>
       )}
     </Box>
@@ -217,7 +221,7 @@ export default function DriverDashboard() {
             {todayTrips.length > 0 ? (
               <Stack gap="sm">
                 {todayTrips.map((b) => (
-                  <TripCard key={b.id} booking={b} showActions />
+                  <TripCard key={b.id} booking={b} showNav showContact />
                 ))}
               </Stack>
             ) : (
@@ -230,7 +234,7 @@ export default function DriverDashboard() {
             {soonTrips.length > 0 ? (
               <Stack gap="sm">
                 {soonTrips.map((b) => (
-                  <TripCard key={b.id} booking={b} />
+                  <TripCard key={b.id} booking={b} showContact />
                 ))}
               </Stack>
             ) : (
