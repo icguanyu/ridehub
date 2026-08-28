@@ -90,6 +90,32 @@ function TripCard({ booking, showActions }) {
   );
 }
 
+function SectionTitle({ children }) {
+  return (
+    <Text fw={600} size="sm" mb={10} style={{ color: '#4A6152' }}>
+      {children}
+    </Text>
+  );
+}
+
+function EmptyBox({ children }) {
+  return (
+    <Box
+      style={{
+        border: '1px solid #E4E0D0',
+        borderRadius: 16,
+        padding: '20px 16px',
+        textAlign: 'center',
+        background: '#FFFFFF',
+      }}
+    >
+      <Text c="dimmed" size="sm">
+        {children}
+      </Text>
+    </Box>
+  );
+}
+
 export default function DriverDashboard() {
   const driverId = useCurrentDriverId();
   const driver = useDriver(driverId);
@@ -109,11 +135,13 @@ export default function DriverDashboard() {
   const outstanding = (bookings.data?.bookings ?? []).filter((b) => OUTSTANDING.includes(b.status));
 
   const t = todayISO();
-  const upcoming = (acceptedQ.data?.bookings ?? [])
+  const accepted = (acceptedQ.data?.bookings ?? [])
     .filter((b) => b.bookingDate >= t)
     .sort((a, b) =>
       `${a.bookingDate}T${a.bookingTime}`.localeCompare(`${b.bookingDate}T${b.bookingTime}`),
     );
+  const todayTrips = accepted.filter((b) => b.bookingDate === t);
+  const soonTrips = accepted.filter((b) => b.bookingDate > t);
 
   const doAccept = (b) =>
     accept.mutate(
@@ -179,41 +207,42 @@ export default function DriverDashboard() {
         </Box>
       )}
 
-      {/* 待出發 */}
-      <div>
-        <Text fw={600} size="sm" mb={10} style={{ color: '#4A6152' }}>
-          待出發
-        </Text>
-        {acceptedQ.isLoading ? (
-          <Spinner />
-        ) : upcoming.length > 0 ? (
-          <Stack gap="sm">
-            {upcoming.map((b) => (
-              <TripCard key={b.id} booking={b} showActions />
-            ))}
-          </Stack>
-        ) : (
-          <Box
-            style={{
-              border: '1px solid #E4E0D0',
-              borderRadius: 16,
-              padding: '20px 16px',
-              textAlign: 'center',
-              background: '#FFFFFF',
-            }}
-          >
-            <Text c="dimmed" size="sm">
-              目前無待出發行程
-            </Text>
-          </Box>
-        )}
-      </div>
+      {/* 今日待出發 / 即將到來 */}
+      {acceptedQ.isLoading ? (
+        <Spinner />
+      ) : (
+        <>
+          <div>
+            <SectionTitle>今日待出發</SectionTitle>
+            {todayTrips.length > 0 ? (
+              <Stack gap="sm">
+                {todayTrips.map((b) => (
+                  <TripCard key={b.id} booking={b} showActions />
+                ))}
+              </Stack>
+            ) : (
+              <EmptyBox>今日沒有待出發行程</EmptyBox>
+            )}
+          </div>
+
+          <div>
+            <SectionTitle>即將到來</SectionTitle>
+            {soonTrips.length > 0 ? (
+              <Stack gap="sm">
+                {soonTrips.map((b) => (
+                  <TripCard key={b.id} booking={b} />
+                ))}
+              </Stack>
+            ) : (
+              <EmptyBox>沒有即將到來的行程</EmptyBox>
+            )}
+          </div>
+        </>
+      )}
 
       {/* 待處理預約 */}
       <div>
-        <Text fw={600} size="sm" mb={10} style={{ color: '#4A6152' }}>
-          待處理預約
-        </Text>
+        <SectionTitle>待處理預約</SectionTitle>
         {bookings.isLoading ? (
           <Spinner />
         ) : outstanding.length > 0 ? (
@@ -231,19 +260,7 @@ export default function DriverDashboard() {
             ))}
           </Stack>
         ) : (
-          <Box
-            style={{
-              border: '1px solid #E4E0D0',
-              borderRadius: 16,
-              padding: '20px 16px',
-              textAlign: 'center',
-              background: '#FFFFFF',
-            }}
-          >
-            <Text c="dimmed" size="sm">
-              目前沒有待處理的預約
-            </Text>
-          </Box>
+          <EmptyBox>目前沒有待處理的預約</EmptyBox>
         )}
       </div>
 
