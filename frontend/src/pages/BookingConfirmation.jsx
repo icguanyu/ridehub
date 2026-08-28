@@ -18,6 +18,7 @@ import Spinner from '@/components/Spinner';
 import Wordmark from '@/components/Wordmark';
 import TripRoute, { TripTypeBadge } from '@/components/TripRoute';
 import { fmtMoney, STATUS_LABEL, STATUS_COLOR } from '@/lib/format';
+import { lineAddFriendUrl } from '@/lib/line';
 import { notifyOk, notifyErr } from '@/lib/notify';
 
 const STATUS_HINT = {
@@ -158,11 +159,7 @@ export default function BookingConfirmation() {
                       </Text>
                       <Button
                         component="a"
-                        href={
-                          b.driverLineDisplayId.startsWith('@')
-                            ? `https://line.me/R/ti/p/${encodeURIComponent(b.driverLineDisplayId)}`
-                            : `https://line.me/ti/p/~${encodeURIComponent(b.driverLineDisplayId)}`
-                        }
+                        href={lineAddFriendUrl(b.driverLineDisplayId)}
                         target="_blank"
                         rel="noopener noreferrer"
                         size="xs"

@@ -17,6 +17,7 @@ import RejectBookingModal from '@/components/RejectBookingModal';
 import QuoteModal from '@/components/QuoteModal';
 import Spinner from '@/components/Spinner';
 import { fmtMoney, fmtDateFull } from '@/lib/format';
+import { lineAddFriendUrl } from '@/lib/line';
 import { notifyOk, notifyErr } from '@/lib/notify';
 
 const OUTSTANDING = ['pending', 'quoted'];
@@ -80,23 +81,35 @@ function TripCard({ booking, showNav, showContact, showComplete, onComplete, bus
 
       {hasActions && (
         <Stack gap={8}>
-          {(showNav || showContact) && (
+          {showNav && (
+            <Button fullWidth color="brand" size="sm" onClick={openNav}>
+              開始導航
+            </Button>
+          )}
+          {showContact && (
             <Group gap={8}>
-              {showNav && (
-                <Button flex={1} color="brand" size="sm" onClick={openNav}>
-                  開始導航
+              {b.customerPhone ? (
+                <Button flex={1} variant="default" size="sm" component="a" href={`tel:${b.customerPhone}`}>
+                  撥打電話
+                </Button>
+              ) : (
+                <Button flex={1} variant="default" size="sm" disabled>
+                  撥打電話
                 </Button>
               )}
-              {showContact &&
-                (b.customerPhone ? (
-                  <Button flex={1} variant="default" size="sm" component="a" href={`tel:${b.customerPhone}`}>
-                    聯絡乘客
-                  </Button>
-                ) : (
-                  <Button flex={1} variant="default" size="sm" disabled>
-                    聯絡乘客
-                  </Button>
-                ))}
+              {b.customerLineId && (
+                <Button
+                  flex={1}
+                  variant="default"
+                  size="sm"
+                  component="a"
+                  href={lineAddFriendUrl(b.customerLineId)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  加入 LINE 好友
+                </Button>
+              )}
             </Group>
           )}
           {showComplete && (
