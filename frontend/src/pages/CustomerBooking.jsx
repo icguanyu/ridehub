@@ -21,6 +21,7 @@ import { useForm } from '@mantine/form';
 import dayjs from 'dayjs';
 import { usePublicDriver, useCreateBooking } from '@/hooks/useCustomer';
 import Spinner from '@/components/Spinner';
+import Wordmark from '@/components/Wordmark';
 import { fmtMoney } from '@/lib/format';
 import { notifyErr } from '@/lib/notify';
 
@@ -120,10 +121,10 @@ export default function CustomerBooking() {
   return (
     <Center mih="100vh" px="md" py="xl">
       <Box w="100%" maw={460}>
-        <Text ta="center" fw={700} size="xl" c="brand.7" mb="lg">
-          RideHub
-        </Text>
-        <Card withBorder shadow="sm" radius="md" p="lg">
+        <Center mb="lg">
+          <Wordmark size={28} withMark markSize={34} />
+        </Center>
+        <Card radius="xl" p="lg">
           <form onSubmit={submit}>
             <Stack>
               <div>
@@ -205,25 +206,31 @@ export default function CustomerBooking() {
               />
 
               {priceBreakdown && (
-                <Card bg="brand.0" p="sm" radius="sm" withBorder>
+                <Card p="sm" radius="md" style={{ background: '#F3F1E4' }}>
                   <Group justify="space-between">
                     <Text size="sm" c="dimmed">
                       單程預估
                     </Text>
-                    <Text size="sm">{fmtMoney(priceBreakdown.oneWay)}</Text>
+                    <Text size="sm" className="mono">
+                      {fmtMoney(priceBreakdown.oneWay)}
+                    </Text>
                   </Group>
                   {isRoundTrip && (
                     <Group justify="space-between">
                       <Text size="sm" c="dimmed">
                         往返 × 2
                       </Text>
-                      <Text size="sm">{fmtMoney(priceBreakdown.total)}</Text>
+                      <Text size="sm" className="mono">
+                        {fmtMoney(priceBreakdown.total)}
+                      </Text>
                     </Group>
                   )}
                   <Divider my={6} />
                   <Group justify="space-between">
-                    <Text fw={600}>預估合計</Text>
-                    <Text fw={700}>{fmtMoney(priceBreakdown.total)}</Text>
+                    <Text fw={700}>預估合計</Text>
+                    <Text fw={700} className="mono" style={{ color: '#0F3D2E' }}>
+                      {fmtMoney(priceBreakdown.total)}
+                    </Text>
                   </Group>
                   <Text size="xs" c="dimmed" mt={4}>
                     實際金額以司機確認為準，司機可能重新報價

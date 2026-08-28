@@ -33,7 +33,7 @@ export default function DriverLogin() {
   });
 
   return (
-    <Card withBorder shadow="sm" radius="md" p="lg">
+    <Card radius="xl" p="lg">
       <form onSubmit={submit}>
         <Stack>
           <Title order={3}>司機登入</Title>

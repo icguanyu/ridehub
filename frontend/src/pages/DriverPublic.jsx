@@ -14,6 +14,7 @@ import {
 import { QRCodeCanvas } from 'qrcode.react';
 import { usePublicDriver } from '@/hooks/useCustomer';
 import Spinner from '@/components/Spinner';
+import Wordmark from '@/components/Wordmark';
 import { fmtMoney } from '@/lib/format';
 
 export default function DriverPublic() {
@@ -24,19 +25,19 @@ export default function DriverPublic() {
   return (
     <Center mih="100vh" px="md" py="xl">
       <Box w="100%" maw={420}>
-        <Text ta="center" fw={700} size="xl" c="brand.7" mb="lg">
-          RideHub
-        </Text>
+        <Center mb="lg">
+          <Wordmark size={30} withMark markSize={38} slogan />
+        </Center>
 
         {isLoading ? (
           <Spinner />
         ) : isError ? (
-          <Card withBorder p="lg">
+          <Card p="lg">
             <Text c="dimmed">找不到這位司機，連結可能有誤。</Text>
           </Card>
         ) : (
           <Stack>
-            <Card withBorder shadow="sm" radius="md" p="lg">
+            <Card radius="xl" p="lg">
               <Stack gap="sm">
                 <Group justify="space-between">
                   <Title order={3}>{data.name}</Title>
@@ -68,7 +69,7 @@ export default function DriverPublic() {
                       <Text size="xs" c="dimmed">
                         營運時間
                       </Text>
-                      <Text size="sm">
+                      <Text size="sm" className="mono">
                         {data.operatingHoursStart ?? '—'} ~ {data.operatingHoursEnd ?? '—'}
                       </Text>
                     </div>
@@ -89,23 +90,29 @@ export default function DriverPublic() {
                     參考價格
                   </Text>
                   <Text size="sm">
-                    起價 {fmtMoney(data.basePrice)}
-                    {data.pricePerKm ? `，每公里 +${fmtMoney(data.pricePerKm)}` : ''}
+                    起價 <span className="mono">{fmtMoney(data.basePrice)}</span>
+                    {data.pricePerKm ? (
+                      <>
+                        ，每公里 +<span className="mono">{fmtMoney(data.pricePerKm)}</span>
+                      </>
+                    ) : (
+                      ''
+                    )}
                   </Text>
                 </div>
 
-                <Button mt="sm" fullWidth onClick={() => navigate(`/driver/${driverId}/book`)}>
+                <Button mt="sm" size="md" fullWidth onClick={() => navigate(`/driver/${driverId}/book`)}>
                   預約此司機
                 </Button>
               </Stack>
             </Card>
 
-            <Card withBorder radius="md" p="lg">
+            <Card radius="xl" p="lg">
               <Stack align="center" gap="xs">
                 <Text size="sm" c="dimmed">
                   掃碼分享此頁
                 </Text>
-                <QRCodeCanvas value={window.location.href} size={140} />
+                <QRCodeCanvas value={window.location.href} size={140} fgColor="#0F3D2E" />
               </Stack>
             </Card>
 

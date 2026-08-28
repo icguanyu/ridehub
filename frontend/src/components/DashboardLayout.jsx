@@ -1,6 +1,7 @@
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { AppShell, Group, Text, Button, Tabs, Container } from '@mantine/core';
 import { useAuthStore } from '@/store/authStore';
+import Wordmark from '@/components/Wordmark';
 
 const tabs = [
   { value: '/dashboard', label: '總覽' },
@@ -24,13 +25,15 @@ export default function DashboardLayout() {
   const { pathname } = useLocation();
 
   return (
-    <AppShell header={{ height: 56 }} padding="md">
+    <AppShell
+      header={{ height: 60 }}
+      padding="md"
+      styles={{ header: { borderBottom: '1px solid #E4E0D0', background: '#FAF7EB' } }}
+    >
       <AppShell.Header>
         <Group h="100%" px="md" justify="space-between">
-          <Group gap="xs">
-            <Text fw={700} c="brand.7">
-              RideHub
-            </Text>
+          <Group gap={10}>
+            <Wordmark size={20} withMark markSize={26} />
             <Text size="xs" c="dimmed">
               {driver?.name ? `${driver.name} 司機後台` : '司機後台'}
             </Text>

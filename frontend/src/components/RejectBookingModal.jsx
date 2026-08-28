@@ -26,7 +26,7 @@ export default function RejectBookingModal({ booking, opened, onClose, onConfirm
         <Button variant="default" onClick={onClose}>
           取消
         </Button>
-        <Button color="red" loading={busy} onClick={() => onConfirm(reason)}>
+        <Button color="danger" loading={busy} onClick={() => onConfirm(reason)}>
           確認拒絕
         </Button>
       </Group>

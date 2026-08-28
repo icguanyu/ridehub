@@ -1,5 +1,20 @@
 :root {
   --mantine-color-body: #faf7eb;
+  /* 次要文字：暖綠灰 */
+  --mantine-color-dimmed: #4a6152;
+  /* 卡片 / 分隔線：暖米色，取代 Mantine 預設灰 */
+  --mantine-color-default-border: #e4e0d0;
+  --mantine-color-gray-2: #e4e0d0;
+  --mantine-color-gray-3: #e4e0d0;
+}
+
+/* 扁平：徹底移除所有陰影 */
+:root {
+  --mantine-shadow-xs: none;
+  --mantine-shadow-sm: none;
+  --mantine-shadow-md: none;
+  --mantine-shadow-lg: none;
+  --mantine-shadow-xl: none;
 }
 
 html,
@@ -11,7 +26,15 @@ body,
 body {
   margin: 0;
   font-family:
-    system-ui, -apple-system, 'Segoe UI', 'Noto Sans TC', 'PingFang TC',
+    'Noto Sans TC', 'Outfit', system-ui, -apple-system, 'Segoe UI', 'PingFang TC',
     'Microsoft JhengHei', sans-serif;
   background: #faf7eb;
+  color: #0f3d2e;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 數據字體工具類：金額、時間、代碼 */
+.mono {
+  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-variant-numeric: tabular-nums;
 }

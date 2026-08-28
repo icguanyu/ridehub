@@ -55,7 +55,7 @@ export default function LineBindingCard({ driverId }) {
         <Group justify="space-between">
           <Title order={4}>LINE 通知</Title>
           {linked ? (
-            <Badge color="green" variant="light">
+            <Badge color="brand" variant="light">
               已綁定
             </Badge>
           ) : (

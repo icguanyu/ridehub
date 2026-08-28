@@ -1,7 +1,8 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
-import { Center, Stack, Text, Box } from '@mantine/core';
+import { Center, Stack, Box } from '@mantine/core';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import DashboardLayout from '@/components/DashboardLayout';
+import Wordmark from '@/components/Wordmark';
 
 import DriverLogin from '@/pages/auth/DriverLogin';
 import DriverSignup from '@/pages/auth/DriverSignup';
@@ -17,13 +18,11 @@ import NotFound from '@/pages/NotFound';
 
 function CenteredPage({ children }) {
   return (
-    <Center mih="100vh" px="md">
+    <Center mih="100vh" px="md" py="xl">
       <Box w="100%" maw={380}>
-        <Stack gap="lg">
-          <Text ta="center" fw={700} size="xl" c="brand.7">
-            RideHub
-          </Text>
-          {children}
+        <Stack gap="lg" align="center">
+          <Wordmark size={32} withMark markSize={40} slogan />
+          <Box w="100%">{children}</Box>
         </Stack>
       </Box>
     </Center>

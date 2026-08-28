@@ -15,6 +15,7 @@ import {
 } from '@mantine/core';
 import { useBookingStatus, useRespondToQuote } from '@/hooks/useCustomer';
 import Spinner from '@/components/Spinner';
+import Wordmark from '@/components/Wordmark';
 import {
   fmtMoney,
   fmtDateTime,
@@ -52,12 +53,12 @@ export default function BookingConfirmation() {
   return (
     <Center mih="100vh" px="md" py="xl">
       <Box w="100%" maw={440}>
-        <Text ta="center" fw={700} size="xl" c="brand.7" mb="lg">
-          RideHub
-        </Text>
+        <Center mb="lg">
+          <Wordmark size={28} withMark markSize={34} />
+        </Center>
 
         {!token ? (
-          <Card withBorder p="lg">
+          <Card p="lg">
             <Text c="dimmed">連結缺少查詢憑證，無法顯示預約狀態。</Text>
           </Card>
         ) : isLoading ? (
@@ -68,7 +69,7 @@ export default function BookingConfirmation() {
           </Card>
         ) : (
           <Stack>
-            <Card withBorder shadow="sm" radius="md" p="lg">
+            <Card radius="xl" p="lg">
               <Stack gap="sm">
                 <Group justify="space-between">
                   <Title order={3}>預約狀態</Title>
@@ -95,14 +96,18 @@ export default function BookingConfirmation() {
                   <Text size="sm" c="dimmed">
                     去程
                   </Text>
-                  <Text size="sm">{fmtDateTime(b.bookingDate, b.bookingTime)}</Text>
+                  <Text size="sm" className="mono">
+                    {fmtDateTime(b.bookingDate, b.bookingTime)}
+                  </Text>
                 </Group>
                 {isRoundTrip && (
                   <Group justify="space-between">
                     <Text size="sm" c="dimmed">
                       回程
                     </Text>
-                    <Text size="sm">{fmtDateTime(b.returnDate, b.returnTime)}</Text>
+                    <Text size="sm" className="mono">
+                      {fmtDateTime(b.returnDate, b.returnTime)}
+                    </Text>
                   </Group>
                 )}
                 <Group justify="space-between">
@@ -115,18 +120,18 @@ export default function BookingConfirmation() {
                   <Text size="sm" c="dimmed">
                     {b.quotedPrice != null ? '司機報價' : '預估車資'}
                   </Text>
-                  <Text size="sm" fw={b.quotedPrice != null ? 700 : 400}>
+                  <Text size="sm" className="mono" fw={b.quotedPrice != null ? 700 : 400}>
                     {fmtMoney(b.quotedPrice ?? b.estimatedPrice)}
                   </Text>
                 </Group>
                 {b.quotedPrice != null && (
                   <Text size="xs" c="dimmed">
-                    （原預估 {fmtMoney(b.estimatedPrice)}）
+                    （原預估 <span className="mono">{fmtMoney(b.estimatedPrice)}</span>）
                   </Text>
                 )}
 
                 {b.status === 'rejected' && b.rejectedReason && (
-                  <Text size="sm" c="red">
+                  <Text size="sm" c="danger.6">
                     原因：{b.rejectedReason}
                   </Text>
                 )}
@@ -134,10 +139,10 @@ export default function BookingConfirmation() {
             </Card>
 
             {b.status === 'quoted' && (
-              <Card withBorder radius="md" p="lg">
+              <Card radius="lg" p="lg" style={{ borderColor: '#FFB74D', borderWidth: 2 }}>
                 <Stack gap="sm">
                   <Title order={4}>司機報價</Title>
-                  <Text size="lg" fw={700}>
+                  <Text className="mono" fw={700} style={{ fontSize: 28, color: '#0F3D2E' }}>
                     {fmtMoney(b.quotedPrice)}
                   </Text>
                   {b.quoteNote && (
@@ -146,12 +151,11 @@ export default function BookingConfirmation() {
                     </Text>
                   )}
                   <Group grow mt="xs">
-                    <Button color="green" loading={respond.isPending} onClick={() => doRespond(true)}>
+                    <Button color="brand" loading={respond.isPending} onClick={() => doRespond(true)}>
                       同意報價
                     </Button>
                     <Button
-                      variant="light"
-                      color="red"
+                      variant="default"
                       loading={respond.isPending}
                       onClick={() => doRespond(false)}
                     >
@@ -163,12 +167,22 @@ export default function BookingConfirmation() {
             )}
 
             {b.status === 'accepted' && (
-              <Card withBorder radius="md" p="lg">
+              <Card radius="lg" p="lg" style={{ background: '#0F3D2E' }}>
                 <Stack gap={6}>
-                  <Title order={4}>司機聯絡方式</Title>
-                  <Text size="sm">姓名：{b.driverName}</Text>
-                  <Text size="sm">電話：{b.driverPhone}</Text>
-                  {b.driverLineId && <Text size="sm">LINE：{b.driverLineId}</Text>}
+                  <Title order={4} c="#FAF7EB">
+                    司機聯絡方式
+                  </Title>
+                  <Text size="sm" c="#DCE9DC">
+                    姓名：{b.driverName}
+                  </Text>
+                  <Text size="sm" c="#DCE9DC" className="mono">
+                    電話：{b.driverPhone}
+                  </Text>
+                  {b.driverLineId && (
+                    <Text size="sm" c="#DCE9DC">
+                      LINE：{b.driverLineId}
+                    </Text>
+                  )}
                 </Stack>
               </Card>
             )}

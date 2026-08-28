@@ -18,7 +18,7 @@ export default function QuoteModal({ booking, opened, onClose, onConfirm, busy }
       <Text size="sm" c="dimmed" mb="sm">
         {booking?.customerName}・{booking?.pickupLocation} → {booking?.destination}
         <br />
-        原預估：{fmtMoney(booking?.estimatedPrice)}
+        原預估：<span className="mono">{fmtMoney(booking?.estimatedPrice)}</span>
       </Text>
       <NumberInput
         label="新報價 (NT$)"
@@ -42,7 +42,7 @@ export default function QuoteModal({ booking, opened, onClose, onConfirm, busy }
           取消
         </Button>
         <Button
-          color="orange"
+          color="sun"
           loading={busy}
           disabled={!price || Number(price) <= 0}
           onClick={() => onConfirm({ price: Number(price), note })}
