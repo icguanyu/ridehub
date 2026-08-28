@@ -47,21 +47,14 @@ export async function getAvailability(driverId) {
     .in('status', ACTIVE_BOOKING_STATUSES);
   if (error) throw error;
 
-  // Postgres TIME 會回 "HH:MM:SS"，裁成 "HH:MM"
-  const hhmm = (t) => (t ? String(t).slice(0, 5) : null);
-
   return {
-    operatingHoursStart: hhmm(driver.operating_hours_start),
-    operatingHoursEnd: hhmm(driver.operating_hours_end),
     maxDailyBookings: driver.max_daily_bookings,
     bookedTodayCount: count ?? 0,
   };
 }
 
-export async function updateAvailability(driverId, { operatingHoursStart, operatingHoursEnd, maxDailyBookings }) {
+export async function updateAvailability(driverId, { maxDailyBookings }) {
   const patch = {};
-  if (operatingHoursStart !== undefined) patch.operating_hours_start = operatingHoursStart;
-  if (operatingHoursEnd !== undefined) patch.operating_hours_end = operatingHoursEnd;
   if (maxDailyBookings !== undefined) patch.max_daily_bookings = maxDailyBookings;
 
   await updateDriver(driverId, patch);

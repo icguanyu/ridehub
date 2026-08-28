@@ -64,16 +64,7 @@ export default function DriverPublic() {
                       </Text>
                     </div>
                   )}
-                  {(data.operatingHoursStart || data.operatingHoursEnd) && (
-                    <div>
-                      <Text size="xs" c="dimmed">
-                        營運時間
-                      </Text>
-                      <Text size="sm" className="mono">
-                        {data.operatingHoursStart ?? '—'} ~ {data.operatingHoursEnd ?? '—'}
-                      </Text>
-                    </div>
-                  )}
+
                 </Group>
 
                 {data.serviceAreas && (

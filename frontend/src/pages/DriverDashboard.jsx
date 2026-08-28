@@ -116,7 +116,7 @@ export default function DriverDashboard() {
   const [quoting, setQuoting] = useState(null);
 
   const needsSetup =
-    driver.data && (!driver.data.basePrice || !driver.data.operatingHoursStart || !driver.data.lineId);
+    driver.data && (!driver.data.basePrice || !driver.data.lineId);
 
   const busy = accept.isPending || reject.isPending || quote.isPending;
   const outstanding = (bookings.data?.bookings ?? []).filter((b) => OUTSTANDING.includes(b.status));

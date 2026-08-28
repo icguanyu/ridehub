@@ -10,6 +10,7 @@ import {
   Group,
   Anchor,
   UnstyledButton,
+  Checkbox,
 } from '@mantine/core';
 import { Link, useNavigate } from 'react-router-dom';
 import Wordmark from '@/components/Wordmark';
@@ -86,16 +87,30 @@ function BookingRow({ booking }) {
   );
 }
 
+const STORAGE_KEY = 'ridehub_phone';
+
 export default function HomePage() {
-  const [inputPhone, setInputPhone] = useState('');
-  const [searchPhone, setSearchPhone] = useState('');
+  const saved = localStorage.getItem(STORAGE_KEY) ?? '';
+  const [inputPhone, setInputPhone] = useState(saved);
+  const [remember, setRemember] = useState(Boolean(saved));
+  const [searchPhone, setSearchPhone] = useState(
+    /^09\d{8}$/.test(saved) ? saved : '',
+  );
   const phoneError = inputPhone && !/^09\d{8}$/.test(inputPhone) ? '手機格式需為 09xxxxxxxx' : null;
 
   const { data, isLoading, isFetched } = useBookingSearch(searchPhone);
 
+  const handleRemember = (checked) => {
+    setRemember(checked);
+    if (!checked) localStorage.removeItem(STORAGE_KEY);
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (/^09\d{8}$/.test(inputPhone)) setSearchPhone(inputPhone);
+    if (!/^09\d{8}$/.test(inputPhone)) return;
+    if (remember) localStorage.setItem(STORAGE_KEY, inputPhone);
+    else localStorage.removeItem(STORAGE_KEY);
+    setSearchPhone(inputPhone);
   };
 
   return (
@@ -117,7 +132,7 @@ export default function HomePage() {
             </Text>
 
             <form onSubmit={handleSubmit}>
-              <Group gap="xs" align="flex-start">
+              <Group gap="xs" align="flex-start" mb="xs">
                 <TextInput
                   flex={1}
                   placeholder="0912345678"
@@ -131,6 +146,13 @@ export default function HomePage() {
                   查詢
                 </Button>
               </Group>
+              <Checkbox
+                label="記住我"
+                size="xs"
+                checked={remember}
+                onChange={(e) => handleRemember(e.currentTarget.checked)}
+                color="brand"
+              />
             </form>
           </Box>
 

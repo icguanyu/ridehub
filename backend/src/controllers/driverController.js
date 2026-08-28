@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { validate } from '../middlewares/validate.js';
-import { nameField, timeField } from '../utils/validators.js';
+import { nameField } from '../utils/validators.js';
 import { currentMonth } from '../utils/dates.js';
 import { BOOKING_STATUS_VALUES } from '../constants.js';
 import {
@@ -86,8 +86,6 @@ export const getAvailabilityHandler = asyncHandler(async (req, res) => {
 export const updateAvailabilityValidator = validate({
   body: z
     .object({
-      operatingHoursStart: timeField.optional(),
-      operatingHoursEnd: timeField.optional(),
       maxDailyBookings: z.number().int().min(1).max(100).optional(),
     })
     .strict(),

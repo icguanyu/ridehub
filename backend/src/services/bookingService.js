@@ -36,14 +36,6 @@ export async function listDriverBookings(driverId, { status, month, page = 1, pa
   };
 }
 
-const hhmm = (t) => String(t).slice(0, 5);
-
-const withinOperatingHours = (driver, time) => {
-  if (!driver.operating_hours_start || !driver.operating_hours_end) return true; // 未設定則不限制
-  const t = hhmm(time);
-  return t >= hhmm(driver.operating_hours_start) && t <= hhmm(driver.operating_hours_end);
-};
-
 // 檢查某日名額；超過上限則丟 409
 async function assertDailyCapacity(driver, date, label) {
   const { count, error } = await supabaseAdmin
@@ -79,14 +71,7 @@ export async function createBooking(input) {
     throw ApiError.badRequest('預約日期不可早於今天');
   }
 
-  // 2. 去程需在營運時間內
-  if (!withinOperatingHours(driver, bookingTime)) {
-    throw ApiError.badRequest(
-      `預約時間需在營運時間內（${hhmm(driver.operating_hours_start)}–${hhmm(driver.operating_hours_end)}）`,
-    );
-  }
-
-  // 3. 往返：驗證回程
+  // 2. 往返：驗證回程
   if (isRoundTrip) {
     if (!returnDate || !returnTime) {
       throw ApiError.badRequest('往返行程需填寫回程日期與時間');
@@ -97,14 +82,9 @@ export async function createBooking(input) {
     if (returnDate === bookingDate && hhmm(returnTime) <= hhmm(bookingTime)) {
       throw ApiError.badRequest('同日回程時間需晚於去程時間');
     }
-    if (!withinOperatingHours(driver, returnTime)) {
-      throw ApiError.badRequest(
-        `回程時間需在營運時間內（${hhmm(driver.operating_hours_start)}–${hhmm(driver.operating_hours_end)}）`,
-      );
-    }
   }
 
-  // 4. 名額檢查（去程日；往返且回程跨日則回程日也檢查）
+  // 3. 名額檢查（去程日；往返且回程跨日則回程日也檢查）
   await assertDailyCapacity(driver, bookingDate, '去程當日');
   if (isRoundTrip && returnDate !== bookingDate) {
     await assertDailyCapacity(driver, returnDate, '回程當日');
