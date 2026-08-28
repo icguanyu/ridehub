@@ -649,6 +649,75 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Error' }
 
+  /bookings/{bookingId}/cancel:
+    put:
+      tags: [Booking]
+      summary: 司機取消預約
+      description: 僅該預約的司機、且狀態為 `pending` / `quoted` / `accepted` 時可操作。取消理由必填，成功後通知客人。
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [reason]
+              properties:
+                reason: { type: string, minLength: 1, maxLength: 500, example: 司機臨時有事無法出車 }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  booking: { $ref: '#/components/schemas/BookingItem' }
+                  message: { type: string }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409':
+          description: 預約目前狀態無法取消
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /bookings/{bookingId}/complete:
+    put:
+      tags: [Booking]
+      summary: 司機標記行程完成
+      description: 僅該預約的司機、且狀態為 `accepted` 時可操作。`accepted` → `completed`，完成後無法復原。
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  booking: { $ref: '#/components/schemas/BookingItem' }
+                  message: { type: string }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409':
+          description: 預約非 accepted 狀態
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
   /line/webhook:
     post:
       tags: [Line]
