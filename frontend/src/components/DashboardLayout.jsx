@@ -1,16 +1,75 @@
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { AppShell, Group, Text, Button, Tabs, Container } from '@mantine/core';
+import { AppShell, Group, UnstyledButton, Text, ActionIcon, Container, Tooltip } from '@mantine/core';
 import { useAuthStore } from '@/store/authStore';
 import Wordmark from '@/components/Wordmark';
 
+function IconCar({ active }) {
+  const c = active ? '#0F3D2E' : '#4A6152';
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M5 17H3a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1l3-4h12l3 4h1a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-2" />
+      <circle cx="7.5" cy="17.5" r="2.5" />
+      <circle cx="16.5" cy="17.5" r="2.5" />
+    </svg>
+  );
+}
+
+function IconCalendar({ active }) {
+  const c = active ? '#0F3D2E' : '#4A6152';
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <rect x="3" y="4" width="18" height="18" rx="2" />
+      <path d="M16 2v4M8 2v4M3 10h18" />
+    </svg>
+  );
+}
+
+function IconCard({ active }) {
+  const c = active ? '#0F3D2E' : '#4A6152';
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <rect x="2" y="5" width="20" height="14" rx="2" />
+      <path d="M2 10h20" />
+    </svg>
+  );
+}
+
+function IconClock({ active }) {
+  const c = active ? '#0F3D2E' : '#4A6152';
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 6v6l4 2" />
+    </svg>
+  );
+}
+
+function IconBell() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4A6152" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+    </svg>
+  );
+}
+
+function IconLogout() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4A6152" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <polyline points="16 17 21 12 16 7" />
+      <line x1="21" y1="12" x2="9" y2="12" />
+    </svg>
+  );
+}
+
 const tabs = [
-  { value: '/dashboard', label: '總覽' },
-  { value: '/dashboard/bookings', label: '預約' },
-  { value: '/dashboard/edit', label: '服務資訊' },
-  { value: '/dashboard/availability', label: '時間設定' },
+  { value: '/dashboard', label: '總覽', Icon: IconCar },
+  { value: '/dashboard/bookings', label: '預約', Icon: IconCalendar },
+  { value: '/dashboard/edit', label: '服務', Icon: IconCard },
+  { value: '/dashboard/availability', label: '時間', Icon: IconClock },
 ];
 
-// 目前路徑對應到哪個分頁（子路徑如 /dashboard/bookings/:id 也算在「預約」）
 function activeTab(pathname) {
   const match = [...tabs]
     .sort((a, b) => b.value.length - a.value.length)
@@ -19,52 +78,79 @@ function activeTab(pathname) {
 }
 
 export default function DashboardLayout() {
-  const driver = useAuthStore((s) => s.driver);
   const logout = useAuthStore((s) => s.logout);
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const active = activeTab(pathname);
 
   return (
     <AppShell
-      header={{ height: 60 }}
+      header={{ height: 56 }}
+      footer={{ height: 64 }}
       padding="md"
-      styles={{ header: { borderBottom: '1px solid #E4E0D0', background: '#FAF7EB' } }}
+      styles={{
+        header: { borderBottom: '1px solid #E4E0D0', background: '#FAF7EB' },
+        footer: { borderTop: '1px solid #E4E0D0', background: '#FAF7EB' },
+        main: { background: '#FAF7EB' },
+      }}
     >
       <AppShell.Header>
         <Group h="100%" px="md" justify="space-between">
-          <Group gap={10}>
-            <Wordmark size={20} withMark markSize={26} />
-            <Text size="xs" c="dimmed">
-              {driver?.name ? `${driver.name} 司機後台` : '司機後台'}
-            </Text>
+          <Wordmark size={20} withMark markSize={26} />
+          <Group gap={2}>
+            <ActionIcon variant="subtle" color="gray" size="lg" aria-label="通知">
+              <IconBell />
+            </ActionIcon>
+            <Tooltip label="登出" withArrow position="bottom-end">
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                size="lg"
+                aria-label="登出"
+                onClick={() => {
+                  logout();
+                  navigate('/login', { replace: true });
+                }}
+              >
+                <IconLogout />
+              </ActionIcon>
+            </Tooltip>
           </Group>
-          <Button
-            size="xs"
-            variant="default"
-            onClick={() => {
-              logout();
-              navigate('/login', { replace: true });
-            }}
-          >
-            登出
-          </Button>
         </Group>
       </AppShell.Header>
 
       <AppShell.Main>
         <Container size="sm" px={0}>
-          <Tabs value={activeTab(pathname)} onChange={(v) => navigate(v)} mb="lg" variant="pills">
-            <Tabs.List grow>
-              {tabs.map((t) => (
-                <Tabs.Tab key={t.value} value={t.value}>
-                  {t.label}
-                </Tabs.Tab>
-              ))}
-            </Tabs.List>
-          </Tabs>
           <Outlet />
         </Container>
       </AppShell.Main>
+
+      <AppShell.Footer>
+        <Group h="100%" justify="space-around" align="center">
+          {tabs.map(({ value, label, Icon }) => {
+            const isActive = active === value;
+            return (
+              <UnstyledButton
+                key={value}
+                onClick={() => navigate(value)}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: 3,
+                  padding: '6px 16px',
+                  borderRadius: 10,
+                }}
+              >
+                <Icon active={isActive} />
+                <Text size="10px" fw={isActive ? 700 : 400} c={isActive ? '#0F3D2E' : '#4A6152'}>
+                  {label}
+                </Text>
+              </UnstyledButton>
+            );
+          })}
+        </Group>
+      </AppShell.Footer>
     </AppShell>
   );
 }

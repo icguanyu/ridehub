@@ -14,12 +14,17 @@ import {
   quoteAccept,
   quoteDecline,
   quoteResponseValidator,
+  searchValidator,
+  searchByPhone,
 } from '../controllers/bookingController.js';
 
 export const bookingsRouter = Router();
 
 // 客人匿名建立預約
 bookingsRouter.post('/', createBookingValidator, create);
+
+// 乘客用手機查詢行程（需在 /:bookingId 之前）
+bookingsRouter.get('/search', searchValidator, searchByPhone);
 
 // 客人憑 token 查詢預約狀態
 bookingsRouter.get('/:bookingId', getStatusValidator, getStatus);

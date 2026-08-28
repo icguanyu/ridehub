@@ -1,0 +1,179 @@
+import { useState } from 'react';
+import {
+  Center,
+  Box,
+  Stack,
+  TextInput,
+  Button,
+  Text,
+  Badge,
+  Group,
+  Anchor,
+  UnstyledButton,
+} from '@mantine/core';
+import { Link, useNavigate } from 'react-router-dom';
+import Wordmark from '@/components/Wordmark';
+import { useBookingSearch } from '@/hooks/useCustomer';
+import { STATUS_LABEL, STATUS_COLOR, fmtDateTime } from '@/lib/format';
+import Spinner from '@/components/Spinner';
+
+function ArrowIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M9 18l6-6-6-6" />
+    </svg>
+  );
+}
+
+function PinIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2E7D32" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flex: 'none', marginTop: 2 }} aria-hidden>
+      <path d="M12 21s7-6.4 7-11a7 7 0 1 0-14 0c0 4.6 7 11 7 11Z" />
+      <circle cx="12" cy="10" r="2.6" />
+    </svg>
+  );
+}
+
+function BookingRow({ booking }) {
+  const navigate = useNavigate();
+
+  const go = () => navigate(`/booking/${booking.id}?token=${booking.statusToken}`);
+
+  return (
+    <UnstyledButton
+      onClick={go}
+      style={{ width: '100%', textAlign: 'left' }}
+    >
+      <Box
+        style={{
+          border: '1px solid #E4E0D0',
+          borderRadius: 16,
+          padding: '12px 14px',
+          background: '#fff',
+          transition: 'border-color 0.15s',
+        }}
+        onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#2E7D32')}
+        onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#E4E0D0')}
+      >
+        <Group justify="space-between" mb={6} wrap="nowrap">
+          <Text size="sm" fw={600} className="mono">
+            {fmtDateTime(booking.bookingDate, booking.bookingTime)}
+          </Text>
+          <Group gap={6} wrap="nowrap">
+            <Badge color={STATUS_COLOR[booking.status]} variant="light" size="sm">
+              {STATUS_LABEL[booking.status] ?? booking.status}
+            </Badge>
+            <Text c="dimmed" style={{ lineHeight: 1 }}>
+              <ArrowIcon />
+            </Text>
+          </Group>
+        </Group>
+
+        <Group gap={5} align="flex-start" wrap="nowrap" mb={booking.driverName ? 4 : 0}>
+          <PinIcon />
+          <Text size="sm" style={{ lineHeight: 1.4 }}>
+            {booking.pickupLocation} → {booking.destination}
+          </Text>
+        </Group>
+
+        {booking.driverName && (
+          <Text size="xs" c="dimmed" ml={18}>
+            司機：{booking.driverName}
+          </Text>
+        )}
+      </Box>
+    </UnstyledButton>
+  );
+}
+
+export default function HomePage() {
+  const [inputPhone, setInputPhone] = useState('');
+  const [searchPhone, setSearchPhone] = useState('');
+  const phoneError = inputPhone && !/^09\d{8}$/.test(inputPhone) ? '手機格式需為 09xxxxxxxx' : null;
+
+  const { data, isLoading, isFetched } = useBookingSearch(searchPhone);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (/^09\d{8}$/.test(inputPhone)) setSearchPhone(inputPhone);
+  };
+
+  return (
+    <Center mih="100vh" px="md" py="xl" style={{ background: '#FAF7EB', alignItems: 'flex-start' }}>
+      <Box w="100%" maw={420}>
+        <Stack gap="xl">
+          {/* 品牌 */}
+          <Center pt="lg">
+            <Wordmark size={28} withMark markSize={34} slogan />
+          </Center>
+
+          {/* 搜尋區塊 */}
+          <Box>
+            <Text fw={700} size="lg" mb={4} style={{ color: '#0F3D2E' }}>
+              查詢我的行程
+            </Text>
+            <Text size="sm" c="dimmed" mb="md">
+              輸入預約時填寫的手機號碼，即可查詢所有行程狀態。
+            </Text>
+
+            <form onSubmit={handleSubmit}>
+              <Group gap="xs" align="flex-start">
+                <TextInput
+                  flex={1}
+                  placeholder="0912345678"
+                  inputMode="numeric"
+                  value={inputPhone}
+                  onChange={(e) => setInputPhone(e.target.value.trim())}
+                  error={phoneError}
+                  maxLength={10}
+                />
+                <Button type="submit" color="brand" disabled={!!phoneError || !inputPhone}>
+                  查詢
+                </Button>
+              </Group>
+            </form>
+          </Box>
+
+          {/* 搜尋結果 */}
+          {isLoading && <Spinner />}
+
+          {isFetched && data && (
+            <Stack gap="sm">
+              {data.length > 0 ? (
+                <>
+                  <Text size="sm" c="dimmed">
+                    找到 {data.length} 筆行程
+                  </Text>
+                  {data.map((b) => (
+                    <BookingRow key={b.id} booking={b} />
+                  ))}
+                </>
+              ) : (
+                <Box
+                  style={{
+                    border: '1px solid #E4E0D0',
+                    borderRadius: 16,
+                    padding: '24px 16px',
+                    textAlign: 'center',
+                    background: '#fff',
+                  }}
+                >
+                  <Text c="dimmed" size="sm">
+                    查無此號碼的行程紀錄
+                  </Text>
+                </Box>
+              )}
+            </Stack>
+          )}
+
+          {/* 司機入口 */}
+          <Center>
+            <Anchor component={Link} to="/dashboard" size="xs" c="dimmed">
+              司機後台登入 →
+            </Anchor>
+          </Center>
+        </Stack>
+      </Box>
+    </Center>
+  );
+}

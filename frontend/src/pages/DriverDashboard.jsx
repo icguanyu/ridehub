@@ -1,16 +1,10 @@
 import { useState } from 'react';
-import { SimpleGrid, Stack, Title, Text, Alert, Group, Button } from '@mantine/core';
+import { Stack, Text, Alert, Group, Button, Box, Badge } from '@mantine/core';
 import { Link } from 'react-router-dom';
 import { useCurrentDriverId } from '@/hooks/useAuth';
+import { useDriverBookings, useAcceptBooking, useRejectBooking, useQuoteBooking } from '@/hooks/useBookings';
 import { useDriverStats } from '@/hooks/useStats';
-import {
-  useDriverBookings,
-  useAcceptBooking,
-  useRejectBooking,
-  useQuoteBooking,
-} from '@/hooks/useBookings';
 import { useDriver } from '@/hooks/useDriver';
-import StatCard from '@/components/StatCard';
 import BookingCard from '@/components/BookingCard';
 import RejectBookingModal from '@/components/RejectBookingModal';
 import QuoteModal from '@/components/QuoteModal';
@@ -20,22 +14,119 @@ import { notifyOk, notifyErr } from '@/lib/notify';
 
 const OUTSTANDING = ['pending', 'quoted'];
 
+function todayISO() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function minutesUntil(date, time) {
+  const t = (time ?? '00:00:00').slice(0, 8);
+  return Math.round((new Date(`${date}T${t}`) - new Date()) / 60000);
+}
+
+function getCountdownBadge(booking) {
+  if (booking.bookingDate !== todayISO()) {
+    return { label: '已確認', color: 'brand', variant: 'outline' };
+  }
+  const mins = minutesUntil(booking.bookingDate, booking.bookingTime);
+  if (mins < 0) return { label: '進行中', color: 'leaf', variant: 'filled' };
+  if (mins <= 60) return { label: `${mins}分鐘後`, color: 'sun', variant: 'filled' };
+  return { label: '已確認', color: 'brand', variant: 'outline' };
+}
+
+function PinIcon() {
+  return (
+    <svg
+      width="14" height="14" viewBox="0 0 24 24"
+      fill="none" stroke="#2E7D32" strokeWidth="2.5"
+      strokeLinecap="round" strokeLinejoin="round"
+      style={{ flex: 'none', marginTop: 2 }}
+      aria-hidden
+    >
+      <path d="M12 21s7-6.4 7-11a7 7 0 1 0-14 0c0 4.6 7 11 7 11Z" />
+      <circle cx="12" cy="10" r="2.6" />
+    </svg>
+  );
+}
+
+function TripCard({ booking, showActions }) {
+  const b = booking;
+  const badge = getCountdownBadge(b);
+  const time = (b.bookingTime ?? '').slice(0, 5);
+
+  const openNav = () => {
+    const q = encodeURIComponent(b.pickupLocation);
+    window.open(`https://www.google.com/maps/search/?api=1&query=${q}`, '_blank', 'noopener,noreferrer');
+  };
+
+  return (
+    <Box style={{ border: '1px solid #E4E0D0', borderRadius: 16, padding: '14px 16px', background: '#FFFFFF' }}>
+      <Group justify="space-between" mb={8} wrap="nowrap">
+        <Text
+          fw={700}
+          style={{ fontFamily: "'Outfit', sans-serif", fontSize: 22, letterSpacing: '-0.02em', lineHeight: 1 }}
+        >
+          {time}
+        </Text>
+        <Badge color={badge.color} variant={badge.variant} size="md">
+          {badge.label}
+        </Badge>
+      </Group>
+
+      <Group gap={6} align="flex-start" mb={4} wrap="nowrap">
+        <PinIcon />
+        <Text size="sm" fw={500} style={{ lineHeight: 1.4 }}>
+          {b.pickupLocation} → {b.destination}
+        </Text>
+      </Group>
+
+      <Text size="sm" c="dimmed" mb={showActions ? 12 : 0}>
+        {b.customerName} · {b.passengerCount}人
+      </Text>
+
+      {showActions && (
+        <Group gap={8}>
+          <Button flex={1} color="brand" size="sm" onClick={openNav}>
+            開始導航
+          </Button>
+          {b.customerPhone ? (
+            <Button flex={1} variant="default" size="sm" component="a" href={`tel:${b.customerPhone}`}>
+              聯絡乘客
+            </Button>
+          ) : (
+            <Button flex={1} variant="default" size="sm" disabled>
+              聯絡乘客
+            </Button>
+          )}
+        </Group>
+      )}
+    </Box>
+  );
+}
+
 export default function DriverDashboard() {
   const driverId = useCurrentDriverId();
   const driver = useDriver(driverId);
   const stats = useDriverStats(driverId);
   const bookings = useDriverBookings(driverId, { pageSize: 50 });
+  const acceptedQ = useDriverBookings(driverId, { status: 'accepted', pageSize: 50 });
   const accept = useAcceptBooking();
   const reject = useRejectBooking();
   const quote = useQuoteBooking();
   const [rejecting, setRejecting] = useState(null);
   const [quoting, setQuoting] = useState(null);
 
+  const needsSetup =
+    driver.data && (!driver.data.basePrice || !driver.data.operatingHoursStart || !driver.data.lineId);
+
   const busy = accept.isPending || reject.isPending || quote.isPending;
   const outstanding = (bookings.data?.bookings ?? []).filter((b) => OUTSTANDING.includes(b.status));
 
-  const needsSetup =
-    driver.data && (!driver.data.basePrice || !driver.data.operatingHoursStart || !driver.data.lineId);
+  const t = todayISO();
+  const upcoming = (acceptedQ.data?.bookings ?? [])
+    .filter((b) => b.bookingDate >= t)
+    .sort((a, b) =>
+      `${a.bookingDate}T${a.bookingTime}`.localeCompare(`${b.bookingDate}T${b.bookingTime}`),
+    );
 
   const doAccept = (b) =>
     accept.mutate(
@@ -47,10 +138,7 @@ export default function DriverDashboard() {
     reject.mutate(
       { bookingId: rejecting.id, reason },
       {
-        onSuccess: (r) => {
-          notifyOk(r.message || '已拒絕');
-          setRejecting(null);
-        },
+        onSuccess: (r) => { notifyOk(r.message || '已拒絕'); setRejecting(null); },
         onError: (e) => notifyErr(e),
       },
     );
@@ -59,16 +147,13 @@ export default function DriverDashboard() {
     quote.mutate(
       { bookingId: quoting.id, price, note },
       {
-        onSuccess: (r) => {
-          notifyOk(r.message || '報價已送出');
-          setQuoting(null);
-        },
+        onSuccess: (r) => { notifyOk(r.message || '報價已送出'); setQuoting(null); },
         onError: (e) => notifyErr(e),
       },
     );
 
   return (
-    <Stack gap="lg">
+    <Stack gap="md">
       {needsSetup && (
         <Alert color="sun" title="完成基本設定">
           <Group justify="space-between">
@@ -80,32 +165,71 @@ export default function DriverDashboard() {
         </Alert>
       )}
 
+      {/* 本月收益卡 */}
+      {stats.isLoading ? (
+        <Spinner />
+      ) : (
+        <Box style={{ background: '#0F3D2E', borderRadius: 16, padding: '20px 24px 22px' }}>
+          <Text size="sm" mb={6} style={{ color: '#8BC34A', fontWeight: 500 }}>
+            本月已完成
+          </Text>
+          <Text
+            fw={700}
+            style={{
+              fontFamily: "'Outfit', sans-serif",
+              fontSize: 36,
+              letterSpacing: '-0.02em',
+              color: '#FFFFFF',
+              lineHeight: 1.1,
+            }}
+          >
+            {fmtMoney(stats.data?.totalRevenue)}
+          </Text>
+          <Text size="sm" mt={6} style={{ color: '#8BC34A' }}>
+            {stats.data?.acceptedBookings ?? 0} 趟已成交
+            {stats.data?.totalCustomers > 0 && ` · ${stats.data.totalCustomers} 位乘客`}
+          </Text>
+        </Box>
+      )}
+
+      {/* 待出發 */}
       <div>
-        <Title order={4} mb="xs">
-          本月統計
-        </Title>
-        {stats.isLoading ? (
+        <Text fw={600} size="sm" mb={10} style={{ color: '#4A6152' }}>
+          待出發
+        </Text>
+        {acceptedQ.isLoading ? (
           <Spinner />
+        ) : upcoming.length > 0 ? (
+          <Stack gap="sm">
+            {upcoming.map((b, i) => (
+              <TripCard key={b.id} booking={b} showActions={i === 0} />
+            ))}
+          </Stack>
         ) : (
-          <SimpleGrid cols={{ base: 3 }} spacing="sm">
-            <StatCard
-              label="本月接單"
-              value={stats.data?.totalBookings ?? 0}
-              sub={`成交 ${stats.data?.acceptedBookings ?? 0}`}
-            />
-            <StatCard label="平均評分" value={stats.data?.avgRating ? `${stats.data.avgRating} ⭐` : '—'} />
-            <StatCard label="本月收入" value={fmtMoney(stats.data?.totalRevenue)} />
-          </SimpleGrid>
+          <Box
+            style={{
+              border: '1px solid #E4E0D0',
+              borderRadius: 16,
+              padding: '20px 16px',
+              textAlign: 'center',
+              background: '#FFFFFF',
+            }}
+          >
+            <Text c="dimmed" size="sm">
+              目前無待出發行程
+            </Text>
+          </Box>
         )}
       </div>
 
+      {/* 待處理預約 */}
       <div>
-        <Title order={4} mb="xs">
+        <Text fw={600} size="sm" mb={10} style={{ color: '#4A6152' }}>
           待處理預約
-        </Title>
+        </Text>
         {bookings.isLoading ? (
           <Spinner />
-        ) : outstanding.length ? (
+        ) : outstanding.length > 0 ? (
           <Stack gap="sm">
             {outstanding.map((b) => (
               <BookingCard
@@ -120,9 +244,19 @@ export default function DriverDashboard() {
             ))}
           </Stack>
         ) : (
-          <Text c="dimmed" size="sm">
-            目前沒有待處理的預約。
-          </Text>
+          <Box
+            style={{
+              border: '1px solid #E4E0D0',
+              borderRadius: 16,
+              padding: '20px 16px',
+              textAlign: 'center',
+              background: '#FFFFFF',
+            }}
+          >
+            <Text c="dimmed" size="sm">
+              目前沒有待處理的預約
+            </Text>
+          </Box>
         )}
       </div>
 

@@ -15,15 +15,35 @@ import {
   Divider,
   Anchor,
   SegmentedControl,
+  Input,
 } from '@mantine/core';
-import { DateInput, TimeInput } from '@mantine/dates';
+import { TimeInput } from '@mantine/dates';
 import { useForm } from '@mantine/form';
-import dayjs from 'dayjs';
 import { usePublicDriver, useCreateBooking } from '@/hooks/useCustomer';
 import Spinner from '@/components/Spinner';
 import Wordmark from '@/components/Wordmark';
 import { fmtMoney } from '@/lib/format';
 import { notifyErr } from '@/lib/notify';
+
+function todayISO() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function NativeDateInput({ label, withAsterisk, min, value, onChange, error }) {
+  return (
+    <Input.Wrapper label={label} withAsterisk={withAsterisk} error={error}>
+      <Input
+        component="input"
+        type="date"
+        min={min}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        error={!!error}
+        styles={{ input: { cursor: 'pointer', colorScheme: 'light' } }}
+      />
+    </Input.Wrapper>
+  );
+}
 
 export default function CustomerBooking() {
   const { driverId } = useParams();
@@ -39,9 +59,9 @@ export default function CustomerBooking() {
       tripType: 'one_way',
       pickupLocation: '',
       destination: '',
-      bookingDate: null,
+      bookingDate: '',
       bookingTime: '',
-      returnDate: null,
+      returnDate: '',
       returnTime: '',
       passengerCount: 1,
       estimatedDistanceKm: '',
@@ -59,7 +79,7 @@ export default function CustomerBooking() {
           ? null
           : !v
             ? '請選擇回程日期'
-            : values.bookingDate && dayjs(v).isBefore(dayjs(values.bookingDate), 'day')
+            : values.bookingDate && v < values.bookingDate
               ? '回程不可早於去程'
               : null,
       returnTime: (v, values) =>
@@ -100,12 +120,12 @@ export default function CustomerBooking() {
       tripType: v.tripType,
       pickupLocation: v.pickupLocation.trim(),
       destination: v.destination.trim(),
-      bookingDate: dayjs(v.bookingDate).format('YYYY-MM-DD'),
+      bookingDate: v.bookingDate,
       bookingTime: v.bookingTime,
       passengerCount: Number(v.passengerCount) || 1,
     };
     if (v.tripType === 'round_trip') {
-      payload.returnDate = dayjs(v.returnDate).format('YYYY-MM-DD');
+      payload.returnDate = v.returnDate;
       payload.returnTime = v.returnTime;
     }
     if (v.customerLineId.trim()) payload.customerLineId = v.customerLineId.trim();
@@ -161,24 +181,26 @@ export default function CustomerBooking() {
               <TextInput label="目的地" withAsterisk {...form.getInputProps('destination')} />
 
               <Group grow>
-                <DateInput
+                <NativeDateInput
                   label="去程日期"
                   withAsterisk
-                  valueFormat="YYYY-MM-DD"
-                  minDate={new Date()}
-                  {...form.getInputProps('bookingDate')}
+                  min={todayISO()}
+                  value={form.values.bookingDate}
+                  onChange={(v) => form.setFieldValue('bookingDate', v)}
+                  error={form.errors.bookingDate}
                 />
                 <TimeInput label="去程時間" withAsterisk {...form.getInputProps('bookingTime')} />
               </Group>
 
               {isRoundTrip && (
                 <Group grow>
-                  <DateInput
+                  <NativeDateInput
                     label="回程日期"
                     withAsterisk
-                    valueFormat="YYYY-MM-DD"
-                    minDate={form.values.bookingDate || new Date()}
-                    {...form.getInputProps('returnDate')}
+                    min={form.values.bookingDate || todayISO()}
+                    value={form.values.returnDate}
+                    onChange={(v) => form.setFieldValue('returnDate', v)}
+                    error={form.errors.returnDate}
                   />
                   <TimeInput label="回程時間" withAsterisk {...form.getInputProps('returnTime')} />
                 </Group>

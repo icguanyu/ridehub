@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 
@@ -30,6 +31,19 @@ export function useBookingStatus(bookingId, token) {
     queryFn: async () => {
       const { data } = await api.get(`/bookings/${bookingId}`, { params: { token } });
       return data.booking;
+    },
+  });
+}
+
+// 乘客用手機號碼查詢自己的行程
+export function useBookingSearch(phone) {
+  return useQuery({
+    queryKey: ['booking-search', phone],
+    enabled: /^09\d{8}$/.test(phone),
+    staleTime: 30_000,
+    queryFn: async () => {
+      const { data } = await api.get('/bookings/search', { params: { phone } });
+      return data.bookings;
     },
   });
 }

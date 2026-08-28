@@ -142,11 +142,21 @@ export default function DriverEdit() {
             </CopyButton>
           </Group>
           <Center mt="sm">
-            <Stack align="center" gap={4}>
+            <Stack align="center" gap="sm">
               <QRCodeCanvas value={shareUrl} size={160} />
               <Text size="xs" c="dimmed">
                 客人掃碼即可預約
               </Text>
+              <Button
+                variant="default"
+                size="xs"
+                component="a"
+                href={shareUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                開啟預約頁面
+              </Button>
             </Stack>
           </Center>
         </Stack>

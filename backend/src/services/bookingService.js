@@ -152,6 +152,19 @@ export async function getBookingWithDriver(bookingId) {
   return data;
 }
 
+// 乘客憑手機號碼查詢自己的所有預約
+export async function searchBookingsByPhone(phone) {
+  const { data, error } = await supabaseAdmin
+    .from('bookings')
+    .select('id, status, trip_type, pickup_location, destination, booking_date, booking_time, drivers(name)')
+    .eq('customer_phone', phone)
+    .order('booking_date', { ascending: false })
+    .order('booking_time', { ascending: false })
+    .limit(50);
+  if (error) throw error;
+  return data ?? [];
+}
+
 // 依 id 取預約（後端內部用）
 export async function getBookingById(bookingId) {
   const { data, error } = await supabaseAdmin

@@ -42,6 +42,21 @@ export function bookingCreated(row) {
   };
 }
 
+// 手機搜尋結果：精簡欄位，不含敏感聯絡資訊
+export function bookingSearchItem(row, statusToken) {
+  return {
+    id: row.id,
+    status: row.status,
+    tripType: row.trip_type,
+    pickupLocation: row.pickup_location,
+    destination: row.destination,
+    bookingDate: row.booking_date,
+    bookingTime: hhmm(row.booking_time),
+    driverName: row.drivers?.name ?? null,
+    statusToken,
+  };
+}
+
 // 客人查詢狀態：預約 + 司機聯絡資訊（driver 已 join）
 export function bookingWithDriver(row) {
   const d = row.drivers || {};

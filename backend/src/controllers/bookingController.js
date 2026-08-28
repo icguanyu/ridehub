@@ -8,6 +8,7 @@ import {
   respondToBooking,
   quoteBooking,
   respondToQuote,
+  searchBookingsByPhone,
 } from '../services/bookingService.js';
 import { getDriverById } from '../services/driverService.js';
 import {
@@ -16,7 +17,7 @@ import {
   notifyCustomerQuote,
   notifyDriverQuoteResponse,
 } from '../services/notificationService.js';
-import { bookingItem, bookingCreated, bookingWithDriver } from '../serializers/booking.js';
+import { bookingItem, bookingCreated, bookingWithDriver, bookingSearchItem } from '../serializers/booking.js';
 import { makeBookingToken, verifyBookingToken } from '../utils/bookingToken.js';
 import { ApiError } from '../utils/ApiError.js';
 import { logger } from '../utils/logger.js';
@@ -70,6 +71,18 @@ export const create = asyncHandler(async (req, res) => {
       message: '預約已提交，等待司機確認',
     },
     notified: notify.ok ? notify.channel : false,
+  });
+});
+
+// ── GET /bookings/search?phone= ──（乘客用手機查詢行程，公開）
+export const searchValidator = validate({
+  query: z.object({ phone: phoneField }),
+});
+
+export const searchByPhone = asyncHandler(async (req, res) => {
+  const rows = await searchBookingsByPhone(req.query.phone);
+  res.json({
+    bookings: rows.map((row) => bookingSearchItem(row, makeBookingToken(row.id))),
   });
 });
 

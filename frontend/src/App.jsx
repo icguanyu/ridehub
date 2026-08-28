@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 import { Center, Stack, Box } from '@mantine/core';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -14,6 +14,7 @@ import BookingDetail from '@/pages/BookingDetail';
 import DriverPublic from '@/pages/DriverPublic';
 import CustomerBooking from '@/pages/CustomerBooking';
 import BookingConfirmation from '@/pages/BookingConfirmation';
+import HomePage from '@/pages/HomePage';
 import NotFound from '@/pages/NotFound';
 
 function CenteredPage({ children }) {
@@ -32,7 +33,7 @@ function CenteredPage({ children }) {
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/" element={<HomePage />} />
 
       <Route path="/login" element={<CenteredPage><DriverLogin /></CenteredPage>} />
       <Route path="/signup" element={<CenteredPage><DriverSignup /></CenteredPage>} />
