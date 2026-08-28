@@ -2,7 +2,13 @@ import { useState } from 'react';
 import { Stack, Text, Alert, Group, Button, Box, Badge } from '@mantine/core';
 import { Link } from 'react-router-dom';
 import { useCurrentDriverId } from '@/hooks/useAuth';
-import { useDriverBookings, useAcceptBooking, useRejectBooking, useQuoteBooking } from '@/hooks/useBookings';
+import {
+  useDriverBookings,
+  useAcceptBooking,
+  useRejectBooking,
+  useQuoteBooking,
+  useCompleteBooking,
+} from '@/hooks/useBookings';
 import { useDriverStats } from '@/hooks/useStats';
 import { useDriver } from '@/hooks/useDriver';
 import BookingCard from '@/components/BookingCard';
@@ -34,12 +40,12 @@ function getCountdownBadge(booking) {
   return { label: '已確認', color: 'brand', variant: 'outline' };
 }
 
-function TripCard({ booking, showNav, showContact }) {
+function TripCard({ booking, showNav, showContact, showComplete, onComplete, busy }) {
   const b = booking;
   const badge = getCountdownBadge(b);
   const time = (b.bookingTime ?? '').slice(0, 5);
   const isRoundTrip = b.tripType === 'round_trip';
-  const hasActions = showNav || showContact;
+  const hasActions = showNav || showContact || showComplete;
 
   const openNav = () => {
     const q = encodeURIComponent(b.pickupLocation);
@@ -72,23 +78,39 @@ function TripCard({ booking, showNav, showContact }) {
       </Text>
 
       {hasActions && (
-        <Group gap={8}>
-          {showNav && (
-            <Button flex={1} color="brand" size="sm" onClick={openNav}>
-              開始導航
+        <Stack gap={8}>
+          {(showNav || showContact) && (
+            <Group gap={8}>
+              {showNav && (
+                <Button flex={1} color="brand" size="sm" onClick={openNav}>
+                  開始導航
+                </Button>
+              )}
+              {showContact &&
+                (b.customerPhone ? (
+                  <Button flex={1} variant="default" size="sm" component="a" href={`tel:${b.customerPhone}`}>
+                    聯絡乘客
+                  </Button>
+                ) : (
+                  <Button flex={1} variant="default" size="sm" disabled>
+                    聯絡乘客
+                  </Button>
+                ))}
+            </Group>
+          )}
+          {showComplete && (
+            <Button
+              fullWidth
+              variant="light"
+              color="leaf"
+              size="sm"
+              loading={busy}
+              onClick={() => onComplete?.(b)}
+            >
+              完成行程
             </Button>
           )}
-          {showContact &&
-            (b.customerPhone ? (
-              <Button flex={1} variant="default" size="sm" component="a" href={`tel:${b.customerPhone}`}>
-                聯絡乘客
-              </Button>
-            ) : (
-              <Button flex={1} variant="default" size="sm" disabled>
-                聯絡乘客
-              </Button>
-            ))}
-        </Group>
+        </Stack>
       )}
     </Box>
   );
@@ -129,13 +151,14 @@ export default function DriverDashboard() {
   const accept = useAcceptBooking();
   const reject = useRejectBooking();
   const quote = useQuoteBooking();
+  const complete = useCompleteBooking();
   const [rejecting, setRejecting] = useState(null);
   const [quoting, setQuoting] = useState(null);
 
   const needsSetup =
     driver.data && (!driver.data.basePrice || !driver.data.lineId);
 
-  const busy = accept.isPending || reject.isPending || quote.isPending;
+  const busy = accept.isPending || reject.isPending || quote.isPending || complete.isPending;
   const outstanding = (bookings.data?.bookings ?? []).filter((b) => OUTSTANDING.includes(b.status));
 
   const t = todayISO();
@@ -170,6 +193,14 @@ export default function DriverDashboard() {
         onError: (e) => notifyErr(e),
       },
     );
+
+  const doComplete = (b) => {
+    if (!window.confirm('確認這筆行程已完成？完成後無法復原。')) return;
+    complete.mutate(
+      { bookingId: b.id },
+      { onSuccess: (r) => notifyOk(r.message || '行程已完成'), onError: (e) => notifyErr(e) },
+    );
+  };
 
   return (
     <Stack gap="md">
@@ -221,7 +252,15 @@ export default function DriverDashboard() {
             {todayTrips.length > 0 ? (
               <Stack gap="sm">
                 {todayTrips.map((b) => (
-                  <TripCard key={b.id} booking={b} showNav showContact />
+                  <TripCard
+                    key={b.id}
+                    booking={b}
+                    showNav
+                    showContact
+                    showComplete
+                    onComplete={doComplete}
+                    busy={busy}
+                  />
                 ))}
               </Stack>
             ) : (

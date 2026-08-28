@@ -242,6 +242,30 @@ export async function cancelBooking(bookingId, driverId, { reason }) {
   return data;
 }
 
+// 司機標記行程完成：accepted → completed
+export async function completeBooking(bookingId, driverId) {
+  const booking = await getBookingById(bookingId);
+  if (booking.driver_id !== driverId) throw ApiError.forbidden('這不是你的預約');
+  if (booking.status !== BOOKING_STATUS.ACCEPTED) {
+    throw ApiError.conflict(`預約目前為「${booking.status}」，無法標記完成`);
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from('bookings')
+    .update({
+      status: BOOKING_STATUS.COMPLETED,
+      completed_at: new Date().toISOString(),
+    })
+    .eq('id', bookingId)
+    .eq('status', BOOKING_STATUS.ACCEPTED) // 樂觀鎖
+    .select('*')
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) throw ApiError.conflict('預約狀態已被變更，請重新整理');
+
+  return data;
+}
+
 // 客人回應司機報價：quoted → accepted / cancelled
 export async function respondToQuote(bookingId, { accept }) {
   const booking = await getBookingById(bookingId);

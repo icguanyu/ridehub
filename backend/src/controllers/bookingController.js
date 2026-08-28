@@ -9,6 +9,7 @@ import {
   quoteBooking,
   respondToQuote,
   cancelBooking,
+  completeBooking,
   searchBookingsByPhone,
 } from '../services/bookingService.js';
 import { getDriverById } from '../services/driverService.js';
@@ -161,6 +162,17 @@ export const cancel = asyncHandler(async (req, res) => {
   res.json({
     booking: bookingItem(booking),
     message: notify.ok ? `已透過 ${notify.channel} 通知客人` : '已取消（客人通知發送失敗或未設定）',
+  });
+});
+
+// ── PUT /bookings/:bookingId/complete ──（司機標記行程完成）
+export const completeValidator = validate({ params: bookingIdParam });
+
+export const complete = asyncHandler(async (req, res) => {
+  const booking = await completeBooking(req.params.bookingId, req.auth.driverId);
+  res.json({
+    booking: bookingItem(booking),
+    message: '行程已標記完成',
   });
 });
 

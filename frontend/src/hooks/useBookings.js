@@ -34,6 +34,7 @@ function useRespond(action) {
 
 export const useAcceptBooking = () => useRespond('accept');
 export const useRejectBooking = () => useRespond('reject');
+export const useCompleteBooking = () => useRespond('complete');
 
 // 司機重新報價
 export function useQuoteBooking() {
