@@ -42,6 +42,11 @@ function TripCard({ booking, showNav, showContact, showComplete, onComplete, bus
   const isToday = b.bookingDate === todayISO();
   const hasActions = showNav || showContact || showComplete;
 
+  const rtMult = isRoundTrip ? 2 : 1;
+  const showKm =
+    b.estimatedDistanceKm != null ? Math.round(b.estimatedDistanceKm * rtMult * 10) / 10 : null;
+  const showMin = b.estimatedDurationMin != null ? b.estimatedDurationMin * rtMult : null;
+
   const openNav = () => {
     const q = encodeURIComponent(b.pickupLocation);
     window.open(`https://www.google.com/maps/search/?api=1&query=${q}`, '_blank', 'noopener,noreferrer');
@@ -71,18 +76,18 @@ function TripCard({ booking, showNav, showContact, showComplete, onComplete, bus
       <Text
         size="sm"
         c="dimmed"
-        mb={b.estimatedDistanceKm != null || b.estimatedEnergyCost != null ? 2 : hasActions ? 12 : 0}
+        mb={showKm != null || b.estimatedEnergyCost != null ? 2 : hasActions ? 12 : 0}
       >
         {b.customerName}{b.customerPhone && ` · ${b.customerPhone}`} · {b.passengerCount}人
       </Text>
 
-      {(b.estimatedDistanceKm != null || b.estimatedEnergyCost != null) && (
+      {(showKm != null || b.estimatedEnergyCost != null) && (
         <Text size="xs" c="dimmed" mb={hasActions ? 12 : 0}>
-          {b.estimatedDistanceKm != null && `距離約 ${b.estimatedDistanceKm} km`}
-          {b.estimatedDurationMin != null && `・車程約 ${b.estimatedDurationMin} 分`}
+          {showKm != null && `距離約 ${showKm} km${rtMult === 2 ? '（往返）' : ''}`}
+          {showMin != null && `・車程約 ${showMin} 分`}
           {b.estimatedEnergyCost != null && (
             <>
-              {b.estimatedDistanceKm != null && '・'}
+              {showKm != null && '・'}
               能耗成本 ≈ <span className="mono">{fmtMoney(b.estimatedEnergyCost)}</span>
             </>
           )}

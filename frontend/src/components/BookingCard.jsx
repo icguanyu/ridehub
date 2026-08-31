@@ -18,6 +18,12 @@ export default function BookingCard({
   const canDelete = Boolean(onDelete) && !isTripStarted(b);
   const canComplete = Boolean(onComplete) && actionable && b.status === 'accepted';
 
+  // 距離 / 車程以「整趟」呈現（往返 ×2），和能耗成本一致
+  const rtMult = b.tripType === 'round_trip' ? 2 : 1;
+  const showKm =
+    b.estimatedDistanceKm != null ? Math.round(b.estimatedDistanceKm * rtMult * 10) / 10 : null;
+  const showMin = b.estimatedDurationMin != null ? b.estimatedDurationMin * rtMult : null;
+
   return (
     <Card radius="lg" p="md">
       <Stack gap="xs">
@@ -54,13 +60,13 @@ export default function BookingCard({
           )}
         </Group>
 
-        {(b.estimatedDistanceKm != null || b.estimatedEnergyCost != null) && (
+        {(showKm != null || b.estimatedEnergyCost != null) && (
           <Text size="xs" c="dimmed">
-            {b.estimatedDistanceKm != null && `距離約 ${b.estimatedDistanceKm} km`}
-            {b.estimatedDurationMin != null && `・車程約 ${b.estimatedDurationMin} 分`}
+            {showKm != null && `距離約 ${showKm} km${rtMult === 2 ? '（往返）' : ''}`}
+            {showMin != null && `・車程約 ${showMin} 分`}
             {b.estimatedEnergyCost != null && (
               <>
-                {b.estimatedDistanceKm != null && '・'}
+                {showKm != null && '・'}
                 能耗成本 ≈ <span className="mono">{fmtMoney(b.estimatedEnergyCost)}</span>
               </>
             )}
