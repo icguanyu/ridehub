@@ -1,4 +1,4 @@
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams, Link } from 'react-router-dom';
 import {
   Center,
   Box,
@@ -11,6 +11,7 @@ import {
   Button,
   Divider,
   Alert,
+  Anchor,
   CopyButton,
 } from '@mantine/core';
 import { useBookingStatus, useRespondToQuote } from '@/hooks/useCustomer';
@@ -54,6 +55,10 @@ export default function BookingConfirmation() {
         <Center mb="lg">
           <Wordmark size={28} withMark markSize={34} />
         </Center>
+
+        <Anchor component={Link} to="/my-bookings" size="sm" mb="md" style={{ display: 'inline-block' }}>
+          ← 查詢我的行程
+        </Anchor>
 
         {!token ? (
           <Card p="lg">
