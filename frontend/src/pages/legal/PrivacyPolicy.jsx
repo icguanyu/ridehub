@@ -4,6 +4,10 @@ import LegalPage, { Section, P } from './LegalPage';
 export default function PrivacyPolicy() {
   return (
     <LegalPage title="隱私說明" updated="2026-08-28">
+      <Section heading="誰在處理你的資料">
+        <P>本平台由 icguanyu@gmail.com 營運，並依此說明蒐集、處理及利用你的個人資料。</P>
+      </Section>
+
       <Section heading="我們收集什麼">
         <P>司機：姓名、電話、Email、LINE ID、車型車牌、服務區域、定價。</P>
         <P>

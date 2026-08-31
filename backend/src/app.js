@@ -8,6 +8,7 @@ import YAML from 'yaml';
 
 import { config } from './config/index.js';
 import { apiRouter } from './routes/index.js';
+import { apiLimiter } from './middlewares/rateLimit.js';
 import { notFound, errorHandler } from './middlewares/errorHandler.js';
 import { makeCorsOrigin } from './utils/corsOrigin.js';
 
@@ -17,6 +18,9 @@ const openapiDoc = YAML.parse(
 
 export function createApp() {
   const app = express();
+
+  // 正式環境通常在反向代理後面，信任第一層 hop 取得真實 client IP（供 rate limit 用）
+  if (config.isProd) app.set('trust proxy', 1);
 
   // API 文件（掛在 helmet 之前，避免 CSP 擋掉 Swagger UI 的資源）
   app.get('/api/v1/openapi.json', (_req, res) => res.json(openapiDoc));
@@ -46,7 +50,7 @@ export function createApp() {
   app.use(morgan(config.isProd ? 'combined' : 'dev'));
 
   app.get('/', (_req, res) => res.json({ service: 'ridehub-backend', docs: '/api/v1/docs' }));
-  app.use('/api/v1', apiRouter);
+  app.use('/api/v1', apiLimiter, apiRouter);
 
   app.use(notFound);
   app.use(errorHandler);

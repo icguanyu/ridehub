@@ -7,18 +7,20 @@ export function monthRange(month) {
   return { start, endExclusive };
 }
 
-// 今天（伺服器時區）的 YYYY-MM-DD
+// 目前台北時間。台灣固定 UTC+8、無日光節約，直接位移即可。
+const taipeiNow = () => new Date(Date.now() + 8 * 60 * 60 * 1000);
+
+// 台北「今天」的 YYYY-MM-DD
 export function todayISO() {
-  return new Date().toISOString().slice(0, 10);
+  return taipeiNow().toISOString().slice(0, 10);
 }
 
-// 當月 YYYY-MM
+// 台北當月 YYYY-MM
 export function currentMonth() {
-  return new Date().toISOString().slice(0, 7);
+  return taipeiNow().toISOString().slice(0, 7);
 }
 
-// 目前台北掛鐘時間，格式 YYYY-MM-DDTHH:mm。
-// 台灣固定 UTC+8、無日光節約，可直接和 booking_date + booking_time 這種本地時間字串比較。
+// 台北目前掛鐘時間 YYYY-MM-DDTHH:mm，可直接和 booking_date + booking_time 比較。
 export function taipeiNowMinute() {
-  return new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().slice(0, 16);
+  return taipeiNow().toISOString().slice(0, 16);
 }

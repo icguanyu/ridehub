@@ -6,6 +6,7 @@ import {
   loginValidator,
 } from '../controllers/authController.js';
 import { requireDriverAuth, requireSelf } from '../middlewares/auth.js';
+import { authLimiter } from '../middlewares/rateLimit.js';
 import {
   getMe,
   updateProfile,
@@ -26,8 +27,8 @@ import { createLinkCode } from '../controllers/lineController.js';
 export const driversRouter = Router();
 
 // ── 認證（公開）──────────────────────
-driversRouter.post('/auth/register', registerValidator, register);
-driversRouter.post('/auth/login', loginValidator, login);
+driversRouter.post('/auth/register', authLimiter, registerValidator, register);
+driversRouter.post('/auth/login', authLimiter, loginValidator, login);
 
 // ── 公開：客人端顯示司機資訊（須在下方 auth 守衛之前）──
 driversRouter.get('/:driverId/public', getPublicProfile);

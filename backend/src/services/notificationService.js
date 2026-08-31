@@ -1,5 +1,5 @@
-// 通知調度：優先 LINE，失敗或沒有 LINE ID 則改用簡訊，全程寫入 notifications_log。
-// 任何通知失敗都不得中斷主要 API 流程。
+// 通知調度：司機走 LINE（失敗改簡訊），客人只走簡訊（客人的 LINE ID 僅供司機加好友用，
+// 不做客人 LINE 推播）。全程寫入 notifications_log；任何通知失敗都不得中斷主要 API 流程。
 import { supabaseAdmin } from '../config/supabase.js';
 import { logger } from '../utils/logger.js';
 import {
@@ -66,17 +66,13 @@ export async function notifyDriverNewBooking(driver, booking) {
   return result;
 }
 
-// 司機接受 / 拒絕 → 通知客人
+// 司機接受 / 拒絕 → 通知客人（僅簡訊）
 export async function notifyCustomerBookingResult(booking, driver, { accepted, reason }) {
   const text = accepted ? acceptedText(driver, booking) : rejectedText(driver, booking, reason);
-  const result = await deliver({
-    lineId: booking.customer_line_id,
-    phone: booking.customer_phone,
-    text,
-  });
+  const result = await deliver({ phone: booking.customer_phone, text });
   await logNotification({
     booking_id: booking.id,
-    recipient_line_id: booking.customer_line_id ?? null,
+    recipient_line_id: null,
     recipient_type: 'customer',
     notification_type: accepted ? 'booking_accepted' : 'booking_rejected',
     status: logStatus(result),
@@ -85,16 +81,15 @@ export async function notifyCustomerBookingResult(booking, driver, { accepted, r
   return result;
 }
 
-// 司機取消預約 → 通知客人
+// 司機取消預約 → 通知客人（僅簡訊）
 export async function notifyCustomerCancellation(booking, driver, reason) {
   const result = await deliver({
-    lineId: booking.customer_line_id,
     phone: booking.customer_phone,
     text: cancelledText(driver, booking, reason),
   });
   await logNotification({
     booking_id: booking.id,
-    recipient_line_id: booking.customer_line_id ?? null,
+    recipient_line_id: null,
     recipient_type: 'customer',
     notification_type: 'booking_cancelled',
     status: logStatus(result),
@@ -103,16 +98,15 @@ export async function notifyCustomerCancellation(booking, driver, reason) {
   return result;
 }
 
-// 司機重新報價 → 通知客人
+// 司機重新報價 → 通知客人（僅簡訊）
 export async function notifyCustomerQuote(booking, driver) {
   const result = await deliver({
-    lineId: booking.customer_line_id,
     phone: booking.customer_phone,
     text: quotedText(driver, booking),
   });
   await logNotification({
     booking_id: booking.id,
-    recipient_line_id: booking.customer_line_id ?? null,
+    recipient_line_id: null,
     recipient_type: 'customer',
     notification_type: 'booking_quoted',
     status: logStatus(result),

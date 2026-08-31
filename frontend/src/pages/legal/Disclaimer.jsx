@@ -9,6 +9,7 @@ export default function Disclaimer() {
           RideHub 是一個<b>免費、測試中</b>的媒合工具，幫司機和乘客互相找到對方。
           我們不是車行、不派車，也不是乘車契約的一方——車是司機開的，行程是你們之間的約定。
         </P>
+        <P>本平台由 icguanyu@gmail.com 營運。</P>
       </Section>
 
       <Section heading="不收費、不經手錢">
