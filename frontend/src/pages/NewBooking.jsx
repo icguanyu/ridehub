@@ -191,7 +191,13 @@ export default function NewBooking() {
             )}
 
             <Group grow>
-              <NumberInput label="人數" min={1} max={20} {...form.getInputProps('passengerCount')} />
+              <NumberInput
+                label={`人數（最多 ${driver.data?.maxPassengers ?? 20} 人）`}
+                min={1}
+                max={driver.data?.maxPassengers ?? 20}
+                clampBehavior="strict"
+                {...form.getInputProps('passengerCount')}
+              />
               <NumberInput
                 label="預估距離 (km，選填)"
                 min={0}

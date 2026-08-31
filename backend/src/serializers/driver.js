@@ -19,6 +19,7 @@ export function driverPrivate(row) {
     pricePerKm: row.price_per_km,
     lineDisplayId: row.line_display_id ?? null,
     maxDailyBookings: row.max_daily_bookings,
+    maxPassengers: row.max_passengers,
     isVerified: row.is_verified,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -36,6 +37,7 @@ export function driverPublic(row) {
     carPlate: row.car_plate,
     basePrice: row.base_price,
     pricePerKm: row.price_per_km,
+    maxPassengers: row.max_passengers,
     isVerified: row.is_verified,
   };
 }

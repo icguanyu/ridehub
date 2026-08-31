@@ -59,6 +59,14 @@ async function assertDailyCapacity(driver, date, label) {
   }
 }
 
+// 人數不得超過司機可載客上限
+function assertPassengerCount(driver, count) {
+  const max = driver.max_passengers ?? 20;
+  if (Number(count) > max) {
+    throw ApiError.badRequest(`人數超過司機可載客上限（最多 ${max} 人）`);
+  }
+}
+
 // 去程 / 回程 日期時間的共用驗證
 function assertTripDates({ bookingDate, bookingTime, returnDate, returnTime, isRoundTrip }) {
   if (bookingDate < todayISO()) {
@@ -113,6 +121,7 @@ export async function createBooking(input) {
   const isRoundTrip = tripType === TRIP_TYPE.ROUND_TRIP;
 
   assertTripDates({ bookingDate, bookingTime, returnDate, returnTime, isRoundTrip });
+  assertPassengerCount(driver, rest.passengerCount ?? 1);
 
   // 名額檢查（去程日；往返且回程跨日則回程日也檢查）
   await assertDailyCapacity(driver, bookingDate, '去程當日');
@@ -154,6 +163,7 @@ export async function createDriverBooking(driverId, input) {
   const isRoundTrip = tripType === TRIP_TYPE.ROUND_TRIP;
 
   assertTripDates({ bookingDate, bookingTime, returnDate, returnTime, isRoundTrip });
+  assertPassengerCount(driver, rest.passengerCount ?? 1);
 
   const price =
     agreedPrice != null && agreedPrice !== ''

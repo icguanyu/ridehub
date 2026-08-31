@@ -187,6 +187,7 @@ paths:
                 serviceAreas: { type: string, maxLength: 500, nullable: true, example: '新竹市,竹科園區' }
                 carType: { type: string, maxLength: 50, nullable: true }
                 carPlate: { type: string, maxLength: 20, nullable: true }
+                maxPassengers: { type: integer, minimum: 1, maximum: 20, description: 可載客人數上限 }
                 basePrice: { type: number, minimum: 0, nullable: true }
                 pricePerKm: { type: number, minimum: 0, nullable: true }
       responses:
@@ -888,6 +889,7 @@ components:
         operatingHoursStart: { type: string, nullable: true, example: '08:00' }
         operatingHoursEnd: { type: string, nullable: true, example: '20:00' }
         maxDailyBookings: { type: integer }
+        maxPassengers: { type: integer, description: 可載客人數上限 }
         isVerified: { type: boolean }
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
@@ -903,6 +905,7 @@ components:
         carPlate: { type: string, nullable: true }
         basePrice: { type: number, nullable: true }
         pricePerKm: { type: number, nullable: true }
+        maxPassengers: { type: integer, description: 可載客人數上限 }
         operatingHoursStart: { type: string, nullable: true }
         operatingHoursEnd: { type: string, nullable: true }
         isVerified: { type: boolean }

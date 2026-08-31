@@ -45,6 +45,7 @@ export const updateProfileValidator = validate({
       basePrice: z.number().nonnegative().nullish(),
       pricePerKm: z.number().nonnegative().nullish(),
       lineDisplayId: z.string().trim().max(100).nullish(),
+      maxPassengers: z.coerce.number().int().min(1).max(20).optional(),
     })
     .strict(),
 });
@@ -58,6 +59,7 @@ const PROFILE_FIELD_MAP = {
   basePrice: 'base_price',
   pricePerKm: 'price_per_km',
   lineDisplayId: 'line_display_id',
+  maxPassengers: 'max_passengers',
 };
 
 export const updateProfile = asyncHandler(async (req, res) => {

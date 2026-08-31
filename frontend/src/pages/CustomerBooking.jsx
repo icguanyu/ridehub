@@ -205,9 +205,10 @@ export default function CustomerBooking() {
 
               <Group grow>
                 <NumberInput
-                  label="人數"
+                  label={`人數（最多 ${driver.maxPassengers ?? 20} 人）`}
                   min={1}
-                  max={20}
+                  max={driver.maxPassengers ?? 20}
+                  clampBehavior="strict"
                   {...form.getInputProps('passengerCount')}
                 />
                 <NumberInput

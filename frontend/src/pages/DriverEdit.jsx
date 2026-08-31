@@ -6,6 +6,7 @@ import {
   TextInput,
   Textarea,
   Input,
+  NumberInput,
   Button,
   Group,
   Select,
@@ -43,6 +44,7 @@ export default function DriverEdit() {
       serviceAreas: '',
       carType: '',
       carPlate: '',
+      maxPassengers: 4,
       basePrice: '',
       pricePerKm: '',
       lineDisplayId: '',
@@ -61,6 +63,7 @@ export default function DriverEdit() {
         serviceAreas: data.serviceAreas ?? '',
         carType: data.carType ?? '',
         carPlate: data.carPlate ?? '',
+        maxPassengers: data.maxPassengers ?? 4,
         basePrice: data.basePrice ?? '',
         pricePerKm: data.pricePerKm ?? '',
         lineDisplayId: data.lineDisplayId ?? '',
@@ -79,6 +82,7 @@ export default function DriverEdit() {
       serviceAreas: v.serviceAreas || null,
       carType: v.carType || null,
       carPlate: v.carPlate || null,
+      maxPassengers: Number(v.maxPassengers) || 4,
       basePrice: v.basePrice === '' ? null : Number(v.basePrice),
       pricePerKm: v.pricePerKm === '' ? null : Number(v.pricePerKm),
       lineDisplayId: v.lineDisplayId.trim() || null,
@@ -119,6 +123,14 @@ export default function DriverEdit() {
               />
               <TextInput label="車牌" placeholder="ABC-1234" {...form.getInputProps('carPlate')} />
             </Group>
+            <NumberInput
+              label="可載客人數上限"
+              description="客人預約時的人數不能超過這個數字"
+              min={1}
+              max={20}
+              clampBehavior="strict"
+              {...form.getInputProps('maxPassengers')}
+            />
             <Group grow>
               <Input.Wrapper label="基礎價格 (NT$)" error={form.errors.basePrice}>
                 <Input
