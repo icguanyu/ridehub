@@ -36,6 +36,21 @@ export const useAcceptBooking = () => useRespond('accept');
 export const useRejectBooking = () => useRespond('reject');
 export const useCompleteBooking = () => useRespond('complete');
 
+// 司機刪除行程（軟刪）
+export function useDeleteBooking() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ bookingId }) => {
+      const { data } = await api.delete(`/bookings/${bookingId}`);
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['bookings'] });
+      qc.invalidateQueries({ queryKey: ['stats'] });
+    },
+  });
+}
+
 // 司機重新報價
 export function useQuoteBooking() {
   const qc = useQueryClient();

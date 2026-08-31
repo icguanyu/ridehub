@@ -7,6 +7,7 @@ import {
   useAcceptBooking,
   useRejectBooking,
   useQuoteBooking,
+  useDeleteBooking,
 } from '@/hooks/useBookings';
 import BookingCard from '@/components/BookingCard';
 import RejectBookingModal from '@/components/RejectBookingModal';
@@ -22,6 +23,7 @@ export default function BookingDetail() {
   const accept = useAcceptBooking();
   const reject = useRejectBooking();
   const quote = useQuoteBooking();
+  const del = useDeleteBooking();
   const [rejecting, setRejecting] = useState(false);
   const [quoting, setQuoting] = useState(false);
 
@@ -52,7 +54,7 @@ export default function BookingDetail() {
       <BookingCard
         booking={booking}
         actionable
-        busy={accept.isPending || reject.isPending || quote.isPending}
+        busy={accept.isPending || reject.isPending || quote.isPending || del.isPending}
         onAccept={(b) =>
           accept.mutate(
             { bookingId: b.id },
@@ -61,6 +63,19 @@ export default function BookingDetail() {
         }
         onReject={() => setRejecting(true)}
         onQuote={() => setQuoting(true)}
+        onDelete={(b) => {
+          if (!window.confirm('確定刪除這筆行程？刪除後不會再出現在列表中。')) return;
+          del.mutate(
+            { bookingId: b.id },
+            {
+              onSuccess: (r) => {
+                notifyOk(r.message || '行程已刪除');
+                navigate('/dashboard/bookings');
+              },
+              onError: (e) => notifyErr(e),
+            },
+          );
+        }}
       />
 
       <Card withBorder radius="md" p="md">

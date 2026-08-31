@@ -1,5 +1,5 @@
 import { supabaseAdmin } from '../config/supabase.js';
-import { monthRange, todayISO } from '../utils/dates.js';
+import { monthRange, todayISO, taipeiNowMinute } from '../utils/dates.js';
 import { ApiError } from '../utils/ApiError.js';
 import { getDriverById } from './driverService.js';
 import { estimatePrice } from '../utils/pricing.js';
@@ -17,7 +17,8 @@ export async function listDriverBookings(driverId, { status, month, page = 1, pa
   let query = supabaseAdmin
     .from('bookings')
     .select('*', { count: 'exact' })
-    .eq('driver_id', driverId);
+    .eq('driver_id', driverId)
+    .is('deleted_at', null);
 
   if (status) query = query.eq('status', status);
 
@@ -49,6 +50,7 @@ async function assertDailyCapacity(driver, date, label) {
     .from('bookings')
     .select('id', { count: 'exact', head: true })
     .eq('driver_id', driver.id)
+    .is('deleted_at', null)
     .or(`booking_date.eq.${date},return_date.eq.${date}`)
     .in('status', ACTIVE_BOOKING_STATUSES);
   if (error) throw error;
@@ -133,6 +135,7 @@ export async function getBookingWithDriver(bookingId) {
     .from('bookings')
     .select('*, drivers ( name, phone, line_id, line_display_id )')
     .eq('id', bookingId)
+    .is('deleted_at', null)
     .maybeSingle();
   if (error) throw error;
   if (!data) throw ApiError.notFound('找不到預約');
@@ -147,6 +150,7 @@ export async function searchBookingsByPhone(phone) {
       'id, status, trip_type, pickup_location, destination, booking_date, booking_time, return_date, return_time, drivers(name)',
     )
     .eq('customer_phone', phone)
+    .is('deleted_at', null)
     .order('booking_date', { ascending: false })
     .order('booking_time', { ascending: false })
     .limit(50);
@@ -154,12 +158,13 @@ export async function searchBookingsByPhone(phone) {
   return data ?? [];
 }
 
-// 依 id 取預約（後端內部用）
+// 依 id 取預約（後端內部用）。已軟刪的視為不存在。
 export async function getBookingById(bookingId) {
   const { data, error } = await supabaseAdmin
     .from('bookings')
     .select('*')
     .eq('id', bookingId)
+    .is('deleted_at', null)
     .maybeSingle();
   if (error) throw error;
   if (!data) throw ApiError.notFound('找不到預約');
@@ -286,4 +291,28 @@ export async function respondToQuote(bookingId, { accept }) {
   if (!data) throw ApiError.conflict('預約狀態已被變更，請重新整理');
 
   return data;
+}
+
+// 司機刪除行程（軟刪）。僅預約司機本人、且去程尚未開始才可刪。
+// 保留資料列供日後統計（信用率、刪除紀錄）；所有查詢會過濾 deleted_at。
+export async function deleteBooking(bookingId, driverId) {
+  const booking = await getBookingById(bookingId); // 已過濾 deleted_at → 重複刪會 404
+  if (booking.driver_id !== driverId) throw ApiError.forbidden('這不是你的預約');
+
+  const departure = `${booking.booking_date}T${hm(booking.booking_time)}`;
+  if (departure <= taipeiNowMinute()) {
+    throw ApiError.badRequest('行程已開始或已結束，無法刪除');
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from('bookings')
+    .update({ deleted_at: new Date().toISOString(), deleted_by: driverId })
+    .eq('id', bookingId)
+    .is('deleted_at', null) // 樂觀鎖
+    .select('id')
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) throw ApiError.conflict('行程已被刪除，請重新整理');
+
+  return { id: bookingId };
 }

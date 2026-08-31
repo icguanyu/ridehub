@@ -6,6 +6,7 @@ import {
   useAcceptBooking,
   useRejectBooking,
   useQuoteBooking,
+  useDeleteBooking,
 } from '@/hooks/useBookings';
 import BookingCard from '@/components/BookingCard';
 import RejectBookingModal from '@/components/RejectBookingModal';
@@ -38,7 +39,8 @@ export default function BookingList() {
   const accept = useAcceptBooking();
   const reject = useRejectBooking();
   const quote = useQuoteBooking();
-  const busy = accept.isPending || reject.isPending || quote.isPending;
+  const del = useDeleteBooking();
+  const busy = accept.isPending || reject.isPending || quote.isPending || del.isPending;
 
   const totalPages = Math.max(1, Math.ceil((data?.pagination.total ?? 0) / PAGE_SIZE));
 
@@ -77,6 +79,14 @@ export default function BookingList() {
       },
     );
 
+  const doDelete = (b) => {
+    if (!window.confirm('確定刪除這筆行程？刪除後不會再出現在列表中。')) return;
+    del.mutate(
+      { bookingId: b.id },
+      { onSuccess: (r) => notifyOk(r.message || '行程已刪除'), onError: (e) => notifyErr(e) },
+    );
+  };
+
   return (
     <Stack gap="md">
       <Title order={4}>預約列表</Title>
@@ -95,6 +105,7 @@ export default function BookingList() {
               onAccept={doAccept}
               onReject={(bk) => setRejecting(bk)}
               onQuote={(bk) => setQuoting(bk)}
+              onDelete={doDelete}
             />
           ))}
         </Stack>

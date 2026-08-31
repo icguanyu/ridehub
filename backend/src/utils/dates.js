@@ -16,3 +16,9 @@ export function todayISO() {
 export function currentMonth() {
   return new Date().toISOString().slice(0, 7);
 }
+
+// 目前台北掛鐘時間，格式 YYYY-MM-DDTHH:mm。
+// 台灣固定 UTC+8、無日光節約，可直接和 booking_date + booking_time 這種本地時間字串比較。
+export function taipeiNowMinute() {
+  return new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().slice(0, 16);
+}

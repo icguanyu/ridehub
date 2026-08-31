@@ -18,6 +18,8 @@ import {
   cancelValidator,
   complete,
   completeValidator,
+  remove,
+  deleteBookingValidator,
   searchValidator,
   searchByPhone,
 } from '../controllers/bookingController.js';
@@ -43,3 +45,6 @@ bookingsRouter.put('/:bookingId/reject', requireDriverAuth, rejectValidator, rej
 bookingsRouter.put('/:bookingId/quote', requireDriverAuth, quoteValidator, quote);
 bookingsRouter.put('/:bookingId/cancel', requireDriverAuth, cancelValidator, cancel);
 bookingsRouter.put('/:bookingId/complete', requireDriverAuth, completeValidator, complete);
+
+// 司機刪除行程（軟刪，去程已開始不可刪；需登入）
+bookingsRouter.delete('/:bookingId', requireDriverAuth, deleteBookingValidator, remove);

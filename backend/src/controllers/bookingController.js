@@ -10,6 +10,7 @@ import {
   respondToQuote,
   cancelBooking,
   completeBooking,
+  deleteBooking,
   searchBookingsByPhone,
 } from '../services/bookingService.js';
 import { getDriverById } from '../services/driverService.js';
@@ -174,6 +175,14 @@ export const complete = asyncHandler(async (req, res) => {
     booking: bookingItem(booking),
     message: '行程已標記完成',
   });
+});
+
+// ── DELETE /bookings/:bookingId ──（司機刪除行程，軟刪；去程已開始不可刪）
+export const deleteBookingValidator = validate({ params: bookingIdParam });
+
+export const remove = asyncHandler(async (req, res) => {
+  await deleteBooking(req.params.bookingId, req.auth.driverId);
+  res.json({ ok: true, message: '行程已刪除' });
 });
 
 // ── PUT /bookings/:bookingId/quote ──（司機重新報價）

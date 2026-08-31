@@ -1,9 +1,11 @@
 import { Card, Group, Text, Badge, Stack, Button } from '@mantine/core';
 import { fmtMoney, STATUS_LABEL, STATUS_COLOR } from '@/lib/format';
+import { isTripStarted } from '@/lib/trip';
 import TripRoute, { TripTypeBadge } from '@/components/TripRoute';
 
-export default function BookingCard({ booking, onAccept, onReject, onQuote, busy, actionable }) {
+export default function BookingCard({ booking, onAccept, onReject, onQuote, onDelete, busy, actionable }) {
   const b = booking;
+  const canDelete = Boolean(onDelete) && !isTripStarted(b);
 
   return (
     <Card radius="lg" p="md">
@@ -71,6 +73,19 @@ export default function BookingCard({ booking, onAccept, onReject, onQuote, busy
           >
             已報價 {fmtMoney(b.quotedPrice)} · 等待客人確認
           </Badge>
+        )}
+
+        {canDelete && (
+          <Button
+            size="xs"
+            variant="subtle"
+            color="red"
+            loading={busy}
+            onClick={() => onDelete?.(b)}
+            style={{ alignSelf: 'flex-end' }}
+          >
+            刪除行程
+          </Button>
         )}
       </Stack>
     </Card>

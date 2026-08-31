@@ -12,6 +12,7 @@ export async function getDriverStats(driverId, month) {
     .from('bookings')
     .select('id, status, customer_phone, estimated_price, quoted_price')
     .eq('driver_id', driverId)
+    .is('deleted_at', null)
     .gte('booking_date', start)
     .lt('booking_date', endExclusive);
   if (error) throw error;
