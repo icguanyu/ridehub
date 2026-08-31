@@ -134,7 +134,7 @@ export async function createBooking(input) {
 export async function getBookingWithDriver(bookingId) {
   const { data, error } = await supabaseAdmin
     .from('bookings')
-    .select('*, drivers ( name, phone, line_id, line_display_id )')
+    .select('*, drivers!bookings_driver_id_fkey ( name, phone, line_id, line_display_id )')
     .eq('id', bookingId)
     .maybeSingle();
   if (error) throw error;
@@ -147,7 +147,7 @@ export async function searchBookingsByPhone(phone) {
   const { data, error } = await supabaseAdmin
     .from('bookings')
     .select(
-      'id, status, trip_type, pickup_location, destination, booking_date, booking_time, return_date, return_time, drivers(name)',
+      'id, status, trip_type, pickup_location, destination, booking_date, booking_time, return_date, return_time, drivers!bookings_driver_id_fkey(name)',
     )
     .eq('customer_phone', phone)
     .is('deleted_at', null)
