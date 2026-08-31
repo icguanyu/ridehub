@@ -21,6 +21,7 @@ export function bookingItem(row) {
     specialRequests: row.special_requests,
     estimatedPrice: row.estimated_price,
     estimatedDistanceKm: row.estimated_distance_km,
+    estimatedDurationMin: row.estimated_duration_min,
     estimatedEnergyCost: row.estimated_energy_cost,
     quotedPrice: row.quoted_price,
     quotedAt: row.quoted_at,

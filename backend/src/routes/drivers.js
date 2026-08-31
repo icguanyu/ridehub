@@ -21,6 +21,8 @@ import {
   getStats,
   getStatsValidator,
   getPublicProfile,
+  distancePreview,
+  distancePreviewValidator,
 } from '../controllers/driverController.js';
 import { createLinkCode } from '../controllers/lineController.js';
 import {
@@ -51,4 +53,5 @@ driversRouter.put('/:driverId/availability', updateAvailabilityValidator, update
 
 driversRouter.get('/:driverId/bookings', listBookingsValidator, listBookings);
 driversRouter.post('/:driverId/bookings', createDriverBookingValidator, createDriverBookingHandler);
+driversRouter.post('/:driverId/distance', distancePreviewValidator, distancePreview);
 driversRouter.get('/:driverId/stats', getStatsValidator, getStats);

@@ -48,6 +48,16 @@ export function useCreateLineLinkCode(driverId) {
   });
 }
 
+// 依上車/目的地自動估算開車距離
+export function useDistancePreview(driverId) {
+  return useMutation({
+    mutationFn: async ({ origin, destination }) => {
+      const { data } = await api.post(`/drivers/${driverId}/distance`, { origin, destination });
+      return data; // { distanceKm, durationMin }
+    },
+  });
+}
+
 export function useAvailability(driverId) {
   return useQuery({
     queryKey: ['availability', driverId],

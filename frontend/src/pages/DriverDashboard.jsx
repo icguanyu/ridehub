@@ -68,13 +68,25 @@ function TripCard({ booking, showNav, showContact, showComplete, onComplete, bus
         <TripRoute booking={b} timeMode={isToday ? 'omitOutbound' : 'full'} />
       </Box>
 
-      <Text size="sm" c="dimmed" mb={b.estimatedEnergyCost != null ? 2 : hasActions ? 12 : 0}>
+      <Text
+        size="sm"
+        c="dimmed"
+        mb={b.estimatedDistanceKm != null || b.estimatedEnergyCost != null ? 2 : hasActions ? 12 : 0}
+      >
         {b.customerName}{b.customerPhone && ` · ${b.customerPhone}`} · {b.passengerCount}人
       </Text>
 
-      {b.estimatedEnergyCost != null && (
+      {(b.estimatedDistanceKm != null || b.estimatedEnergyCost != null) && (
         <Text size="xs" c="dimmed" mb={hasActions ? 12 : 0}>
-          預估能耗成本 ≈ <span className="mono">{fmtMoney(b.estimatedEnergyCost)}</span>（僅供參考）
+          {b.estimatedDistanceKm != null && `距離約 ${b.estimatedDistanceKm} km`}
+          {b.estimatedDurationMin != null && `・車程約 ${b.estimatedDurationMin} 分`}
+          {b.estimatedEnergyCost != null && (
+            <>
+              {b.estimatedDistanceKm != null && '・'}
+              能耗成本 ≈ <span className="mono">{fmtMoney(b.estimatedEnergyCost)}</span>
+            </>
+          )}
+          （僅供參考）
         </Text>
       )}
 

@@ -417,6 +417,39 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
 
+  /drivers/{driverId}/distance:
+    post:
+      tags: [Driver]
+      summary: 依上車/目的地文字自動估算開車距離
+      description: 用 Google Distance Matrix。未設 API key 或查不到 → distanceKm 為 null。
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/DriverId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [origin, destination]
+              properties:
+                origin: { type: string, maxLength: 200 }
+                destination: { type: string, maxLength: 200 }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  distanceKm: { type: number, nullable: true }
+                  durationMin: { type: integer, nullable: true }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
   /drivers/{driverId}/stats:
     get:
       tags: [Driver]
@@ -981,7 +1014,8 @@ components:
         passengerCount: { type: integer }
         specialRequests: { type: string, nullable: true }
         estimatedPrice: { type: number, nullable: true, description: 建立時的基礎報價 }
-        estimatedDistanceKm: { type: number, nullable: true }
+        estimatedDistanceKm: { type: number, nullable: true, description: 手填或 Google 自動估算 }
+        estimatedDurationMin: { type: integer, nullable: true, description: Google 估的車程分鐘 }
         estimatedEnergyCost: { type: number, nullable: true, description: 建立時快照的能耗成本估算（僅供參考） }
         quotedPrice: { type: number, nullable: true, description: 司機重新報價的金額 }
         quotedAt: { type: string, format: date-time, nullable: true }

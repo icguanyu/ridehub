@@ -46,9 +46,17 @@ export default function BookingCard({
           )}
         </Group>
 
-        {b.estimatedEnergyCost != null && (
+        {(b.estimatedDistanceKm != null || b.estimatedEnergyCost != null) && (
           <Text size="xs" c="dimmed">
-            預估能耗成本 ≈ <span className="mono">{fmtMoney(b.estimatedEnergyCost)}</span>（僅供參考）
+            {b.estimatedDistanceKm != null && `距離約 ${b.estimatedDistanceKm} km`}
+            {b.estimatedDurationMin != null && `・車程約 ${b.estimatedDurationMin} 分`}
+            {b.estimatedEnergyCost != null && (
+              <>
+                {b.estimatedDistanceKm != null && '・'}
+                能耗成本 ≈ <span className="mono">{fmtMoney(b.estimatedEnergyCost)}</span>
+              </>
+            )}
+            （僅供參考）
           </Text>
         )}
 

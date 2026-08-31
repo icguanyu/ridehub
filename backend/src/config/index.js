@@ -32,6 +32,9 @@ const schema = z.object({
   LINE_CHANNEL_SECRET: z.string().optional().default(''),
   LINE_ADD_FRIEND_URL: z.string().optional().default(''), // 官方帳號加好友連結（lin.ee / line.me）
 
+  // 未填則不做距離自動估算（客人/司機仍可手動填距離）
+  GOOGLE_MAPS_API_KEY: z.string().optional().default(''),
+
   SENDGRID_API_KEY: z.string().optional().default(''),
 });
 
@@ -63,6 +66,8 @@ export const config = {
     secret: env.JWT_SECRET,
     expiry: env.JWT_EXPIRY,
   },
+
+  googleMapsApiKey: env.GOOGLE_MAPS_API_KEY,
 
   line: {
     accessToken: env.LINE_CHANNEL_ACCESS_TOKEN,

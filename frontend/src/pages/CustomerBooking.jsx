@@ -213,6 +213,7 @@ export default function CustomerBooking() {
                 />
                 <NumberInput
                   label="預估距離 (km，選填)"
+                  description="留空會依上車/目的地自動估算"
                   min={0}
                   {...form.getInputProps('estimatedDistanceKm')}
                 />

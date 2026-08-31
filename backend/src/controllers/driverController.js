@@ -13,6 +13,7 @@ import {
 } from '../services/driverService.js';
 import { listDriverBookings } from '../services/bookingService.js';
 import { getDriverStats } from '../services/statsService.js';
+import { getDrivingDistance } from '../services/mapsService.js';
 import { driverPrivate, driverPublic } from '../serializers/driver.js';
 import { bookingItem } from '../serializers/booking.js';
 
@@ -135,4 +136,19 @@ export const getStatsValidator = validate({
 export const getStats = asyncHandler(async (req, res) => {
   const month = req.query.month || currentMonth();
   res.json(await getDriverStats(req.params.driverId, month));
+});
+
+// ── POST /drivers/:driverId/distance ──（自動估算開車距離，供新增訂單預覽）
+export const distancePreviewValidator = validate({
+  body: z
+    .object({
+      origin: z.string().trim().min(1).max(200),
+      destination: z.string().trim().min(1).max(200),
+    })
+    .strict(),
+});
+
+export const distancePreview = asyncHandler(async (req, res) => {
+  const m = await getDrivingDistance(req.body.origin, req.body.destination);
+  res.json(m ?? { distanceKm: null, durationMin: null });
 });

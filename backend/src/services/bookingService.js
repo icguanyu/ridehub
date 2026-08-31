@@ -4,6 +4,7 @@ import { ApiError } from '../utils/ApiError.js';
 import { getDriverById } from './driverService.js';
 import { estimatePrice, estimateEnergyCost } from '../utils/pricing.js';
 import { getFuelPrices, resolveUnitPrice } from './fuelPriceService.js';
+import { getDrivingDistance } from './mapsService.js';
 import {
   ACTIVE_BOOKING_STATUSES,
   BOOKING_STATUS,
@@ -13,16 +14,23 @@ import {
 
 const hm = (t) => String(t).slice(0, 5);
 
-// 距離 → 能耗成本快照（抓不到油價不擋流程）
-async function energySnapshot(driver, distanceKm, tripType) {
-  const km = distanceKm != null && distanceKm !== '' ? Number(distanceKm) : null;
-  if (!(km > 0) || !driver.energy_type) return { km, cost: null };
+// 解析行程距離：有手填就用，否則用 Google 依上車/目的地估。回 { km, durationMin }
+async function resolveDistance(inputKm, pickup, destination) {
+  if (inputKm != null && inputKm !== '' && Number(inputKm) > 0) {
+    return { km: Number(inputKm), durationMin: null };
+  }
+  const m = await getDrivingDistance(pickup, destination).catch(() => null);
+  return m ? { km: m.distanceKm, durationMin: m.durationMin } : { km: null, durationMin: null };
+}
+
+// 距離 → 能耗成本（抓不到油價不擋流程）
+async function energyCostFor(driver, km, tripType) {
+  if (!(km > 0) || !driver.energy_type) return null;
   try {
     const { prices } = await getFuelPrices();
-    const unitPrice = resolveUnitPrice(driver, prices);
-    return { km, cost: estimateEnergyCost(driver, { distanceKm: km, tripType, unitPrice }) };
+    return estimateEnergyCost(driver, { distanceKm: km, tripType, unitPrice: resolveUnitPrice(driver, prices) });
   } catch {
-    return { km, cost: estimateEnergyCost(driver, { distanceKm: km, tripType }) };
+    return estimateEnergyCost(driver, { distanceKm: km, tripType });
   }
 }
 
@@ -143,16 +151,18 @@ export async function createBooking(input) {
     await assertDailyCapacity(driver, returnDate, '回程當日');
   }
 
-  const { estimatedPrice } = estimatePrice(driver, { estimatedDistanceKm, tripType });
-  const energy = await energySnapshot(driver, estimatedDistanceKm, tripType);
+  const dist = await resolveDistance(estimatedDistanceKm, rest.pickupLocation, rest.destination);
+  const { estimatedPrice } = estimatePrice(driver, { estimatedDistanceKm: dist.km, tripType });
+  const energyCost = await energyCostFor(driver, dist.km, tripType);
 
   const { data, error } = await supabaseAdmin
     .from('bookings')
     .insert({
       ...bookingRow({ driverId, tripType, isRoundTrip, bookingDate, bookingTime, returnDate, returnTime, rest }),
       estimated_price: estimatedPrice,
-      estimated_distance_km: energy.km,
-      estimated_energy_cost: energy.cost,
+      estimated_distance_km: dist.km,
+      estimated_duration_min: dist.durationMin,
+      estimated_energy_cost: energyCost,
       status: BOOKING_STATUS.PENDING,
     })
     .select('*')
@@ -182,19 +192,21 @@ export async function createDriverBooking(driverId, input) {
   assertTripDates({ bookingDate, bookingTime, returnDate, returnTime, isRoundTrip });
   assertPassengerCount(driver, rest.passengerCount ?? 1);
 
+  const dist = await resolveDistance(estimatedDistanceKm, rest.pickupLocation, rest.destination);
   const price =
     agreedPrice != null && agreedPrice !== ''
       ? Math.round(Number(agreedPrice))
-      : estimatePrice(driver, { estimatedDistanceKm, tripType }).estimatedPrice;
-  const energy = await energySnapshot(driver, estimatedDistanceKm, tripType);
+      : estimatePrice(driver, { estimatedDistanceKm: dist.km, tripType }).estimatedPrice;
+  const energyCost = await energyCostFor(driver, dist.km, tripType);
 
   const { data, error } = await supabaseAdmin
     .from('bookings')
     .insert({
       ...bookingRow({ driverId, tripType, isRoundTrip, bookingDate, bookingTime, returnDate, returnTime, rest }),
       estimated_price: price,
-      estimated_distance_km: energy.km,
-      estimated_energy_cost: energy.cost,
+      estimated_distance_km: dist.km,
+      estimated_duration_min: dist.durationMin,
+      estimated_energy_cost: energyCost,
       status: BOOKING_STATUS.ACCEPTED,
     })
     .select('*')

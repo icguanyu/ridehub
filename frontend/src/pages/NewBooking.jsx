@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Stack,
@@ -17,7 +17,7 @@ import {
 import { TimeInput } from '@mantine/dates';
 import { useForm } from '@mantine/form';
 import { useCurrentDriverId } from '@/hooks/useAuth';
-import { useDriver } from '@/hooks/useDriver';
+import { useDriver, useDistancePreview } from '@/hooks/useDriver';
 import { useCreateDriverBooking } from '@/hooks/useBookings';
 import { useFuelPrices } from '@/hooks/useFuelPrices';
 import Spinner from '@/components/Spinner';
@@ -47,7 +47,9 @@ export default function NewBooking() {
   const driverId = useCurrentDriverId();
   const driver = useDriver(driverId);
   const fuel = useFuelPrices();
+  const distance = useDistancePreview(driverId);
   const create = useCreateDriverBooking(driverId);
+  const [durationHint, setDurationHint] = useState(undefined);
 
   const form = useForm({
     initialValues: {
@@ -113,6 +115,24 @@ export default function NewBooking() {
   }, [driver.data, fuel.data, form.values.estimatedDistanceKm, form.values.tripType]);
 
   if (driver.isLoading) return <Spinner />;
+
+  const autoDistance = () => {
+    distance.mutate(
+      { origin: form.values.pickupLocation.trim(), destination: form.values.destination.trim() },
+      {
+        onSuccess: (r) => {
+          if (r.distanceKm == null) {
+            setDurationHint(undefined);
+            notifyErr(new Error('查不到這兩點的距離，請手動填'), '自動估算失敗');
+            return;
+          }
+          form.setFieldValue('estimatedDistanceKm', r.distanceKm);
+          setDurationHint(r.durationMin ? `車程約 ${r.durationMin} 分鐘` : undefined);
+        },
+        onError: (e) => notifyErr(e, '自動估算失敗'),
+      },
+    );
+  };
 
   const submit = form.onSubmit((v) => {
     const payload = {
@@ -217,10 +237,20 @@ export default function NewBooking() {
               />
               <NumberInput
                 label="預估距離 (km，選填)"
+                description={durationHint}
                 min={0}
                 {...form.getInputProps('estimatedDistanceKm')}
               />
             </Group>
+            <Button
+              variant="light"
+              size="xs"
+              loading={distance.isPending}
+              disabled={!form.values.pickupLocation.trim() || !form.values.destination.trim()}
+              onClick={autoDistance}
+            >
+              依上車／目的地自動估算距離
+            </Button>
 
             <NumberInput
               label="議定車資（選填，留空則用估價）"
