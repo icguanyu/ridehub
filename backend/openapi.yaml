@@ -217,6 +217,12 @@ paths:
                   nullable: true
                   description: 對外顯示的 LINE ID（客人加好友用），與 bind-line 的內部 line_id 不同
                 maxPassengers: { type: integer, minimum: 1, maximum: 20, description: 可載客人數上限 }
+                passengerInsuranceWan:
+                  type: integer
+                  minimum: 0
+                  maximum: 99999
+                  nullable: true
+                  description: 乘客責任險保額（萬元）；未填 = 未提供
                 energyType:
                   type: string
                   enum: [gasoline_92, gasoline_95, gasoline_98, diesel, ev]
@@ -995,6 +1001,7 @@ components:
         pricePerKm: { type: number, nullable: true }
         maxDailyBookings: { type: integer }
         maxPassengers: { type: integer, description: 可載客人數上限 }
+        passengerInsuranceWan: { type: integer, nullable: true, description: 乘客責任險保額（萬元） }
         energyType: { type: string, nullable: true, enum: [gasoline_92, gasoline_95, gasoline_98, diesel, ev] }
         energyConsumption: { type: number, nullable: true, description: 油車 km/L；電車 kWh/100km }
         energyUnitPrice: { type: number, nullable: true, description: 油車 NT$/L；電車 NT$/度 }
@@ -1014,6 +1021,7 @@ components:
         basePrice: { type: number, nullable: true }
         pricePerKm: { type: number, nullable: true }
         maxPassengers: { type: integer, description: 可載客人數上限 }
+        passengerInsuranceWan: { type: integer, nullable: true, description: 乘客責任險保額（萬元） }
         isVerified: { type: boolean }
 
     Availability:

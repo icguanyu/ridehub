@@ -78,6 +78,15 @@ export default function DriverPublic() {
                   </div>
                 )}
 
+                {data.passengerInsuranceWan > 0 && (
+                  <div>
+                    <Text size="xs" c="dimmed">
+                      乘客責任險
+                    </Text>
+                    <Text size="sm">保額 {data.passengerInsuranceWan} 萬</Text>
+                  </div>
+                )}
+
                 <div>
                   <Text size="xs" c="dimmed">
                     參考價格

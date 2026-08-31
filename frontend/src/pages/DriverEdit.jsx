@@ -48,6 +48,7 @@ export default function DriverEdit() {
       carType: '',
       carPlate: '',
       maxPassengers: 4,
+      passengerInsuranceWan: '',
       basePrice: '',
       pricePerKm: '',
       lineDisplayId: '',
@@ -70,6 +71,7 @@ export default function DriverEdit() {
         carType: data.carType ?? '',
         carPlate: data.carPlate ?? '',
         maxPassengers: data.maxPassengers ?? 4,
+        passengerInsuranceWan: data.passengerInsuranceWan ?? '',
         basePrice: data.basePrice ?? '',
         pricePerKm: data.pricePerKm ?? '',
         lineDisplayId: data.lineDisplayId ?? '',
@@ -92,6 +94,7 @@ export default function DriverEdit() {
       carType: v.carType || null,
       carPlate: v.carPlate || null,
       maxPassengers: Number(v.maxPassengers) || 4,
+      passengerInsuranceWan: v.passengerInsuranceWan === '' ? null : Number(v.passengerInsuranceWan),
       basePrice: v.basePrice === '' ? null : Number(v.basePrice),
       pricePerKm: v.pricePerKm === '' ? null : Number(v.pricePerKm),
       lineDisplayId: v.lineDisplayId.trim() || null,
@@ -142,6 +145,14 @@ export default function DriverEdit() {
               max={20}
               clampBehavior="strict"
               {...form.getInputProps('maxPassengers')}
+            />
+            <NumberInput
+              label="乘客責任險保額（萬元，選填）"
+              description="有填才會顯示在你的公開頁"
+              placeholder="例如 300"
+              min={0}
+              max={99999}
+              {...form.getInputProps('passengerInsuranceWan')}
             />
             <Group grow>
               <Input.Wrapper label="基礎價格 (NT$)" error={form.errors.basePrice}>

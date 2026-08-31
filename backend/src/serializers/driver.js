@@ -20,6 +20,7 @@ export function driverPrivate(row) {
     lineDisplayId: row.line_display_id ?? null,
     maxDailyBookings: row.max_daily_bookings,
     maxPassengers: row.max_passengers,
+    passengerInsuranceWan: row.passenger_insurance_wan ?? null,
     energyType: row.energy_type ?? null,
     energyConsumption: row.energy_consumption ?? null,
     energyUnitPrice: row.energy_unit_price ?? null,
@@ -41,6 +42,7 @@ export function driverPublic(row) {
     basePrice: row.base_price,
     pricePerKm: row.price_per_km,
     maxPassengers: row.max_passengers,
+    passengerInsuranceWan: row.passenger_insurance_wan ?? null,
     isVerified: row.is_verified,
   };
 }
