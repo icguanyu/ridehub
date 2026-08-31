@@ -18,10 +18,6 @@ const schema = z.object({
   LINE_CHANNEL_SECRET: z.string().optional().default(''),
   LINE_ADD_FRIEND_URL: z.string().optional().default(''), // 官方帳號加好友連結（lin.ee / line.me）
 
-  TWILIO_ACCOUNT_SID: z.string().optional().default(''),
-  TWILIO_AUTH_TOKEN: z.string().optional().default(''),
-  TWILIO_PHONE_NUMBER: z.string().optional().default(''),
-
   SENDGRID_API_KEY: z.string().optional().default(''),
 });
 
@@ -62,15 +58,6 @@ export const config = {
     },
     get webhookEnabled() {
       return Boolean(env.LINE_CHANNEL_SECRET);
-    },
-  },
-
-  twilio: {
-    accountSid: env.TWILIO_ACCOUNT_SID,
-    authToken: env.TWILIO_AUTH_TOKEN,
-    phoneNumber: env.TWILIO_PHONE_NUMBER,
-    get enabled() {
-      return Boolean(env.TWILIO_ACCOUNT_SID && env.TWILIO_AUTH_TOKEN);
     },
   },
 

@@ -35,10 +35,10 @@ npm run smoke        # 執行測試（讀 backend/.env）
 - [ ] 司機接受後，狀態頁「重新整理」顯示「已接受」+ 司機電話
 - [ ] 錯誤 / 缺少 token 時狀態頁顯示提示，不外洩資料
 
-### 通知（需設定 LINE / Twilio 金鑰）
+### 通知（需設定 LINE 金鑰）
 - [ ] 建立預約 → 司機 LINE 收到推播
-- [ ] 司機接受 / 拒絕 → 客人 LINE 收到推播
-- [ ] LINE 失敗時改發簡訊；`notifications_log` 有對應紀錄
+- [ ] 客人同意 / 不同意報價 → 司機 LINE 收到推播
+- [ ] 未設定 LINE 金鑰時記為 `skipped`；`notifications_log` 有對應紀錄
 
 ### 非功能
 - [ ] 手機版面（Chrome DevTools 375px）排版正常

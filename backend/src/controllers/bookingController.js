@@ -16,9 +16,6 @@ import {
 import { getDriverById } from '../services/driverService.js';
 import {
   notifyDriverNewBooking,
-  notifyCustomerBookingResult,
-  notifyCustomerCancellation,
-  notifyCustomerQuote,
   notifyDriverQuoteResponse,
 } from '../services/notificationService.js';
 import { bookingItem, bookingCreated, bookingWithDriver, bookingSearchItem } from '../serializers/booking.js';
@@ -107,15 +104,7 @@ export const acceptValidator = validate({ params: bookingIdParam });
 
 export const accept = asyncHandler(async (req, res) => {
   const booking = await respondToBooking(req.params.bookingId, req.auth.driverId, { accept: true });
-  const driver = await getDriverById(booking.driver_id);
-  const notify = await notifyCustomerBookingResult(booking, driver, { accepted: true }).catch((e) => {
-    logger.error('notifyCustomer 例外', e);
-    return { ok: false, channel: 'none' };
-  });
-  res.json({
-    booking: bookingItem(booking),
-    message: notify.ok ? `已透過 ${notify.channel} 通知客人` : '已接受（客人通知發送失敗或未設定）',
-  });
+  res.json({ booking: bookingItem(booking), message: '已接受預約' });
 });
 
 // ── PUT /bookings/:bookingId/reject ──（司機）
@@ -129,18 +118,7 @@ export const reject = asyncHandler(async (req, res) => {
     accept: false,
     reason: req.body.reason,
   });
-  const driver = await getDriverById(booking.driver_id);
-  const notify = await notifyCustomerBookingResult(booking, driver, {
-    accepted: false,
-    reason: req.body.reason,
-  }).catch((e) => {
-    logger.error('notifyCustomer 例外', e);
-    return { ok: false, channel: 'none' };
-  });
-  res.json({
-    booking: bookingItem(booking),
-    message: notify.ok ? `已透過 ${notify.channel} 通知客人` : '已拒絕（客人通知發送失敗或未設定）',
-  });
+  res.json({ booking: bookingItem(booking), message: '已拒絕預約' });
 });
 
 // ── PUT /bookings/:bookingId/cancel ──（司機取消，理由必填）
@@ -155,15 +133,7 @@ export const cancel = asyncHandler(async (req, res) => {
   const booking = await cancelBooking(req.params.bookingId, req.auth.driverId, {
     reason: req.body.reason,
   });
-  const driver = await getDriverById(booking.driver_id);
-  const notify = await notifyCustomerCancellation(booking, driver, req.body.reason).catch((e) => {
-    logger.error('notifyCustomerCancellation 例外', e);
-    return { ok: false, channel: 'none' };
-  });
-  res.json({
-    booking: bookingItem(booking),
-    message: notify.ok ? `已透過 ${notify.channel} 通知客人` : '已取消（客人通知發送失敗或未設定）',
-  });
+  res.json({ booking: bookingItem(booking), message: '預約已取消' });
 });
 
 // ── PUT /bookings/:bookingId/complete ──（司機標記行程完成）
@@ -201,15 +171,7 @@ export const quote = asyncHandler(async (req, res) => {
     price: req.body.price,
     note: req.body.note,
   });
-  const driver = await getDriverById(booking.driver_id);
-  const notify = await notifyCustomerQuote(booking, driver).catch((e) => {
-    logger.error('notifyCustomerQuote 例外', e);
-    return { ok: false, channel: 'none' };
-  });
-  res.json({
-    booking: bookingItem(booking),
-    message: notify.ok ? `報價已透過 ${notify.channel} 通知客人` : '報價已送出（客人通知發送失敗或未設定）',
-  });
+  res.json({ booking: bookingItem(booking), message: '報價已送出' });
 });
 
 // ── PUT /bookings/:bookingId/quote/accept|decline ──（客人，需 token）

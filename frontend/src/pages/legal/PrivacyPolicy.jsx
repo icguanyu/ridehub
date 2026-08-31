@@ -19,7 +19,7 @@ export default function PrivacyPolicy() {
       <Section heading="拿來做什麼">
         <List size="sm" spacing="xs" withPadding>
           <List.Item>幫司機和乘客媒合、管理預約</List.Item>
-          <List.Item>發送預約狀態通知（LINE 或簡訊）</List.Item>
+          <List.Item>透過 LINE 通知司機新預約與報價回應</List.Item>
           <List.Item>提供司機看自己的營運數字（筆數、營收、乘客數）</List.Item>
         </List>
       </Section>
@@ -28,7 +28,7 @@ export default function PrivacyPolicy() {
         <List size="sm" spacing="xs" withPadding>
           <List.Item>乘客送出預約後，資料會提供給被預約的那位司機，方便聯繫。</List.Item>
           <List.Item>司機的名稱、車型、服務區域、參考價格、對外 LINE ID 會顯示在他的公開頁面。</List.Item>
-          <List.Item>通知經由 LINE 和簡訊服務商（Twilio）發送；資料存放在雲端資料庫（Supabase，主機可能在國外）。</List.Item>
+          <List.Item>給司機的通知經由 LINE（LINE Corporation）發送；資料存放在雲端資料庫（Supabase，主機可能在國外）。</List.Item>
         </List>
         <P>我們不會販售你的個人資料。</P>
       </Section>

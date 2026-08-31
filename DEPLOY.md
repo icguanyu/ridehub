@@ -156,17 +156,6 @@ Messaging API channel → **Messaging API** 分頁：
 
 司機後台 → 服務資訊 → LINE 通知 → **產生綁定碼** → 加官方帳號好友 → 把 6 碼傳給官方帳號 → 自動綁定，之後新預約即時推播。
 
-#### （選用）Twilio 簡訊備援
-
-```bash
-printf '%s' "SID"   | gcloud secrets create TWILIO_ACCOUNT_SID --data-file=-
-printf '%s' "TOKEN" | gcloud secrets create TWILIO_AUTH_TOKEN --data-file=-
-# 一樣跑 add-iam-policy-binding，然後：
-gcloud run services update "$SERVICE" --region "$REGION" \
-  --update-secrets "TWILIO_ACCOUNT_SID=TWILIO_ACCOUNT_SID:latest,TWILIO_AUTH_TOKEN=TWILIO_AUTH_TOKEN:latest" \
-  --update-env-vars "TWILIO_PHONE_NUMBER=+886..."
-```
-
 ---
 
 ## B. 前端：Cloudflare Pages

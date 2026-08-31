@@ -38,12 +38,12 @@ npm run dev            # http://localhost:3000（--watch 自動重啟）
 
 🔒 = 需 `Authorization: Bearer <token>`
 
-## 通知（LINE / SMS）
+## 通知（LINE）
 
-- `POST /bookings` 成功後通知司機；`accept` / `reject` 後通知客人。
-- 順序：LINE push →（失敗或無 LINE ID）Twilio SMS →（都沒設定）記為 `skipped`。
+- `POST /bookings` 成功後以 LINE 通知司機；客人回應報價後同樣以 LINE 通知司機。
+- 客人不推播，改由狀態頁 / 手機查詢查看進度。
 - 每次結果寫入 `notifications_log`；通知失敗**不影響**主流程。
-- 未填 `LINE_CHANNEL_ACCESS_TOKEN` / Twilio 金鑰時自動略過，填了即生效。
+- 未填 `LINE_CHANNEL_ACCESS_TOKEN` 時自動略過（記為 `skipped`），填了即生效。
 
 ## 認證機制
 

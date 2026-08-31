@@ -31,7 +31,7 @@ ridehub/
 | 前端 | React 18 + Vite + TailwindCSS + React Query/Zustand |
 | 後端 | Node.js 20 + Express |
 | 資料庫 / Auth | Supabase (PostgreSQL) |
-| 通知 | LINE Messaging API + Twilio SMS (備援) |
+| 通知 | LINE Messaging API（推播給司機）|
 | 部署 | Cloudflare Pages (前端) + Workers/Railway (後端) |
 
 ## 開發進度
@@ -42,7 +42,7 @@ ridehub/
 - [x] 3. 認證 API
 - [x] 4. 司機 API
 - [x] 5. 客人預約 API
-- [x] 6. LINE 推播 + SMS 備援
+- [x] 6. LINE 推播（司機）
 - [x] 7. 前端骨架
 - [x] 8. 司機前端頁面
 - [x] 9. 客人前端頁面

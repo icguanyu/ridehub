@@ -423,9 +423,9 @@ paths:
                       message: { type: string }
                   notified:
                     oneOf:
-                      - { type: string, enum: [line, sms] }
+                      - { type: string, enum: [line] }
                       - { type: boolean, enum: [false] }
-                    description: 成功通知司機的管道；未設定金鑰時為 false
+                    description: 成功通知司機的管道（LINE）；未設定或失敗時為 false
         '400': { $ref: '#/components/responses/BadRequest' }
         '404':
           description: 找不到司機

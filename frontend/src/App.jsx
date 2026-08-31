@@ -17,6 +17,7 @@ import DriverPublic from '@/pages/DriverPublic';
 import CustomerBooking from '@/pages/CustomerBooking';
 import BookingConfirmation from '@/pages/BookingConfirmation';
 import HomePage from '@/pages/HomePage';
+import MyBookings from '@/pages/MyBookings';
 import PrivacyPolicy from '@/pages/legal/PrivacyPolicy';
 import Disclaimer from '@/pages/legal/Disclaimer';
 import NotFound from '@/pages/NotFound';
@@ -65,6 +66,8 @@ export default function App() {
           <Route path="/driver/:driverId" element={<DriverPublic />} />
           <Route path="/driver/:driverId/book" element={<CustomerBooking />} />
           <Route path="/booking/:bookingId" element={<BookingConfirmation />} />
+
+          <Route path="/my-bookings" element={<MyBookings />} />
 
           {/* 法律頁 */}
           <Route path="/privacy" element={<PrivacyPolicy />} />
