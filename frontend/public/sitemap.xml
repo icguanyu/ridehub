@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- 部署後把 https://ridehub.example 換成你的正式網域 -->
+<!-- 部署後把 https://ridehub-2h3.pages.dev/ 換成你的正式網域 -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://ridehub.example/</loc>
+    <loc>https://ridehub-2h3.pages.dev/</loc>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://ridehub.example/privacy</loc>
+    <loc>https://ridehub-2h3.pages.dev/privacy</loc>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://ridehub.example/disclaimer</loc>
+    <loc>https://ridehub-2h3.pages.dev/disclaimer</loc>
     <priority>0.3</priority>
   </url>
 </urlset>
