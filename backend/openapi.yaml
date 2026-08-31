@@ -336,6 +336,53 @@ paths:
                       pageSize: { type: integer }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [Driver]
+      summary: 司機在後台自建訂單
+      description: >
+        客人已談好、不想自己上平台輸入時，由司機代填。建立後直接為 `accepted`，
+        不做每日名額檢查。`agreedPrice` 未填則沿用估價（起價 + 每公里 × 距離）。
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/DriverId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [customerName, customerPhone, pickupLocation, destination, bookingDate, bookingTime]
+              properties:
+                customerName: { type: string }
+                customerPhone: { type: string, example: '0912345678' }
+                customerLineId: { type: string, maxLength: 100 }
+                tripType: { type: string, enum: [one_way, round_trip], default: one_way }
+                pickupLocation: { type: string, maxLength: 200 }
+                destination: { type: string, maxLength: 200 }
+                bookingDate: { type: string, format: date }
+                bookingTime: { type: string, example: '14:00' }
+                returnDate: { type: string, format: date, nullable: true }
+                returnTime: { type: string, nullable: true, example: '18:00' }
+                passengerCount: { type: integer, minimum: 1, maximum: 20, default: 1 }
+                specialRequests: { type: string, maxLength: 2000 }
+                estimatedDistanceKm: { type: number, minimum: 0, maximum: 2000 }
+                agreedPrice: { type: number, minimum: 0, description: 議定車資；未填則沿用估價 }
+      responses:
+        '201':
+          description: 訂單已建立（accepted）
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  booking: { $ref: '#/components/schemas/BookingItem' }
+                  statusToken:
+                    type: string
+                    description: 可組成客人查詢狀態的連結
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
 
   /drivers/{driverId}/stats:
     get:

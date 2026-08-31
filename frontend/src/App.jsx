@@ -13,6 +13,7 @@ import DriverEdit from '@/pages/DriverEdit';
 import DriverAvailability from '@/pages/DriverAvailability';
 import BookingList from '@/pages/BookingList';
 import BookingDetail from '@/pages/BookingDetail';
+import NewBooking from '@/pages/NewBooking';
 import DriverPublic from '@/pages/DriverPublic';
 import CustomerBooking from '@/pages/CustomerBooking';
 import BookingConfirmation from '@/pages/BookingConfirmation';
@@ -88,6 +89,7 @@ export default function App() {
         >
           <Route index element={<DriverDashboard />} />
           <Route path="bookings" element={<BookingList />} />
+          <Route path="bookings/new" element={<NewBooking />} />
           <Route path="bookings/:bookingId" element={<BookingDetail />} />
           <Route path="edit" element={<DriverEdit />} />
           <Route path="availability" element={<DriverAvailability />} />

@@ -59,6 +59,43 @@ async function assertDailyCapacity(driver, date, label) {
   }
 }
 
+// 去程 / 回程 日期時間的共用驗證
+function assertTripDates({ bookingDate, bookingTime, returnDate, returnTime, isRoundTrip }) {
+  if (bookingDate < todayISO()) {
+    throw ApiError.badRequest('預約日期不可早於今天');
+  }
+  if (isRoundTrip) {
+    if (!returnDate || !returnTime) {
+      throw ApiError.badRequest('往返行程需填寫回程日期與時間');
+    }
+    if (returnDate < bookingDate) {
+      throw ApiError.badRequest('回程日期不可早於去程');
+    }
+    if (returnDate === bookingDate && hm(returnTime) <= hm(bookingTime)) {
+      throw ApiError.badRequest('同日回程時間需晚於去程時間');
+    }
+  }
+}
+
+// 依 input 組出要寫進 bookings 的欄位（不含 status / 價格）
+function bookingRow({ driverId, tripType, isRoundTrip, bookingDate, bookingTime, returnDate, returnTime, rest }) {
+  return {
+    driver_id: driverId,
+    customer_name: rest.customerName,
+    customer_phone: rest.customerPhone,
+    customer_line_id: rest.customerLineId ?? null,
+    trip_type: tripType,
+    pickup_location: rest.pickupLocation,
+    destination: rest.destination,
+    booking_date: bookingDate,
+    booking_time: bookingTime,
+    return_date: isRoundTrip ? returnDate : null,
+    return_time: isRoundTrip ? returnTime : null,
+    passenger_count: rest.passengerCount ?? 1,
+    special_requests: rest.specialRequests ?? null,
+  };
+}
+
 // 客人建立預約（匿名）。回傳建立後的 booking 列。
 export async function createBooking(input) {
   const {
@@ -75,50 +112,20 @@ export async function createBooking(input) {
   const driver = await getDriverById(driverId); // 不存在 → 404
   const isRoundTrip = tripType === TRIP_TYPE.ROUND_TRIP;
 
-  // 1. 去程不可為過去
-  if (bookingDate < todayISO()) {
-    throw ApiError.badRequest('預約日期不可早於今天');
-  }
+  assertTripDates({ bookingDate, bookingTime, returnDate, returnTime, isRoundTrip });
 
-  // 2. 往返：驗證回程
-  if (isRoundTrip) {
-    if (!returnDate || !returnTime) {
-      throw ApiError.badRequest('往返行程需填寫回程日期與時間');
-    }
-    if (returnDate < bookingDate) {
-      throw ApiError.badRequest('回程日期不可早於去程');
-    }
-    if (returnDate === bookingDate && hm(returnTime) <= hm(bookingTime)) {
-      throw ApiError.badRequest('同日回程時間需晚於去程時間');
-    }
-  }
-
-  // 3. 名額檢查（去程日；往返且回程跨日則回程日也檢查）
+  // 名額檢查（去程日；往返且回程跨日則回程日也檢查）
   await assertDailyCapacity(driver, bookingDate, '去程當日');
   if (isRoundTrip && returnDate !== bookingDate) {
     await assertDailyCapacity(driver, returnDate, '回程當日');
   }
 
-  // 5. 預估車資
   const { estimatedPrice } = estimatePrice(driver, { estimatedDistanceKm, tripType });
 
-  // 6. 寫入
   const { data, error } = await supabaseAdmin
     .from('bookings')
     .insert({
-      driver_id: driverId,
-      customer_name: rest.customerName,
-      customer_phone: rest.customerPhone,
-      customer_line_id: rest.customerLineId ?? null,
-      trip_type: tripType,
-      pickup_location: rest.pickupLocation,
-      destination: rest.destination,
-      booking_date: bookingDate,
-      booking_time: bookingTime,
-      return_date: isRoundTrip ? returnDate : null,
-      return_time: isRoundTrip ? returnTime : null,
-      passenger_count: rest.passengerCount ?? 1,
-      special_requests: rest.specialRequests ?? null,
+      ...bookingRow({ driverId, tripType, isRoundTrip, bookingDate, bookingTime, returnDate, returnTime, rest }),
       estimated_price: estimatedPrice,
       status: BOOKING_STATUS.PENDING,
     })
@@ -127,6 +134,44 @@ export async function createBooking(input) {
   if (error) throw error;
 
   return { booking: data, driver };
+}
+
+// 司機在後台自建訂單（客人已談好，只是懶得自己輸入）。
+// 直接進 accepted、不做名額檢查；車資可自填，未填則沿用估價。
+export async function createDriverBooking(driverId, input) {
+  const {
+    bookingDate,
+    bookingTime,
+    returnDate,
+    returnTime,
+    estimatedDistanceKm,
+    agreedPrice,
+    tripType = TRIP_TYPE.ONE_WAY,
+    ...rest
+  } = input;
+
+  const driver = await getDriverById(driverId);
+  const isRoundTrip = tripType === TRIP_TYPE.ROUND_TRIP;
+
+  assertTripDates({ bookingDate, bookingTime, returnDate, returnTime, isRoundTrip });
+
+  const price =
+    agreedPrice != null && agreedPrice !== ''
+      ? Math.round(Number(agreedPrice))
+      : estimatePrice(driver, { estimatedDistanceKm, tripType }).estimatedPrice;
+
+  const { data, error } = await supabaseAdmin
+    .from('bookings')
+    .insert({
+      ...bookingRow({ driverId, tripType, isRoundTrip, bookingDate, bookingTime, returnDate, returnTime, rest }),
+      estimated_price: price,
+      status: BOOKING_STATUS.ACCEPTED,
+    })
+    .select('*')
+    .single();
+  if (error) throw error;
+
+  return data;
 }
 
 // 客人查詢單筆預約（含司機聯絡資訊）。

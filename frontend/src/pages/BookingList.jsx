@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Stack, Title, SegmentedControl, Pagination, Group, Text } from '@mantine/core';
+import { Link } from 'react-router-dom';
+import { Stack, Title, SegmentedControl, Pagination, Group, Text, Button } from '@mantine/core';
 import { useCurrentDriverId } from '@/hooks/useAuth';
 import {
   useDriverBookings,
@@ -100,7 +101,12 @@ export default function BookingList() {
 
   return (
     <Stack gap="md">
-      <Title order={4}>預約列表</Title>
+      <Group justify="space-between" wrap="nowrap">
+        <Title order={4}>預約列表</Title>
+        <Button component={Link} to="/dashboard/bookings/new" size="xs" color="brand">
+          ＋ 新增訂單
+        </Button>
+      </Group>
       <SegmentedControl fullWidth data={FILTERS} value={filter} onChange={changeFilter} />
 
       {isLoading ? (

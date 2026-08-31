@@ -4,6 +4,7 @@ import { validate } from '../middlewares/validate.js';
 import { phoneField, nameField, dateField, timeField } from '../utils/validators.js';
 import {
   createBooking,
+  createDriverBooking,
   getBookingWithDriver,
   respondToBooking,
   quoteBooking,
@@ -72,6 +73,44 @@ export const create = asyncHandler(async (req, res) => {
       message: '預約已提交，等待司機確認',
     },
     notified: notify.ok ? notify.channel : false,
+  });
+});
+
+// ── POST /drivers/:driverId/bookings ──（司機在後台自建訂單，直接 accepted）
+export const createDriverBookingValidator = validate({
+  params: z.object({ driverId: z.string().uuid() }),
+  body: z
+    .object({
+      customerName: nameField,
+      customerPhone: phoneField,
+      customerLineId: z.string().trim().max(100).optional(),
+      tripType: z
+        .string()
+        .refine((v) => TRIP_TYPE_VALUES.includes(v), '無效的 tripType')
+        .default(TRIP_TYPE.ONE_WAY),
+      pickupLocation: z.string().trim().min(1).max(200),
+      destination: z.string().trim().min(1).max(200),
+      bookingDate: dateField,
+      bookingTime: timeField,
+      returnDate: dateField.optional(),
+      returnTime: timeField.optional(),
+      passengerCount: z.coerce.number().int().min(1).max(20).default(1),
+      specialRequests: z.string().trim().max(2000).optional(),
+      estimatedDistanceKm: z.coerce.number().nonnegative().max(2000).optional(),
+      agreedPrice: z.coerce.number().nonnegative().max(1_000_000).optional(),
+    })
+    .strict()
+    .refine(
+      (v) => v.tripType !== TRIP_TYPE.ROUND_TRIP || (v.returnDate && v.returnTime),
+      { message: '往返行程需填寫回程日期與時間', path: ['returnDate'] },
+    ),
+});
+
+export const createDriverBookingHandler = asyncHandler(async (req, res) => {
+  const booking = await createDriverBooking(req.params.driverId, req.body);
+  res.status(201).json({
+    booking: bookingItem(booking),
+    statusToken: makeBookingToken(booking.id),
   });
 });
 

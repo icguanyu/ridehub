@@ -23,6 +23,10 @@ import {
   getPublicProfile,
 } from '../controllers/driverController.js';
 import { createLinkCode } from '../controllers/lineController.js';
+import {
+  createDriverBookingHandler,
+  createDriverBookingValidator,
+} from '../controllers/bookingController.js';
 
 export const driversRouter = Router();
 
@@ -46,4 +50,5 @@ driversRouter.get('/:driverId/availability', getAvailabilityHandler);
 driversRouter.put('/:driverId/availability', updateAvailabilityValidator, updateAvailabilityHandler);
 
 driversRouter.get('/:driverId/bookings', listBookingsValidator, listBookings);
+driversRouter.post('/:driverId/bookings', createDriverBookingValidator, createDriverBookingHandler);
 driversRouter.get('/:driverId/stats', getStatsValidator, getStats);

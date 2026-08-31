@@ -211,17 +211,22 @@ export default function DriverDashboard() {
 
   return (
     <Stack gap="md">
-      <Text
-        fw={700}
-        style={{
-          fontFamily: "'Outfit', sans-serif",
-          fontSize: 20,
-          letterSpacing: '-0.01em',
-          color: '#0F3D2E',
-        }}
-      >
-        {fmtDateFull(t)}
-      </Text>
+      <Group justify="space-between" wrap="nowrap" align="center">
+        <Text
+          fw={700}
+          style={{
+            fontFamily: "'Outfit', sans-serif",
+            fontSize: 20,
+            letterSpacing: '-0.01em',
+            color: '#0F3D2E',
+          }}
+        >
+          {fmtDateFull(t)}
+        </Text>
+        <Button size="xs" color="brand" component={Link} to="/dashboard/bookings/new">
+          ＋ 新增訂單
+        </Button>
+      </Group>
 
       {needsSetup && (
         <Alert color="sun" title="完成基本設定">

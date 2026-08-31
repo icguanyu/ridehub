@@ -51,6 +51,21 @@ export function useDeleteBooking() {
   });
 }
 
+// 司機在後台自建訂單（直接 accepted）
+export function useCreateDriverBooking(driverId) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload) => {
+      const { data } = await api.post(`/drivers/${driverId}/bookings`, payload);
+      return data; // { booking, statusToken }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['bookings'] });
+      qc.invalidateQueries({ queryKey: ['stats'] });
+    },
+  });
+}
+
 // 司機重新報價
 export function useQuoteBooking() {
   const qc = useQueryClient();
