@@ -8,6 +8,13 @@ const STEPS = [
   '乘客線上填寫行程，司機確認或重新報價，雙方用 LINE 聯繫。',
 ];
 
+const FEATURES = [
+  '依上車／目的地自動估算距離、車程與參考車資',
+  '油錢／電費試算，方便司機抓報價（僅供參考）',
+  '司機可自建訂單、標記完成、設定可載客人數上限',
+  '單程／往返分開呈現，行程狀態即時查看',
+];
+
 export default function HomePage() {
   return (
     <Center px="md" py="xl" style={{ background: '#FAF7EB', minHeight: 'calc(100dvh - 120px)', alignItems: 'flex-start' }}>
@@ -26,7 +33,8 @@ export default function HomePage() {
             </Title>
             <Text ta="center" c="dimmed" size="sm" style={{ lineHeight: 1.7 }}>
               RideHub 讓接駁司機建立自己的預約頁，乘客用一個連結就能線上預約行程、
-              即時掌握狀態，雙方透過 LINE 聯繫。免費、免下載 App。
+              即時掌握狀態；系統自動估算距離與參考車資，雙方透過 LINE 聯繫。
+              免費、免下載 App。
             </Text>
           </Stack>
 
@@ -75,6 +83,23 @@ export default function HomePage() {
               </Group>
             </Box>
           </Stack>
+
+          {/* 特色 */}
+          <div>
+            <Title order={2} mb="sm" style={{ fontSize: 15, color: '#4A6152' }}>
+              特色
+            </Title>
+            <Stack gap="xs">
+              {FEATURES.map((f, i) => (
+                <Group key={i} gap={8} wrap="nowrap" align="flex-start">
+                  <Text style={{ flex: 'none', color: '#2E7D32', lineHeight: 1.6 }}>✓</Text>
+                  <Text size="sm" style={{ lineHeight: 1.6 }}>
+                    {f}
+                  </Text>
+                </Group>
+              ))}
+            </Stack>
+          </div>
 
           {/* 怎麼運作 */}
           <div>
