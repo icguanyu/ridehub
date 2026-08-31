@@ -3,12 +3,12 @@ import {
   Center,
   Box,
   Stack,
+  Title,
   TextInput,
   Button,
   Text,
   Badge,
   Group,
-  Anchor,
   UnstyledButton,
   Checkbox,
 } from '@mantine/core';
@@ -27,6 +27,12 @@ function ArrowIcon() {
   );
 }
 
+const STEPS = [
+  '司機建立專屬服務頁，填入車型、服務區域與參考價格。',
+  '把預約連結或 QR Code 分享給乘客。',
+  '乘客線上填寫行程，司機確認或重新報價，雙方用 LINE／簡訊聯繫。',
+];
+
 function BookingRow({ booking }) {
   const navigate = useNavigate();
   const isRoundTrip = booking.tripType === 'round_trip';
@@ -34,10 +40,7 @@ function BookingRow({ booking }) {
   const go = () => navigate(`/booking/${booking.id}?token=${booking.statusToken}`);
 
   return (
-    <UnstyledButton
-      onClick={go}
-      style={{ width: '100%', textAlign: 'left' }}
-    >
+    <UnstyledButton onClick={go} style={{ width: '100%', textAlign: 'left' }}>
       <Box
         style={{
           border: '1px solid #E4E0D0',
@@ -86,9 +89,7 @@ export default function HomePage() {
   const saved = localStorage.getItem(STORAGE_KEY) ?? '';
   const [inputPhone, setInputPhone] = useState(saved);
   const [remember, setRemember] = useState(Boolean(saved));
-  const [searchPhone, setSearchPhone] = useState(
-    /^09\d{8}$/.test(saved) ? saved : '',
-  );
+  const [searchPhone, setSearchPhone] = useState(/^09\d{8}$/.test(saved) ? saved : '');
   const phoneError = inputPhone && !/^09\d{8}$/.test(inputPhone) ? '手機格式需為 09xxxxxxxx' : null;
 
   const { data, isLoading, isFetched } = useBookingSearch(searchPhone);
@@ -108,18 +109,62 @@ export default function HomePage() {
 
   return (
     <Center mih="100vh" px="md" py="xl" style={{ background: '#FAF7EB', alignItems: 'flex-start' }}>
-      <Box w="100%" maw={420}>
-        <Stack gap="xl">
-          {/* 品牌 */}
-          <Center pt="lg">
-            <Wordmark size={28} withMark markSize={34} slogan />
-          </Center>
-
-          {/* 搜尋區塊 */}
-          <Box>
-            <Text fw={700} size="lg" mb={4} style={{ color: '#0F3D2E' }}>
-              查詢我的行程
+      <Box w="100%" maw={460}>
+        <Stack gap={40}>
+          {/* Hero */}
+          <Stack gap="md" align="center" pt="lg">
+            <Wordmark size={34} withMark markSize={42} slogan />
+            <Title
+              order={1}
+              ta="center"
+              style={{ fontSize: 22, color: '#0F3D2E', lineHeight: 1.4, letterSpacing: '-0.01em' }}
+            >
+              接送司機與乘客的行程媒合平台
+            </Title>
+            <Text ta="center" c="dimmed" size="sm" style={{ lineHeight: 1.7 }}>
+              RideHub 讓接駁司機建立自己的預約頁，乘客用一個連結就能線上預約行程、
+              即時掌握狀態，雙方透過 LINE 或簡訊聯繫。免費、免下載 App。
             </Text>
+          </Stack>
+
+          {/* 怎麼運作 */}
+          <div>
+            <Title order={2} mb="sm" style={{ fontSize: 16, color: '#4A6152' }}>
+              怎麼運作
+            </Title>
+            <Stack gap="sm">
+              {STEPS.map((s, i) => (
+                <Group key={i} gap={10} wrap="nowrap" align="flex-start">
+                  <Box
+                    style={{
+                      flex: 'none',
+                      width: 22,
+                      height: 22,
+                      borderRadius: '50%',
+                      background: '#0F3D2E',
+                      color: '#FAF7EB',
+                      fontSize: 12,
+                      fontWeight: 700,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    {i + 1}
+                  </Box>
+                  <Text size="sm" style={{ lineHeight: 1.6 }}>
+                    {s}
+                  </Text>
+                </Group>
+              ))}
+            </Stack>
+          </div>
+
+          {/* 查詢我的行程 */}
+          <div>
+            <Title order={2} mb={4} style={{ fontSize: 18, color: '#0F3D2E' }}>
+              查詢我的行程
+            </Title>
             <Text size="sm" c="dimmed" mb="md">
               輸入預約時填寫的手機號碼，即可查詢所有行程狀態。
             </Text>
@@ -147,46 +192,67 @@ export default function HomePage() {
                 color="brand"
               />
             </form>
+
+            {isLoading && (
+              <Box mt="md">
+                <Spinner />
+              </Box>
+            )}
+
+            {isFetched && data && (
+              <Stack gap="sm" mt="md">
+                {data.length > 0 ? (
+                  <>
+                    <Text size="sm" c="dimmed">
+                      找到 {data.length} 筆行程
+                    </Text>
+                    {data.map((b) => (
+                      <BookingRow key={b.id} booking={b} />
+                    ))}
+                  </>
+                ) : (
+                  <Box
+                    style={{
+                      border: '1px solid #E4E0D0',
+                      borderRadius: 16,
+                      padding: '24px 16px',
+                      textAlign: 'center',
+                      background: '#fff',
+                    }}
+                  >
+                    <Text c="dimmed" size="sm">
+                      查無此號碼的行程紀錄
+                    </Text>
+                  </Box>
+                )}
+              </Stack>
+            )}
+          </div>
+
+          {/* 我是司機 */}
+          <Box
+            style={{
+              border: '1px solid #E4E0D0',
+              borderRadius: 16,
+              padding: '18px 16px',
+              background: '#fff',
+            }}
+          >
+            <Title order={2} mb={4} style={{ fontSize: 18, color: '#0F3D2E' }}>
+              我是司機
+            </Title>
+            <Text size="sm" c="dimmed" mb="md">
+              建立你的接駁服務頁，開始線上收單，管理每一筆預約。
+            </Text>
+            <Group gap="xs">
+              <Button component={Link} to="/signup" color="brand">
+                免費註冊
+              </Button>
+              <Button component={Link} to="/login" variant="default">
+                登入
+              </Button>
+            </Group>
           </Box>
-
-          {/* 搜尋結果 */}
-          {isLoading && <Spinner />}
-
-          {isFetched && data && (
-            <Stack gap="sm">
-              {data.length > 0 ? (
-                <>
-                  <Text size="sm" c="dimmed">
-                    找到 {data.length} 筆行程
-                  </Text>
-                  {data.map((b) => (
-                    <BookingRow key={b.id} booking={b} />
-                  ))}
-                </>
-              ) : (
-                <Box
-                  style={{
-                    border: '1px solid #E4E0D0',
-                    borderRadius: 16,
-                    padding: '24px 16px',
-                    textAlign: 'center',
-                    background: '#fff',
-                  }}
-                >
-                  <Text c="dimmed" size="sm">
-                    查無此號碼的行程紀錄
-                  </Text>
-                </Box>
-              )}
-            </Stack>
-          )}
-
-          {/* 司機入口 */}
-          <Center>
-            <Anchor component={Link} to="/dashboard" size="xs" c="dimmed">
-              司機後台登入 →
-            </Anchor>
-          </Center>
         </Stack>
       </Box>
     </Center>

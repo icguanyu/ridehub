@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /driver/
+Disallow: /booking/
+Disallow: /dashboard
+
+# Replace with your production domain after deploy
+Sitemap: https://ridehub.example/sitemap.xml
