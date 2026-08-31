@@ -3,9 +3,19 @@ import { fmtMoney, STATUS_LABEL, STATUS_COLOR } from '@/lib/format';
 import { isTripStarted } from '@/lib/trip';
 import TripRoute, { TripTypeBadge } from '@/components/TripRoute';
 
-export default function BookingCard({ booking, onAccept, onReject, onQuote, onDelete, busy, actionable }) {
+export default function BookingCard({
+  booking,
+  onAccept,
+  onReject,
+  onQuote,
+  onComplete,
+  onDelete,
+  busy,
+  actionable,
+}) {
   const b = booking;
   const canDelete = Boolean(onDelete) && !isTripStarted(b);
+  const canComplete = Boolean(onComplete) && actionable && b.status === 'accepted';
 
   return (
     <Card radius="lg" p="md">
@@ -73,6 +83,19 @@ export default function BookingCard({ booking, onAccept, onReject, onQuote, onDe
           >
             已報價 {fmtMoney(b.quotedPrice)} · 等待客人確認
           </Badge>
+        )}
+
+        {canComplete && (
+          <Button
+            size="xs"
+            variant="light"
+            color="leaf"
+            loading={busy}
+            onClick={() => onComplete?.(b)}
+            style={{ alignSelf: 'flex-start' }}
+          >
+            標記完成
+          </Button>
         )}
 
         {canDelete && (
