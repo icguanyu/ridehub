@@ -28,6 +28,7 @@ const STATUS_HINT = {
   rejected: '很抱歉，司機無法接受這次預約。',
   completed: '行程已完成，感謝搭乘。',
   cancelled: '這筆預約已取消。',
+  deleted: '這筆預約已被司機移除。如有疑問請直接與司機聯繫。',
 };
 
 export default function BookingConfirmation() {
@@ -38,6 +39,8 @@ export default function BookingConfirmation() {
   const respond = useRespondToQuote(bookingId, token);
 
   const shareUrl = window.location.href;
+  const isDeleted = Boolean(b?.deletedAt);
+  const statusKey = isDeleted ? 'deleted' : b?.status;
 
   const doRespond = (accept) =>
     respond.mutate(accept, {
@@ -70,14 +73,14 @@ export default function BookingConfirmation() {
                   <Title order={3}>預約狀態</Title>
                   <Group gap={6}>
                     <TripTypeBadge tripType={b.tripType} />
-                    <Badge size="lg" color={STATUS_COLOR[b.status]} variant="light">
-                      {STATUS_LABEL[b.status] ?? b.status}
+                    <Badge size="lg" color={STATUS_COLOR[statusKey]} variant="light">
+                      {STATUS_LABEL[statusKey] ?? b.status}
                     </Badge>
                   </Group>
                 </Group>
 
-                <Alert color={STATUS_COLOR[b.status]} variant="light">
-                  {STATUS_HINT[b.status]}
+                <Alert color={STATUS_COLOR[statusKey]} variant="light">
+                  {STATUS_HINT[statusKey]}
                 </Alert>
 
                 <Divider />
@@ -104,7 +107,7 @@ export default function BookingConfirmation() {
                   </Text>
                 )}
 
-                {b.status === 'rejected' && b.rejectedReason && (
+                {!isDeleted && b.status === 'rejected' && b.rejectedReason && (
                   <Text size="sm" c="danger.6">
                     原因：{b.rejectedReason}
                   </Text>
@@ -112,7 +115,7 @@ export default function BookingConfirmation() {
               </Stack>
             </Card>
 
-            {b.status === 'quoted' && (
+            {!isDeleted && b.status === 'quoted' && (
               <Card radius="lg" p="lg" style={{ borderColor: '#FFB74D', borderWidth: 2 }}>
                 <Stack gap="sm">
                   <Title order={4}>司機報價</Title>
@@ -140,7 +143,7 @@ export default function BookingConfirmation() {
               </Card>
             )}
 
-            {b.status === 'accepted' && (
+            {!isDeleted && b.status === 'accepted' && (
               <Card radius="lg" p="lg" style={{ background: '#0F3D2E' }}>
                 <Stack gap={6}>
                   <Title order={4} c="#FAF7EB">

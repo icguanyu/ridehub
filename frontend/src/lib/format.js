@@ -28,6 +28,7 @@ export const STATUS_LABEL = {
   rejected: '已拒絕',
   completed: '已完成',
   cancelled: '已取消',
+  deleted: '已移除',
 };
 
 export const STATUS_COLOR = {
@@ -37,6 +38,7 @@ export const STATUS_COLOR = {
   rejected: 'red',
   completed: 'blue',
   cancelled: 'gray',
+  deleted: 'gray',
 };
 
 export const TRIP_TYPE_LABEL = {

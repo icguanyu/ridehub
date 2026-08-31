@@ -129,13 +129,13 @@ export async function createBooking(input) {
   return { booking: data, driver };
 }
 
-// 客人查詢單筆預約（含司機聯絡資訊）
+// 客人查詢單筆預約（含司機聯絡資訊）。
+// 已軟刪的仍會回傳（帶 deleted_at），讓客人看到「已被移除」而非 404。
 export async function getBookingWithDriver(bookingId) {
   const { data, error } = await supabaseAdmin
     .from('bookings')
     .select('*, drivers ( name, phone, line_id, line_display_id )')
     .eq('id', bookingId)
-    .is('deleted_at', null)
     .maybeSingle();
   if (error) throw error;
   if (!data) throw ApiError.notFound('找不到預約');

@@ -944,5 +944,10 @@ components:
           type: string
           nullable: true
           description: 僅 status = accepted 時提供
+        deletedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: 有值代表司機已移除此預約；此時不提供司機聯絡方式
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }

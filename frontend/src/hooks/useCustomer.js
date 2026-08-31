@@ -26,8 +26,11 @@ export function useBookingStatus(bookingId, token) {
   return useQuery({
     queryKey: ['booking-status', bookingId, token],
     enabled: Boolean(bookingId && token),
-    refetchInterval: (q) =>
-      ['pending', 'quoted'].includes(q.state.data?.status) ? 15_000 : false, // 未定案時每 15s 自動刷新
+    refetchInterval: (q) => {
+      const d = q.state.data;
+      if (d?.deletedAt) return false; // 已被移除，停止輪詢
+      return ['pending', 'quoted'].includes(d?.status) ? 15_000 : false; // 未定案時每 15s 自動刷新
+    },
     queryFn: async () => {
       const { data } = await api.get(`/bookings/${bookingId}`, { params: { token } });
       return data.booking;

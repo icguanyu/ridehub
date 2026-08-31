@@ -62,7 +62,8 @@ export function bookingSearchItem(row, statusToken) {
 // 客人查詢狀態：預約 + 司機聯絡資訊（driver 已 join）
 export function bookingWithDriver(row) {
   const d = row.drivers || {};
-  const revealDriver = row.status === 'accepted';
+  const isDeleted = Boolean(row.deleted_at);
+  const revealDriver = row.status === 'accepted' && !isDeleted;
   return {
     id: row.id,
     status: row.status,
@@ -86,6 +87,7 @@ export function bookingWithDriver(row) {
     driverName: d.name ?? null,
     driverPhone: revealDriver ? d.phone ?? null : null,
     driverLineDisplayId: revealDriver ? d.line_display_id ?? null : null,
+    deletedAt: row.deleted_at ?? null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
