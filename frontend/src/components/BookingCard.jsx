@@ -46,6 +46,12 @@ export default function BookingCard({
           )}
         </Group>
 
+        {b.estimatedEnergyCost != null && (
+          <Text size="xs" c="dimmed">
+            預估能耗成本 ≈ <span className="mono">{fmtMoney(b.estimatedEnergyCost)}</span>（僅供參考）
+          </Text>
+        )}
+
         {b.specialRequests && (
           <Text size="sm" c="dimmed">
             備註：{b.specialRequests}

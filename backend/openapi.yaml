@@ -66,6 +66,26 @@ paths:
                   db: { type: string, example: error }
                   message: { type: string }
 
+  /fuel-prices:
+    get:
+      tags: [Misc]
+      summary: 台灣參考油價（NT$/L）
+      description: 優先抓中油 OpenData，失敗回退預設值。前端用於顯示與能耗試算預填。
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  prices:
+                    type: object
+                    additionalProperties: { type: number }
+                    example: { gasoline_92: 29.9, gasoline_95: 31.4, gasoline_98: 33.4, diesel: 27.9 }
+                  source: { type: string, enum: [live, cache, fallback] }
+                  updatedAt: { type: string, format: date-time }
+
   /drivers/auth/register:
     post:
       tags: [Auth]
@@ -188,6 +208,18 @@ paths:
                 carType: { type: string, maxLength: 50, nullable: true }
                 carPlate: { type: string, maxLength: 20, nullable: true }
                 maxPassengers: { type: integer, minimum: 1, maximum: 20, description: 可載客人數上限 }
+                energyType:
+                  type: string
+                  enum: [gasoline_92, gasoline_95, gasoline_98, diesel, ev]
+                  nullable: true
+                energyConsumption:
+                  type: number
+                  nullable: true
+                  description: 油車 km/L；電車 kWh/100km
+                energyUnitPrice:
+                  type: number
+                  nullable: true
+                  description: 油車 NT$/L（留空用即時油價）；電車 NT$/度
                 basePrice: { type: number, minimum: 0, nullable: true }
                 pricePerKm: { type: number, minimum: 0, nullable: true }
       responses:
@@ -890,6 +922,9 @@ components:
         operatingHoursEnd: { type: string, nullable: true, example: '20:00' }
         maxDailyBookings: { type: integer }
         maxPassengers: { type: integer, description: 可載客人數上限 }
+        energyType: { type: string, nullable: true, enum: [gasoline_92, gasoline_95, gasoline_98, diesel, ev] }
+        energyConsumption: { type: number, nullable: true }
+        energyUnitPrice: { type: number, nullable: true }
         isVerified: { type: boolean }
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
@@ -946,6 +981,8 @@ components:
         passengerCount: { type: integer }
         specialRequests: { type: string, nullable: true }
         estimatedPrice: { type: number, nullable: true, description: 建立時的基礎報價 }
+        estimatedDistanceKm: { type: number, nullable: true }
+        estimatedEnergyCost: { type: number, nullable: true, description: 建立時快照的能耗成本估算（僅供參考） }
         quotedPrice: { type: number, nullable: true, description: 司機重新報價的金額 }
         quotedAt: { type: string, format: date-time, nullable: true }
         quoteNote: { type: string, nullable: true }

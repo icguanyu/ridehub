@@ -19,8 +19,10 @@ import { useForm } from '@mantine/form';
 import { useCurrentDriverId } from '@/hooks/useAuth';
 import { useDriver } from '@/hooks/useDriver';
 import { useCreateDriverBooking } from '@/hooks/useBookings';
+import { useFuelPrices } from '@/hooks/useFuelPrices';
 import Spinner from '@/components/Spinner';
 import { fmtMoney } from '@/lib/format';
+import { estimateEnergyCost } from '@/lib/energy';
 import { todayISO } from '@/lib/tz';
 import { notifyOk, notifyErr } from '@/lib/notify';
 
@@ -44,6 +46,7 @@ export default function NewBooking() {
   const navigate = useNavigate();
   const driverId = useCurrentDriverId();
   const driver = useDriver(driverId);
+  const fuel = useFuelPrices();
   const create = useCreateDriverBooking(driverId);
 
   const form = useForm({
@@ -94,6 +97,20 @@ export default function NewBooking() {
     const oneWay = Math.round(base + perKm * km);
     return oneWay * (isRoundTrip ? 2 : 1);
   }, [driver.data, form.values.estimatedDistanceKm, isRoundTrip]);
+
+  const energyCost = useMemo(() => {
+    const d = driver.data;
+    if (!d?.energyType) return null;
+    const unitPrice =
+      d.energyUnitPrice ?? (d.energyType !== 'ev' ? fuel.data?.prices?.[d.energyType] : null);
+    return estimateEnergyCost({
+      energyType: d.energyType,
+      consumption: d.energyConsumption,
+      unitPrice,
+      distanceKm: form.values.estimatedDistanceKm,
+      tripType: form.values.tripType,
+    });
+  }, [driver.data, fuel.data, form.values.estimatedDistanceKm, form.values.tripType]);
 
   if (driver.isLoading) return <Spinner />;
 
@@ -237,6 +254,16 @@ export default function NewBooking() {
                     {fmtMoney(form.values.agreedPrice !== '' ? Number(form.values.agreedPrice) : estimate)}
                   </Text>
                 </Group>
+                {energyCost != null && (
+                  <Group justify="space-between" mt={4}>
+                    <Text size="xs" c="dimmed">
+                      預估能耗成本（僅供參考）
+                    </Text>
+                    <Text size="xs" c="dimmed" className="mono">
+                      ≈ {fmtMoney(energyCost)}
+                    </Text>
+                  </Group>
+                )}
               </Card>
             )}
 

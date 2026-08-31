@@ -20,6 +20,8 @@ export function bookingItem(row) {
     passengerCount: row.passenger_count,
     specialRequests: row.special_requests,
     estimatedPrice: row.estimated_price,
+    estimatedDistanceKm: row.estimated_distance_km,
+    estimatedEnergyCost: row.estimated_energy_cost,
     quotedPrice: row.quoted_price,
     quotedAt: row.quoted_at,
     quoteNote: row.quote_note,

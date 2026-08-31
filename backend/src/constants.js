@@ -36,3 +36,15 @@ export const CANCELLABLE_BOOKING_STATUSES = [
   BOOKING_STATUS.QUOTED,
   BOOKING_STATUS.ACCEPTED,
 ];
+
+// 能耗類型（drivers.energy_type）
+export const ENERGY_TYPES = ['gasoline_92', 'gasoline_95', 'gasoline_98', 'diesel', 'ev'];
+export const FUEL_ENERGY_TYPES = ['gasoline_92', 'gasoline_95', 'gasoline_98', 'diesel'];
+
+// 抓不到即時油價時的回退值（NT$/L）。約略近期參考，上線後可調。
+export const FUEL_PRICE_FALLBACK = Object.freeze({
+  gasoline_92: 29.9,
+  gasoline_95: 31.4,
+  gasoline_98: 33.4,
+  diesel: 27.9,
+});

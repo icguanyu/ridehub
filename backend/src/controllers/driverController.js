@@ -3,7 +3,7 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import { validate } from '../middlewares/validate.js';
 import { nameField } from '../utils/validators.js';
 import { currentMonth } from '../utils/dates.js';
-import { BOOKING_STATUS_VALUES } from '../constants.js';
+import { BOOKING_STATUS_VALUES, ENERGY_TYPES } from '../constants.js';
 import {
   getDriverById,
   updateDriver,
@@ -46,6 +46,9 @@ export const updateProfileValidator = validate({
       pricePerKm: z.number().nonnegative().nullish(),
       lineDisplayId: z.string().trim().max(100).nullish(),
       maxPassengers: z.coerce.number().int().min(1).max(20).optional(),
+      energyType: z.enum(ENERGY_TYPES).nullish(),
+      energyConsumption: z.number().positive().max(100).nullish(),
+      energyUnitPrice: z.number().positive().max(100).nullish(),
     })
     .strict(),
 });
@@ -60,6 +63,9 @@ const PROFILE_FIELD_MAP = {
   pricePerKm: 'price_per_km',
   lineDisplayId: 'line_display_id',
   maxPassengers: 'max_passengers',
+  energyType: 'energy_type',
+  energyConsumption: 'energy_consumption',
+  energyUnitPrice: 'energy_unit_price',
 };
 
 export const updateProfile = asyncHandler(async (req, res) => {

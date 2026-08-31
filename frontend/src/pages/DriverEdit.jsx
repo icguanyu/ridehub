@@ -18,8 +18,10 @@ import { QRCodeCanvas } from 'qrcode.react';
 import { useForm } from '@mantine/form';
 import { useCurrentDriverId } from '@/hooks/useAuth';
 import { useDriver, useUpdateDriver } from '@/hooks/useDriver';
+import { useFuelPrices } from '@/hooks/useFuelPrices';
 import LineBindingCard from '@/components/LineBindingCard';
 import Spinner from '@/components/Spinner';
+import { ENERGY_TYPE_OPTIONS, energyFieldLabels } from '@/lib/energy';
 import { notifyOk, notifyErr } from '@/lib/notify';
 
 const CAR_TYPES = ['轎車', '休旅車', '廂型車', '麵包車'];
@@ -28,6 +30,7 @@ export default function DriverEdit() {
   const driverId = useCurrentDriverId();
   const { data, isLoading } = useDriver(driverId);
   const update = useUpdateDriver(driverId);
+  const fuel = useFuelPrices();
 
   const validatePrice = (v) => {
     if (v === '' || v === null || v === undefined) return null;
@@ -48,6 +51,9 @@ export default function DriverEdit() {
       basePrice: '',
       pricePerKm: '',
       lineDisplayId: '',
+      energyType: '',
+      energyConsumption: '',
+      energyUnitPrice: '',
     },
     validate: {
       basePrice: validatePrice,
@@ -67,6 +73,9 @@ export default function DriverEdit() {
         basePrice: data.basePrice ?? '',
         pricePerKm: data.pricePerKm ?? '',
         lineDisplayId: data.lineDisplayId ?? '',
+        energyType: data.energyType ?? '',
+        energyConsumption: data.energyConsumption ?? '',
+        energyUnitPrice: data.energyUnitPrice ?? '',
       });
       form.resetDirty();
     }
@@ -86,6 +95,9 @@ export default function DriverEdit() {
       basePrice: v.basePrice === '' ? null : Number(v.basePrice),
       pricePerKm: v.pricePerKm === '' ? null : Number(v.pricePerKm),
       lineDisplayId: v.lineDisplayId.trim() || null,
+      energyType: v.energyType || null,
+      energyConsumption: v.energyConsumption === '' ? null : Number(v.energyConsumption),
+      energyUnitPrice: v.energyUnitPrice === '' ? null : Number(v.energyUnitPrice),
     };
     update.mutate(patch, {
       onSuccess: () => notifyOk('服務資訊已更新'),
@@ -160,6 +172,45 @@ export default function DriverEdit() {
               placeholder="例如：@mylineid 或 mylineid"
               {...form.getInputProps('lineDisplayId')}
             />
+
+            <Stack gap="xs">
+              <Text fw={600} size="sm" c="#4A6152">
+                能耗估算（選填，用於試算油／電費，僅供參考）
+              </Text>
+              <Select
+                label="能源類型"
+                placeholder="不設定則不試算"
+                data={ENERGY_TYPE_OPTIONS}
+                clearable
+                {...form.getInputProps('energyType')}
+              />
+              {form.values.energyType && (
+                <Group grow>
+                  <NumberInput
+                    label={energyFieldLabels(form.values.energyType).consumption}
+                    min={0}
+                    step={0.1}
+                    decimalScale={2}
+                    {...form.getInputProps('energyConsumption')}
+                  />
+                  <NumberInput
+                    label={energyFieldLabels(form.values.energyType).unitPrice}
+                    description={
+                      form.values.energyType !== 'ev' && fuel.data?.prices?.[form.values.energyType]
+                        ? `留空則用參考油價 NT$${fuel.data.prices[form.values.energyType]}`
+                        : form.values.energyType === 'ev'
+                          ? '請填你充電的平均每度成本'
+                          : undefined
+                    }
+                    min={0}
+                    step={0.1}
+                    decimalScale={2}
+                    {...form.getInputProps('energyUnitPrice')}
+                  />
+                </Group>
+              )}
+            </Stack>
+
             <Button type="submit" loading={update.isPending}>
               儲存
             </Button>

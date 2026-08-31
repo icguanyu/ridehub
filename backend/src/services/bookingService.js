@@ -2,7 +2,8 @@ import { supabaseAdmin } from '../config/supabase.js';
 import { monthRange, todayISO, localNowMinute } from '../utils/dates.js';
 import { ApiError } from '../utils/ApiError.js';
 import { getDriverById } from './driverService.js';
-import { estimatePrice } from '../utils/pricing.js';
+import { estimatePrice, estimateEnergyCost } from '../utils/pricing.js';
+import { getFuelPrices, resolveUnitPrice } from './fuelPriceService.js';
 import {
   ACTIVE_BOOKING_STATUSES,
   BOOKING_STATUS,
@@ -11,6 +12,19 @@ import {
 } from '../constants.js';
 
 const hm = (t) => String(t).slice(0, 5);
+
+// 距離 → 能耗成本快照（抓不到油價不擋流程）
+async function energySnapshot(driver, distanceKm, tripType) {
+  const km = distanceKm != null && distanceKm !== '' ? Number(distanceKm) : null;
+  if (!(km > 0) || !driver.energy_type) return { km, cost: null };
+  try {
+    const { prices } = await getFuelPrices();
+    const unitPrice = resolveUnitPrice(driver, prices);
+    return { km, cost: estimateEnergyCost(driver, { distanceKm: km, tripType, unitPrice }) };
+  } catch {
+    return { km, cost: estimateEnergyCost(driver, { distanceKm: km, tripType }) };
+  }
+}
 
 // 司機的預約列表：可依 status、month（YYYY-MM）過濾，分頁。
 export async function listDriverBookings(driverId, { status, month, page = 1, pageSize = 20 }) {
@@ -130,12 +144,15 @@ export async function createBooking(input) {
   }
 
   const { estimatedPrice } = estimatePrice(driver, { estimatedDistanceKm, tripType });
+  const energy = await energySnapshot(driver, estimatedDistanceKm, tripType);
 
   const { data, error } = await supabaseAdmin
     .from('bookings')
     .insert({
       ...bookingRow({ driverId, tripType, isRoundTrip, bookingDate, bookingTime, returnDate, returnTime, rest }),
       estimated_price: estimatedPrice,
+      estimated_distance_km: energy.km,
+      estimated_energy_cost: energy.cost,
       status: BOOKING_STATUS.PENDING,
     })
     .select('*')
@@ -169,12 +186,15 @@ export async function createDriverBooking(driverId, input) {
     agreedPrice != null && agreedPrice !== ''
       ? Math.round(Number(agreedPrice))
       : estimatePrice(driver, { estimatedDistanceKm, tripType }).estimatedPrice;
+  const energy = await energySnapshot(driver, estimatedDistanceKm, tripType);
 
   const { data, error } = await supabaseAdmin
     .from('bookings')
     .insert({
       ...bookingRow({ driverId, tripType, isRoundTrip, bookingDate, bookingTime, returnDate, returnTime, rest }),
       estimated_price: price,
+      estimated_distance_km: energy.km,
+      estimated_energy_cost: energy.cost,
       status: BOOKING_STATUS.ACCEPTED,
     })
     .select('*')
