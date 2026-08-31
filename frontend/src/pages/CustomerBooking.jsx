@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   Center,
@@ -12,7 +11,6 @@ import {
   NumberInput,
   Button,
   Group,
-  Divider,
   Anchor,
   SegmentedControl,
   Input,
@@ -61,7 +59,6 @@ export default function CustomerBooking() {
       returnDate: '',
       returnTime: '',
       passengerCount: 1,
-      estimatedDistanceKm: '',
       specialRequests: '',
     },
     validate: {
@@ -85,16 +82,6 @@ export default function CustomerBooking() {
   });
 
   const isRoundTrip = form.values.tripType === 'round_trip';
-
-  const priceBreakdown = useMemo(() => {
-    if (!driver) return null;
-    const base = Number(driver.basePrice ?? 0);
-    const perKm = Number(driver.pricePerKm ?? 0);
-    const km = Number(form.values.estimatedDistanceKm || 0);
-    const oneWay = Math.round(base + perKm * km);
-    const mult = isRoundTrip ? 2 : 1;
-    return { oneWay, mult, total: oneWay * mult };
-  }, [driver, form.values.estimatedDistanceKm, isRoundTrip]);
 
   if (isLoading)
     return (
@@ -127,7 +114,6 @@ export default function CustomerBooking() {
     }
     if (v.customerLineId.trim()) payload.customerLineId = v.customerLineId.trim();
     if (v.specialRequests.trim()) payload.specialRequests = v.specialRequests.trim();
-    if (v.estimatedDistanceKm !== '') payload.estimatedDistanceKm = Number(v.estimatedDistanceKm);
 
     createBooking.mutate(payload, {
       onSuccess: (b) => navigate(`/booking/${b.id}?token=${b.statusToken}`),
@@ -203,21 +189,13 @@ export default function CustomerBooking() {
                 </Group>
               )}
 
-              <Group grow>
-                <NumberInput
-                  label={`人數（最多 ${driver.maxPassengers ?? 20} 人）`}
-                  min={1}
-                  max={driver.maxPassengers ?? 20}
-                  clampBehavior="strict"
-                  {...form.getInputProps('passengerCount')}
-                />
-                <NumberInput
-                  label="預估距離 (km，選填)"
-                  description="留空會依上車/目的地自動估算"
-                  min={0}
-                  {...form.getInputProps('estimatedDistanceKm')}
-                />
-              </Group>
+              <NumberInput
+                label={`人數（最多 ${driver.maxPassengers ?? 20} 人）`}
+                min={1}
+                max={driver.maxPassengers ?? 20}
+                clampBehavior="strict"
+                {...form.getInputProps('passengerCount')}
+              />
               <Textarea
                 label="特殊需求（選填）"
                 autosize
@@ -225,35 +203,29 @@ export default function CustomerBooking() {
                 {...form.getInputProps('specialRequests')}
               />
 
-              {priceBreakdown && (
+              {driver && (driver.basePrice != null || driver.pricePerKm != null) && (
                 <Card p="sm" radius="md" style={{ background: '#F3F1E4' }}>
                   <Group justify="space-between">
                     <Text size="sm" c="dimmed">
-                      單程預估
+                      起價
                     </Text>
                     <Text size="sm" className="mono">
-                      {fmtMoney(priceBreakdown.oneWay)}
+                      {fmtMoney(driver.basePrice)}
                     </Text>
                   </Group>
-                  {isRoundTrip && (
+                  {driver.pricePerKm ? (
                     <Group justify="space-between">
                       <Text size="sm" c="dimmed">
-                        往返 × 2
+                        每公里
                       </Text>
                       <Text size="sm" className="mono">
-                        {fmtMoney(priceBreakdown.total)}
+                        +{fmtMoney(driver.pricePerKm)}
                       </Text>
                     </Group>
-                  )}
-                  <Divider my={6} />
-                  <Group justify="space-between">
-                    <Text fw={700}>預估合計</Text>
-                    <Text fw={700} className="mono" style={{ color: '#0F3D2E' }}>
-                      {fmtMoney(priceBreakdown.total)}
-                    </Text>
-                  </Group>
-                  <Text size="xs" c="dimmed" mt={4}>
-                    實際金額以司機確認為準，司機可能重新報價
+                  ) : null}
+                  <Text size="xs" c="dimmed" mt={6}>
+                    實際車資依上車／目的地距離計算{isRoundTrip ? '（往返 ×2）' : ''}，
+                    送出後可於狀態頁查看，最終以司機確認為準。
                   </Text>
                 </Card>
               )}
