@@ -8,6 +8,9 @@ info:
     - 司機以「手機 + 密碼」登入（帳密存於 Supabase Auth），取得後端簽發的 JWT。
     - 需登入的端點帶 `Authorization: Bearer <token>`，且只能操作自己的 `driverId`。
     - 客人為匿名：以司機的 `driverId` 建立預約，取得 `statusToken` 後憑此查詢狀態。
+    - 所有「今天 / 現在」判斷以環境變數 `APP_TIMEZONE`（預設 `Asia/Taipei`）為準。
+    - 全站有流量限制（預設 1000 次 / 15 分 / IP），另有手機查詢、登入、建立預約的加強限制；超過回 `429`。
+    - 客人不收推播通知，一律於狀態頁 / 手機查詢查看；LINE 通知僅發給司機。
 servers:
   - url: https://ridehub-api-239173126142.asia-east1.run.app/api/v1
     description: Production (Cloud Run)
@@ -20,6 +23,7 @@ tags:
   - name: Driver
   - name: Booking
   - name: Line
+  - name: Misc
 
 security: []
 
@@ -207,6 +211,11 @@ paths:
                 serviceAreas: { type: string, maxLength: 500, nullable: true, example: '新竹市,竹科園區' }
                 carType: { type: string, maxLength: 50, nullable: true }
                 carPlate: { type: string, maxLength: 20, nullable: true }
+                lineDisplayId:
+                  type: string
+                  maxLength: 100
+                  nullable: true
+                  description: 對外顯示的 LINE ID（客人加好友用），與 bind-line 的內部 line_id 不同
                 maxPassengers: { type: integer, minimum: 1, maximum: 20, description: 可載客人數上限 }
                 energyType:
                   type: string
@@ -289,7 +298,7 @@ paths:
   /drivers/{driverId}/availability:
     get:
       tags: [Driver]
-      summary: 取得營運時間設定（本人）
+      summary: 取得每日名額設定與今日已用量（本人）
       security: [{ bearerAuth: [] }]
       parameters:
         - $ref: '#/components/parameters/DriverId'
@@ -303,7 +312,7 @@ paths:
         '403': { $ref: '#/components/responses/Forbidden' }
     put:
       tags: [Driver]
-      summary: 更新營運時間設定（本人）
+      summary: 更新每日名額上限（本人）
       security: [{ bearerAuth: [] }]
       parameters:
         - $ref: '#/components/parameters/DriverId'
@@ -315,8 +324,6 @@ paths:
               type: object
               additionalProperties: false
               properties:
-                operatingHoursStart: { type: string, pattern: '^([01]\d|2[0-3]):[0-5]\d$', example: '08:00' }
-                operatingHoursEnd: { type: string, pattern: '^([01]\d|2[0-3]):[0-5]\d$', example: '20:00' }
                 maxDailyBookings: { type: integer, minimum: 1, maximum: 100, example: 10 }
       responses:
         '200':
@@ -374,7 +381,8 @@ paths:
       summary: 司機在後台自建訂單
       description: >
         客人已談好、不想自己上平台輸入時，由司機代填。建立後直接為 `accepted`，
-        不做每日名額檢查。`agreedPrice` 未填則沿用估價（起價 + 每公里 × 距離）。
+        不做每日名額檢查（但仍檢查人數上限、日期不可為過去）。
+        `agreedPrice` 未填則沿用估價；`estimatedDistanceKm` 未填會嘗試自動估算。
       security: [{ bearerAuth: [] }]
       parameters:
         - $ref: '#/components/parameters/DriverId'
@@ -475,10 +483,11 @@ paths:
       tags: [Booking]
       summary: 客人建立預約（匿名）
       description: |
-        會驗證司機存在、日期不可早於今天、須在營運時間內、當日名額未滿，
-        計算預估車資後建立 `pending` 預約，並嘗試通知司機。
+        會驗證司機存在、日期不可早於今天（以 APP_TIMEZONE 為準）、人數不超過司機上限、
+        當日名額未滿，計算預估車資後建立 `pending` 預約，並以 LINE 嘗試通知司機。
         `tripType=round_trip` 時 `returnDate` / `returnTime` 必填，回程可跨日，
         且去程日與回程日各佔一個名額。
+        `estimatedDistanceKm` 留空且已設 GOOGLE_MAPS_API_KEY 時，會依上車/目的地自動估算距離。
       requestBody:
         required: true
         content:
@@ -514,7 +523,8 @@ paths:
                   type: number
                   minimum: 0
                   maximum: 2000
-                  description: 選填；車資 = (base_price + price_per_km × 距離)，往返再 ×2
+                  description: >
+                    選填；留空會嘗試自動估算。車資 = (base_price + price_per_km × 距離)，往返再 ×2
       responses:
         '201':
           description: 預約已建立
@@ -551,11 +561,41 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Error' }
 
+  /bookings/search:
+    get:
+      tags: [Booking]
+      summary: 乘客用手機號碼查詢自己的行程（公開）
+      description: 回傳精簡欄位（不含敏感聯絡資訊），每筆附可查看完整狀態的 `statusToken`。已軟刪的不列出。
+      parameters:
+        - name: phone
+          in: query
+          required: true
+          schema: { type: string, pattern: '^09\d{8}$' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  bookings:
+                    type: array
+                    items: { $ref: '#/components/schemas/BookingSearchItem' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '429':
+          description: 查詢過於頻繁
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
   /bookings/{bookingId}:
     get:
       tags: [Booking]
       summary: 客人查詢預約狀態
-      description: 需帶建立預約時取得的 `statusToken`。僅 `accepted` 狀態才回傳司機聯絡方式。
+      description: >
+        需帶建立預約時取得的 `statusToken`。僅 `accepted` 且未被刪除時才回傳司機聯絡方式；
+        司機已移除此預約時 `deletedAt` 有值。
       parameters:
         - name: bookingId
           in: path
@@ -621,7 +661,7 @@ paths:
     put:
       tags: [Booking]
       summary: 司機接受預約
-      description: 僅該預約的司機、且狀態為 `pending` 時可操作。成功後通知客人。
+      description: 僅該預約的司機、且狀態為 `pending` 時可操作。客人自行於狀態頁查看，不另發通知。
       security: [{ bearerAuth: [] }]
       parameters:
         - name: bookingId
@@ -650,6 +690,7 @@ paths:
     put:
       tags: [Booking]
       summary: 司機拒絕預約
+      description: 僅該預約的司機、且狀態為 `pending` 時可操作。客人自行於狀態頁查看，不另發通知。
       security: [{ bearerAuth: [] }]
       parameters:
         - name: bookingId
@@ -688,7 +729,7 @@ paths:
     put:
       tags: [Booking]
       summary: 司機重新報價
-      description: 僅該預約的司機、且狀態為 `pending` 時可操作。`pending` → `quoted`，並通知客人。
+      description: 僅該預約的司機、且狀態為 `pending` 時可操作。`pending` → `quoted`；客人於狀態頁查看報價，不另發通知。
       security: [{ bearerAuth: [] }]
       parameters:
         - name: bookingId
@@ -801,7 +842,7 @@ paths:
     put:
       tags: [Booking]
       summary: 司機取消預約
-      description: 僅該預約的司機、且狀態為 `pending` / `quoted` / `accepted` 時可操作。取消理由必填，成功後通知客人。
+      description: 僅該預約的司機、且狀態為 `pending` / `quoted` / `accepted` 時可操作。取消理由必填；客人於狀態頁查看，不另發通知。
       security: [{ bearerAuth: [] }]
       parameters:
         - name: bookingId
@@ -949,15 +990,14 @@ components:
         serviceAreas: { type: string, nullable: true }
         carType: { type: string, nullable: true }
         carPlate: { type: string, nullable: true }
+        lineDisplayId: { type: string, nullable: true, description: 對外顯示的 LINE ID（客人加好友用） }
         basePrice: { type: number, nullable: true }
         pricePerKm: { type: number, nullable: true }
-        operatingHoursStart: { type: string, nullable: true, example: '08:00' }
-        operatingHoursEnd: { type: string, nullable: true, example: '20:00' }
         maxDailyBookings: { type: integer }
         maxPassengers: { type: integer, description: 可載客人數上限 }
         energyType: { type: string, nullable: true, enum: [gasoline_92, gasoline_95, gasoline_98, diesel, ev] }
-        energyConsumption: { type: number, nullable: true }
-        energyUnitPrice: { type: number, nullable: true }
+        energyConsumption: { type: number, nullable: true, description: 油車 km/L；電車 kWh/100km }
+        energyUnitPrice: { type: number, nullable: true, description: 油車 NT$/L；電車 NT$/度 }
         isVerified: { type: boolean }
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
@@ -974,17 +1014,13 @@ components:
         basePrice: { type: number, nullable: true }
         pricePerKm: { type: number, nullable: true }
         maxPassengers: { type: integer, description: 可載客人數上限 }
-        operatingHoursStart: { type: string, nullable: true }
-        operatingHoursEnd: { type: string, nullable: true }
         isVerified: { type: boolean }
 
     Availability:
       type: object
       properties:
-        operatingHoursStart: { type: string, nullable: true, example: '08:00' }
-        operatingHoursEnd: { type: string, nullable: true, example: '20:00' }
         maxDailyBookings: { type: integer, example: 10 }
-        bookedTodayCount: { type: integer, description: 今日已佔用名額的預約數 }
+        bookedTodayCount: { type: integer, description: 今日已佔用名額的預約數（以 APP_TIMEZONE 為準） }
 
     Stats:
       type: object
@@ -1060,11 +1096,11 @@ components:
         driverPhone:
           type: string
           nullable: true
-          description: 僅 status = accepted 時提供
-        driverLineId:
+          description: 僅 status = accepted 且未刪除時提供
+        driverLineDisplayId:
           type: string
           nullable: true
-          description: 僅 status = accepted 時提供
+          description: 僅 status = accepted 且未刪除時提供；對外顯示的 LINE ID
         deletedAt:
           type: string
           format: date-time
@@ -1072,3 +1108,21 @@ components:
           description: 有值代表司機已移除此預約；此時不提供司機聯絡方式
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
+
+    BookingSearchItem:
+      type: object
+      description: 手機查詢結果的精簡列
+      properties:
+        id: { type: string, format: uuid }
+        status:
+          type: string
+          enum: [pending, quoted, accepted, rejected, completed, cancelled]
+        tripType: { type: string, enum: [one_way, round_trip] }
+        pickupLocation: { type: string }
+        destination: { type: string }
+        bookingDate: { type: string, format: date }
+        bookingTime: { type: string, nullable: true }
+        returnDate: { type: string, format: date, nullable: true }
+        returnTime: { type: string, nullable: true }
+        driverName: { type: string, nullable: true }
+        statusToken: { type: string, description: 查看完整狀態用 }
