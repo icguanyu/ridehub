@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Stack, Text, Alert, Group, Button, Box, Badge } from '@mantine/core';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useCurrentDriverId } from '@/hooks/useAuth';
 import {
   useDriverBookings,
@@ -168,6 +168,7 @@ function EmptyBox({ children }) {
 }
 
 export default function DriverDashboard() {
+  const navigate = useNavigate();
   const driverId = useCurrentDriverId();
   const driver = useDriver(driverId);
   const stats = useDriverStats(driverId);
@@ -341,6 +342,7 @@ export default function DriverDashboard() {
                 onAccept={doAccept}
                 onReject={(bk) => setRejecting(bk)}
                 onQuote={(bk) => setQuoting(bk)}
+                onOpen={(bk) => navigate(`/dashboard/bookings/${bk.id}`)}
               />
             ))}
           </Stack>

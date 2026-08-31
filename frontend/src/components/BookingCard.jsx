@@ -1,4 +1,4 @@
-import { Card, Group, Text, Badge, Stack, Button } from '@mantine/core';
+import { Card, Group, Text, Badge, Stack, Button, Anchor } from '@mantine/core';
 import { fmtMoney, STATUS_LABEL, STATUS_COLOR } from '@/lib/format';
 import { isTripStarted } from '@/lib/trip';
 import TripRoute, { TripTypeBadge } from '@/components/TripRoute';
@@ -10,6 +10,7 @@ export default function BookingCard({
   onQuote,
   onComplete,
   onDelete,
+  onOpen,
   busy,
   actionable,
 }) {
@@ -25,9 +26,16 @@ export default function BookingCard({
             <Text fw={700}>{b.customerName}</Text>
             <TripTypeBadge tripType={b.tripType} />
           </Group>
-          <Badge color={STATUS_COLOR[b.status]} variant="light">
-            {STATUS_LABEL[b.status] ?? b.status}
-          </Badge>
+          <Group gap={8} wrap="nowrap">
+            <Badge color={STATUS_COLOR[b.status]} variant="light">
+              {STATUS_LABEL[b.status] ?? b.status}
+            </Badge>
+            {onOpen && (
+              <Anchor component="button" type="button" size="xs" onClick={() => onOpen(b)}>
+                詳情 ›
+              </Anchor>
+            )}
+          </Group>
         </Group>
 
         <TripRoute booking={b} />

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Stack, Title, SegmentedControl, Pagination, Group, Text, Button } from '@mantine/core';
 import { useCurrentDriverId } from '@/hooks/useAuth';
 import {
@@ -26,6 +26,7 @@ const FILTERS = [
 const PAGE_SIZE = 10;
 
 export default function BookingList() {
+  const navigate = useNavigate();
   const driverId = useCurrentDriverId();
   const [filter, setFilter] = useState('pending');
   const [page, setPage] = useState(1);
@@ -124,6 +125,7 @@ export default function BookingList() {
               onQuote={(bk) => setQuoting(bk)}
               onComplete={doComplete}
               onDelete={doDelete}
+              onOpen={(bk) => navigate(`/dashboard/bookings/${bk.id}`)}
             />
           ))}
         </Stack>
