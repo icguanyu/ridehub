@@ -23,11 +23,8 @@ import { usePublicDriver, useCreateBooking } from '@/hooks/useCustomer';
 import Spinner from '@/components/Spinner';
 import Wordmark from '@/components/Wordmark';
 import { fmtMoney } from '@/lib/format';
+import { todayISO } from '@/lib/tz';
 import { notifyErr } from '@/lib/notify';
-
-function todayISO() {
-  return new Date().toISOString().slice(0, 10);
-}
 
 function NativeDateInput({ label, withAsterisk, min, value, onChange, error }) {
   return (

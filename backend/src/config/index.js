@@ -7,6 +7,20 @@ const schema = z.object({
   API_BASE_URL: z.string().url().default('http://localhost:3000'),
   CORS_ORIGINS: z.string().default('http://localhost:5173'),
 
+  // 營運時區（IANA 名稱，例如 Asia/Taipei、Europe/Berlin）。
+  // 所有「今天 / 現在」的判斷都以此時區為準；用具名時區才能正確處理日光節約。
+  APP_TIMEZONE: z
+    .string()
+    .default('Asia/Taipei')
+    .refine((tz) => {
+      try {
+        new Intl.DateTimeFormat('en-CA', { timeZone: tz });
+        return true;
+      } catch {
+        return false;
+      }
+    }, '無效的 IANA 時區名稱'),
+
   SUPABASE_URL: z.string().url(),
   SUPABASE_ANON_KEY: z.string().min(1),
   SUPABASE_SERVICE_KEY: z.string().min(1),
@@ -36,6 +50,7 @@ export const config = {
   isProd: env.NODE_ENV === 'production',
   port: env.PORT,
   apiBaseUrl: env.API_BASE_URL,
+  timezone: env.APP_TIMEZONE,
   corsOrigins: env.CORS_ORIGINS.split(',').map((s) => s.trim()).filter(Boolean),
 
   supabase: {

@@ -1,5 +1,5 @@
 import { supabaseAdmin } from '../config/supabase.js';
-import { monthRange, todayISO, taipeiNowMinute } from '../utils/dates.js';
+import { monthRange, todayISO, localNowMinute } from '../utils/dates.js';
 import { ApiError } from '../utils/ApiError.js';
 import { getDriverById } from './driverService.js';
 import { estimatePrice } from '../utils/pricing.js';
@@ -300,7 +300,7 @@ export async function deleteBooking(bookingId, driverId) {
   if (booking.driver_id !== driverId) throw ApiError.forbidden('這不是你的預約');
 
   const departure = `${booking.booking_date}T${hm(booking.booking_time)}`;
-  if (departure <= taipeiNowMinute()) {
+  if (departure <= localNowMinute()) {
     throw ApiError.badRequest('行程已開始或已結束，無法刪除');
   }
 

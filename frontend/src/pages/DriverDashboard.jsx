@@ -18,24 +18,17 @@ import QuoteModal from '@/components/QuoteModal';
 import Spinner from '@/components/Spinner';
 import { fmtMoney, fmtDateFull } from '@/lib/format';
 import { lineAddFriendUrl } from '@/lib/line';
+import { todayISO, nowMinute, minutesBetween } from '@/lib/tz';
 import { notifyOk, notifyErr } from '@/lib/notify';
 
 const OUTSTANDING = ['pending', 'quoted'];
-
-function todayISO() {
-  return new Date().toLocaleDateString('sv-SE'); // 本地時區 YYYY-MM-DD
-}
-
-function minutesUntil(date, time) {
-  const t = (time ?? '00:00:00').slice(0, 8);
-  return Math.round((new Date(`${date}T${t}`) - new Date()) / 60000);
-}
 
 function getCountdownBadge(booking) {
   if (booking.bookingDate !== todayISO()) {
     return { label: '已確認', color: 'brand', variant: 'outline' };
   }
-  const mins = minutesUntil(booking.bookingDate, booking.bookingTime);
+  const t = (booking.bookingTime ?? '00:00').slice(0, 5);
+  const mins = minutesBetween(nowMinute(), `${booking.bookingDate}T${t}`);
   if (mins < 0) return { label: '進行中', color: 'leaf', variant: 'filled' };
   if (mins <= 60) return { label: `${mins}分鐘後`, color: 'sun', variant: 'filled' };
   return { label: '已確認', color: 'brand', variant: 'outline' };
