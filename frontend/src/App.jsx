@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Route, Routes, Outlet, useLocation } from 'react-router-dom';
+import { Route, Routes, Outlet, useLocation, Link } from 'react-router-dom';
 import { Center, Stack, Box } from '@mantine/core';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -33,7 +33,9 @@ function CenteredPage({ children }) {
     <Center mih="100vh" px="md" py="xl">
       <Box w="100%" maw={380}>
         <Stack gap="lg" align="center">
-          <Wordmark size={32} withMark markSize={40} slogan />
+          <Link to="/" style={{ textDecoration: 'none' }}>
+            <Wordmark size={32} withMark markSize={40} slogan />
+          </Link>
           <Box w="100%">{children}</Box>
         </Stack>
       </Box>
