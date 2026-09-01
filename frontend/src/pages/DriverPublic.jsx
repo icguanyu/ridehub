@@ -53,11 +53,18 @@ export default function DriverPublic() {
                     />
                     <Title order={3}>{data.name}</Title>
                   </Group>
-                  {data.isVerified && (
-                    <Badge color="teal" variant="light">
-                      已驗證
-                    </Badge>
-                  )}
+                  <Group gap={6} wrap="nowrap">
+                    {data.isVerified && (
+                      <Badge color="teal" variant="light">
+                        已驗證
+                      </Badge>
+                    )}
+                    {data.photoVerified && (
+                      <Badge color="green" variant="light" size="sm">
+                        ✓ 真人大頭照
+                      </Badge>
+                    )}
+                  </Group>
                 </Group>
 
                 {data.serviceDescription && <Text size="sm">{data.serviceDescription}</Text>}

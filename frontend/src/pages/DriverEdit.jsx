@@ -11,6 +11,7 @@ import {
   Group,
   Select,
   Text,
+  Divider,
   CopyButton,
   Center,
 } from '@mantine/core';
@@ -27,6 +28,7 @@ import {
 } from '@/hooks/useDriver';
 import { useFuelPrices } from '@/hooks/useFuelPrices';
 import AvatarUpload from '@/components/AvatarUpload';
+import AvatarVerifyStatus from '@/components/AvatarVerifyStatus';
 import LineBindingCard from '@/components/LineBindingCard';
 import Spinner from '@/components/Spinner';
 import { ENERGY_TYPE_OPTIONS, energyFieldLabels } from '@/lib/energy';
@@ -137,7 +139,8 @@ export default function DriverEdit() {
       <Card withBorder radius="md" p="lg">
         <form onSubmit={submit}>
           <Stack>
-            <Title order={4}>服務資訊</Title>
+            <Title order={4}>服務設定</Title>
+
             <AvatarUpload
               url={data?.avatarUrl}
               name={data?.name}
@@ -145,6 +148,7 @@ export default function DriverEdit() {
               onUpload={(file) => avatar.mutateAsync(file)}
               onRemove={() => removeAvatar.mutateAsync()}
             />
+            <AvatarVerifyStatus driverId={driverId} hasAvatar={Boolean(data?.avatarUrl)} />
             <TextInput label="姓名" {...form.getInputProps('name')} />
             <Textarea
               label="服務介紹"
@@ -158,6 +162,8 @@ export default function DriverEdit() {
               placeholder="逗號分隔，例如：新竹市,竹科園區"
               {...form.getInputProps('serviceAreas')}
             />
+
+            <Divider label="車輛資訊" labelPosition="left" mt="xs" />
             <Group grow>
               <Select
                 label="車型"
@@ -167,22 +173,26 @@ export default function DriverEdit() {
               />
               <TextInput label="車牌" placeholder="ABC-1234" {...form.getInputProps('carPlate')} />
             </Group>
-            <NumberInput
-              label="可載客人數上限"
-              description="客人預約時的人數不能超過這個數字"
-              min={1}
-              max={20}
-              clampBehavior="strict"
-              {...form.getInputProps('maxPassengers')}
-            />
-            <NumberInput
-              label="乘客責任險保額（萬元，選填）"
-              description="有填才會顯示在你的公開頁"
-              placeholder="例如 300"
-              min={0}
-              max={99999}
-              {...form.getInputProps('passengerInsuranceWan')}
-            />
+            <Group grow align="flex-start">
+              <NumberInput
+                label="可載客人數上限"
+                description="客人預約時的人數不能超過這個數字"
+                min={1}
+                max={20}
+                clampBehavior="strict"
+                {...form.getInputProps('maxPassengers')}
+              />
+              <NumberInput
+                label="乘客責任險保額（萬元）"
+                description="有填才會顯示在你的公開頁"
+                placeholder="例如 300"
+                min={0}
+                max={99999}
+                {...form.getInputProps('passengerInsuranceWan')}
+              />
+            </Group>
+
+            <Divider label="費用設定" labelPosition="left" mt="xs" />
             <Group grow>
               <Input.Wrapper label="基礎價格 (NT$)" error={form.errors.basePrice}>
                 <Input
@@ -207,51 +217,51 @@ export default function DriverEdit() {
                 />
               </Input.Wrapper>
             </Group>
+
+            <Divider label="能耗估算（選填）" labelPosition="left" mt="xs" />
+            <Text size="xs" c="dimmed" mt={-4}>用於試算油／電費，數字僅供乘客參考</Text>
+            <Select
+              label="能源類型"
+              placeholder="不設定則不顯示試算"
+              data={ENERGY_TYPE_OPTIONS}
+              clearable
+              {...form.getInputProps('energyType')}
+            />
+            {form.values.energyType && (
+              <Group grow>
+                <NumberInput
+                  label={energyFieldLabels(form.values.energyType).consumption}
+                  min={0}
+                  step={0.1}
+                  decimalScale={2}
+                  {...form.getInputProps('energyConsumption')}
+                />
+                <NumberInput
+                  label={energyFieldLabels(form.values.energyType).unitPrice}
+                  description={
+                    form.values.energyType !== 'ev' && fuel.data?.prices?.[form.values.energyType]
+                      ? `留空則用參考油價 NT$${fuel.data.prices[form.values.energyType]}`
+                      : form.values.energyType === 'ev'
+                        ? '請填你充電的平均每度成本'
+                        : undefined
+                  }
+                  min={0}
+                  step={0.1}
+                  decimalScale={2}
+                  {...form.getInputProps('energyUnitPrice')}
+                />
+              </Group>
+            )}
+
+            <Divider label="聯絡方式" labelPosition="left" mt="xs" />
             <TextInput
-              label="LINE ID（選填，客人預約成功後可加好友）"
+              label="對外 LINE ID（選填）"
+              description="客人預約成功後顯示，方便直接加好友聯繫"
               placeholder="例如：@mylineid 或 mylineid"
               {...form.getInputProps('lineDisplayId')}
             />
 
-            <Stack gap="xs">
-              <Text fw={600} size="sm" c="#4A6152">
-                能耗估算（選填，用於試算油／電費，僅供參考）
-              </Text>
-              <Select
-                label="能源類型"
-                placeholder="不設定則不試算"
-                data={ENERGY_TYPE_OPTIONS}
-                clearable
-                {...form.getInputProps('energyType')}
-              />
-              {form.values.energyType && (
-                <Group grow>
-                  <NumberInput
-                    label={energyFieldLabels(form.values.energyType).consumption}
-                    min={0}
-                    step={0.1}
-                    decimalScale={2}
-                    {...form.getInputProps('energyConsumption')}
-                  />
-                  <NumberInput
-                    label={energyFieldLabels(form.values.energyType).unitPrice}
-                    description={
-                      form.values.energyType !== 'ev' && fuel.data?.prices?.[form.values.energyType]
-                        ? `留空則用參考油價 NT$${fuel.data.prices[form.values.energyType]}`
-                        : form.values.energyType === 'ev'
-                          ? '請填你充電的平均每度成本'
-                          : undefined
-                    }
-                    min={0}
-                    step={0.1}
-                    decimalScale={2}
-                    {...form.getInputProps('energyUnitPrice')}
-                  />
-                </Group>
-              )}
-            </Stack>
-
-            <Button type="submit" loading={update.isPending}>
+            <Button type="submit" loading={update.isPending} mt="xs">
               儲存
             </Button>
           </Stack>

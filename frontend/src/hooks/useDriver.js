@@ -40,6 +40,7 @@ export function useUpdateAvatar(driverId) {
     onSuccess: (data) => {
       qc.setQueryData(['driver', driverId], data);
       qc.invalidateQueries({ queryKey: ['public-driver', driverId] });
+      qc.invalidateQueries({ queryKey: ['verifications', driverId] });
     },
   });
 }
@@ -54,6 +55,32 @@ export function useDeleteAvatar(driverId) {
     onSuccess: (data) => {
       qc.setQueryData(['driver', driverId], data);
       qc.invalidateQueries({ queryKey: ['public-driver', driverId] });
+      qc.invalidateQueries({ queryKey: ['verifications', driverId] });
+    },
+  });
+}
+
+export function useVerifications(driverId) {
+  return useQuery({
+    queryKey: ['verifications', driverId],
+    enabled: Boolean(driverId),
+    queryFn: async () => {
+      const { data } = await api.get(`/drivers/${driverId}/verifications`);
+      return data; // { trustScore, trustLevel, items: [{ kind, status, note, reviewedAt }] }
+    },
+  });
+}
+
+export function useSubmitPhotoVerification(driverId) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const { data } = await api.post(`/drivers/${driverId}/verifications/photo`);
+      return data;
+    },
+    onSuccess: (data) => {
+      qc.setQueryData(['verifications', driverId], data);
+      qc.invalidateQueries({ queryKey: ['driver', driverId] });
     },
   });
 }
