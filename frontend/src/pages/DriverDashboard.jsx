@@ -190,6 +190,14 @@ export default function DriverDashboard() {
   const complete = useCompleteBooking();
   const [rejecting, setRejecting] = useState(null);
   const [quoting, setQuoting] = useState(null);
+  const [revenueVisible, setRevenueVisible] = useState(
+    () => localStorage.getItem('driverRevenueVisible') !== 'false'
+  );
+  const toggleRevenue = () =>
+    setRevenueVisible((v) => {
+      localStorage.setItem('driverRevenueVisible', String(!v));
+      return !v;
+    });
 
   const needsSetup =
     driver.data && (!driver.data.basePrice || !driver.data.lineId);
@@ -273,9 +281,38 @@ export default function DriverDashboard() {
         <Spinner />
       ) : (
         <Box style={{ background: '#0F3D2E', borderRadius: 16, padding: '20px 24px 22px' }}>
-          <Text size="sm" mb={6} style={{ color: '#8BC34A', fontWeight: 500 }}>
-            本月已完成
-          </Text>
+          <Group justify="space-between" mb={6} align="center">
+            <Text size="sm" style={{ color: '#8BC34A', fontWeight: 500 }}>
+              本月已完成
+            </Text>
+            <Box
+              component="button"
+              onClick={toggleRevenue}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 4,
+                display: 'flex',
+                alignItems: 'center',
+                color: '#8BC34A',
+              }}
+              aria-label={revenueVisible ? '隱藏金額' : '顯示金額'}
+            >
+              {revenueVisible ? (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              ) : (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                  <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                  <line x1="1" y1="1" x2="23" y2="23"/>
+                </svg>
+              )}
+            </Box>
+          </Group>
           <Text
             fw={700}
             style={{
@@ -286,7 +323,7 @@ export default function DriverDashboard() {
               lineHeight: 1.1,
             }}
           >
-            {fmtMoney(stats.data?.totalRevenue)}
+            {revenueVisible ? fmtMoney(stats.data?.totalRevenue) : '••••••'}
           </Text>
           <Text size="sm" mt={6} style={{ color: '#8BC34A' }}>
             {stats.data?.acceptedBookings ?? 0} 趟已成交
