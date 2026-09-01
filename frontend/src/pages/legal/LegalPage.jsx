@@ -3,6 +3,7 @@ import { Center, Box, Stack, Title, Text } from '@mantine/core';
 import Wordmark from '@/components/Wordmark';
 
 // 法律頁共用外框（隱私權政策 / 免責聲明）。底部 footer 由 PublicLayout 提供。
+// import LegalPage, { Section, P } from './LegalPage';
 export default function LegalPage({ title, updated, children }) {
   return (
     <Center mih="100vh" px="md" py="xl" style={{ alignItems: 'flex-start' }}>
