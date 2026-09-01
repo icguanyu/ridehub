@@ -27,6 +27,8 @@ export function driverPrivate(row) {
     energyConsumption: row.energy_consumption ?? null,
     energyUnitPrice: row.energy_unit_price ?? null,
     isVerified: row.is_verified,
+    trustScore: row.trust_score ?? 0,
+    trustLevel: row.trust_level ?? 'red',
     suspendedAt: row.suspended_at ?? null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -48,5 +50,8 @@ export function driverPublic(row) {
     maxPassengers: row.max_passengers,
     passengerInsuranceWan: row.passenger_insurance_wan ?? null,
     isVerified: row.is_verified,
+    // 目前 green == 真人大頭照已通過平台審核（未來加證件審核後語意會擴大）
+    trustLevel: row.trust_level ?? 'red',
+    photoVerified: (row.trust_score ?? 0) >= 1,
   };
 }

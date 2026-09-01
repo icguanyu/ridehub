@@ -292,6 +292,41 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
 
+  /drivers/{driverId}/verifications:
+    get:
+      tags: [Driver]
+      summary: 取得信任驗證摘要（本人）
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/DriverId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/VerificationSummary' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /drivers/{driverId}/verifications/photo:
+    post:
+      tags: [Driver]
+      summary: 送出真人大頭照審核（本人）
+      description: 需已上傳大頭貼。建立 / 重置 photo 驗證為 pending，等 admin 審核。
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/DriverId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/VerificationSummary' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '409': { description: 已在審核中 / 已通過 }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
   /drivers/{driverId}/bind-line:
     post:
       tags: [Driver]
@@ -1211,6 +1246,8 @@ components:
         energyConsumption: { type: number, nullable: true, description: 油車 km/L；電車 kWh/100km }
         energyUnitPrice: { type: number, nullable: true, description: 油車 NT$/L；電車 NT$/度 }
         isVerified: { type: boolean }
+        trustScore: { type: integer, description: 已通過驗證項目加總分數 }
+        trustLevel: { type: string, enum: [red, yellow, green] }
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
 
@@ -1229,6 +1266,23 @@ components:
         maxPassengers: { type: integer, description: 可載客人數上限 }
         passengerInsuranceWan: { type: integer, nullable: true, description: 乘客責任險保額（萬元） }
         isVerified: { type: boolean }
+        trustLevel: { type: string, enum: [red, yellow, green] }
+        photoVerified: { type: boolean, description: 真人大頭照已通過平台審核 }
+
+    VerificationSummary:
+      type: object
+      properties:
+        trustScore: { type: integer }
+        trustLevel: { type: string, enum: [red, yellow, green] }
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              kind: { type: string, enum: [photo, vehicle_license, driver_license, selfie_id, identity] }
+              status: { type: string, enum: [pending, approved, rejected] }
+              note: { type: string, nullable: true, description: 駁回原因（司機看得到） }
+              reviewedAt: { type: string, format: date-time, nullable: true }
 
     Availability:
       type: object

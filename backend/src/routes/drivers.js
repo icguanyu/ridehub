@@ -26,6 +26,8 @@ import {
   distancePreviewValidator,
   updateAvatar,
   deleteAvatar,
+  getVerifications,
+  submitPhotoVerificationHandler,
 } from '../controllers/driverController.js';
 import { createLinkCode } from '../controllers/lineController.js';
 import {
@@ -50,6 +52,9 @@ driversRouter.put('/:driverId', updateProfileValidator, updateProfile);
 
 driversRouter.put('/:driverId/avatar', uploadAvatar, updateAvatar);
 driversRouter.delete('/:driverId/avatar', deleteAvatar);
+
+driversRouter.get('/:driverId/verifications', getVerifications);
+driversRouter.post('/:driverId/verifications/photo', submitPhotoVerificationHandler);
 
 driversRouter.post('/:driverId/bind-line', bindLineValidator, bindLine);
 driversRouter.post('/:driverId/line/link-code', createLinkCode);

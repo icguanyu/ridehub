@@ -16,6 +16,11 @@ import { listDriverBookings } from '../services/bookingService.js';
 import { getDriverStats } from '../services/statsService.js';
 import { getDrivingDistance } from '../services/mapsService.js';
 import { uploadDriverAvatar, removeStoredFile } from '../services/storageService.js';
+import {
+  verificationSummary,
+  submitPhotoVerification,
+  onAvatarChanged,
+} from '../services/verificationService.js';
 import { driverPrivate, driverPublic } from '../serializers/driver.js';
 import { bookingItem } from '../serializers/booking.js';
 
@@ -90,6 +95,7 @@ export const updateAvatar = asyncHandler(async (req, res) => {
   const path = await uploadDriverAvatar(req.params.driverId, req.file);
   const driver = await updateDriver(req.params.driverId, { avatar_path: path });
   await removeStoredFile(before.avatar_path); // 換圖後刪掉舊檔
+  if (before.avatar_path) await onAvatarChanged(req.params.driverId); // 舊照已核准 → 退回重審
   res.json(driverPrivate(driver));
 });
 
@@ -98,7 +104,18 @@ export const deleteAvatar = asyncHandler(async (req, res) => {
   const before = await getDriverById(req.params.driverId);
   const driver = await updateDriver(req.params.driverId, { avatar_path: null });
   await removeStoredFile(before.avatar_path);
+  await onAvatarChanged(req.params.driverId, { removed: true });
   res.json(driverPrivate(driver));
+});
+
+// ── GET /drivers/:driverId/verifications ──
+export const getVerifications = asyncHandler(async (req, res) => {
+  res.json(await verificationSummary(req.params.driverId));
+});
+
+// ── POST /drivers/:driverId/verifications/photo（送出大頭照審核）──
+export const submitPhotoVerificationHandler = asyncHandler(async (req, res) => {
+  res.json(await submitPhotoVerification(req.params.driverId));
 });
 
 // ── POST /drivers/:driverId/bind-line ─
