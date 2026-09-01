@@ -9,6 +9,8 @@ import { agreedPrice } from '../utils/pricing.js';
 import { driverPrivate } from '../serializers/driver.js';
 import { bookingItem } from '../serializers/booking.js';
 import { getDriverStats } from './statsService.js';
+import { avatarPublicUrl } from './storageService.js';
+import { recomputeTrust } from './verificationService.js';
 
 // ── 登入 ────────────────────────────
 export async function adminLogin({ email, password }) {
@@ -166,6 +168,59 @@ export async function listAllBookings({ status, driverId, month, page = 1, pageS
     bookings: (data ?? []).map((r) => ({ ...bookingItem(r), driverName: r.drivers?.name ?? null })),
     pagination: { total: count ?? 0, page, pageSize },
   };
+}
+
+// ── 信任驗證審核 ─────────────────────
+export async function listPendingVerifications() {
+  const { data, error } = await supabaseAdmin
+    .from('driver_verifications')
+    .select('id, driver_id, kind, file_path, submitted_data, created_at, drivers(name, phone)')
+    .eq('status', 'pending')
+    .order('created_at', { ascending: true });
+  if (error) throw error;
+
+  return (data ?? []).map((r) => ({
+    id: r.id,
+    driverId: r.driver_id,
+    driverName: r.drivers?.name ?? null,
+    driverPhone: r.drivers?.phone ?? null,
+    kind: r.kind,
+    fileUrl: r.file_path ? avatarPublicUrl(r.file_path) : null, // photo 存在公開 bucket
+    submittedData: r.submitted_data ?? null,
+    createdAt: r.created_at,
+  }));
+}
+
+export async function reviewVerification(id, { action, note }, actorEmail) {
+  const { data: row, error } = await supabaseAdmin
+    .from('driver_verifications')
+    .select('id, driver_id, kind, status')
+    .eq('id', id)
+    .maybeSingle();
+  if (error) throw error;
+  if (!row) throw ApiError.notFound('找不到這筆驗證');
+  if (row.status !== 'pending') throw ApiError.conflict('這筆驗證已經審核過了');
+
+  const status = action === 'approve' ? 'approved' : 'rejected';
+  const { error: uErr } = await supabaseAdmin
+    .from('driver_verifications')
+    .update({
+      status,
+      note: note ?? null,
+      reviewed_by: actorEmail,
+      reviewed_at: new Date().toISOString(),
+    })
+    .eq('id', id);
+  if (uErr) throw uErr;
+
+  const trust = await recomputeTrust(row.driver_id);
+  await logAdminAction(actorEmail, `verification_${status}`, 'driver_verification', id, {
+    driverId: row.driver_id,
+    kind: row.kind,
+    note: note ?? null,
+  });
+
+  return { id, status, ...trust };
 }
 
 // ── 動作 ────────────────────────────

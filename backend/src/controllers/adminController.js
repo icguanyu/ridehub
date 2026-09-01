@@ -10,6 +10,8 @@ import {
   listAllBookings,
   setDriverVerified,
   setDriverSuspended,
+  listPendingVerifications,
+  reviewVerification,
 } from '../services/adminService.js';
 
 const monthParam = z.string().regex(/^\d{4}-\d{2}$/, 'month 格式需為 YYYY-MM').optional();
@@ -59,6 +61,25 @@ export const listBookingsValidator = validate({
 });
 export const bookings = asyncHandler(async (req, res) => {
   res.json(await listAllBookings(req.query));
+});
+
+// ── GET /admin/verifications（待審佇列）──
+export const verifications = asyncHandler(async (_req, res) => {
+  res.json({ items: await listPendingVerifications() });
+});
+
+// ── PUT /admin/verifications/:id（核准 / 駁回）──
+export const reviewVerificationValidator = validate({
+  params: z.object({ id: z.string().uuid() }),
+  body: z
+    .object({
+      action: z.enum(['approve', 'reject']),
+      note: z.string().trim().max(500).optional(),
+    })
+    .strict(),
+});
+export const reviewVerificationHandler = asyncHandler(async (req, res) => {
+  res.json(await reviewVerification(req.params.id, req.body, req.admin.email));
 });
 
 // ── PUT /admin/drivers/:driverId/verify ──

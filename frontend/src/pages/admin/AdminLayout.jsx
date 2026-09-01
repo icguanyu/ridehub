@@ -6,6 +6,7 @@ const links = [
   { to: '/admin', label: '總覽', end: true },
   { to: '/admin/drivers', label: '司機' },
   { to: '/admin/bookings', label: '預約' },
+  { to: '/admin/verifications', label: '驗證審核' },
 ];
 
 export default function AdminLayout() {

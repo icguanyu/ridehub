@@ -30,6 +30,7 @@ import AdminOverview from '@/pages/admin/AdminOverview';
 import AdminDrivers from '@/pages/admin/AdminDrivers';
 import AdminDriverDetail from '@/pages/admin/AdminDriverDetail';
 import AdminBookings from '@/pages/admin/AdminBookings';
+import AdminVerifications from '@/pages/admin/AdminVerifications';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -117,6 +118,7 @@ export default function App() {
           <Route path="drivers" element={<AdminDrivers />} />
           <Route path="drivers/:driverId" element={<AdminDriverDetail />} />
           <Route path="bookings" element={<AdminBookings />} />
+          <Route path="verifications" element={<AdminVerifications />} />
         </Route>
       </Routes>
     </>

@@ -16,6 +16,9 @@ import {
   verifyValidator,
   suspend,
   suspendValidator,
+  verifications,
+  reviewVerificationValidator,
+  reviewVerificationHandler,
 } from '../controllers/adminController.js';
 
 export const adminRouter = Router();
@@ -30,3 +33,6 @@ adminRouter.get('/drivers/:driverId', driverDetailValidator, driverDetail);
 adminRouter.put('/drivers/:driverId/verify', verifyValidator, verify);
 adminRouter.put('/drivers/:driverId/suspend', suspendValidator, suspend);
 adminRouter.get('/bookings', listBookingsValidator, bookings);
+
+adminRouter.get('/verifications', verifications);
+adminRouter.put('/verifications/:id', reviewVerificationValidator, reviewVerificationHandler);

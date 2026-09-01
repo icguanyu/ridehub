@@ -55,6 +55,22 @@ export function useAdminBookings({ status, driverId, month, page }) {
   });
 }
 
+export function useAdminVerifications() {
+  return useQuery({
+    queryKey: ['admin', 'verifications'],
+    queryFn: async () => (await adminApi.get('/admin/verifications')).data, // { items: [...] }
+  });
+}
+
+export function useReviewVerification() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, action, note }) =>
+      (await adminApi.put(`/admin/verifications/${id}`, { action, note: note || undefined })).data,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin'] }),
+  });
+}
+
 export function useAdminSetVerified() {
   const qc = useQueryClient();
   return useMutation({
