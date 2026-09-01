@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, lazy, Suspense } from 'react';
 import { Route, Routes, Outlet, useLocation, Link } from 'react-router-dom';
-import { Center, Stack, Box } from '@mantine/core';
+import { Center, Stack, Box, Loader } from '@mantine/core';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import AdminRoute from '@/components/AdminRoute';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -9,6 +9,10 @@ import Wordmark from '@/components/Wordmark';
 
 import DriverLogin from '@/pages/auth/DriverLogin';
 import DriverSignup from '@/pages/auth/DriverSignup';
+
+// 忘記密碼相關頁面才會用到 @supabase/supabase-js，lazy 載入避免灌爆主 bundle
+const ForgotPassword = lazy(() => import('@/pages/auth/ForgotPassword'));
+const ResetPassword = lazy(() => import('@/pages/auth/ResetPassword'));
 import DriverDashboard from '@/pages/DriverDashboard';
 import DriverEdit from '@/pages/DriverEdit';
 import BookingList from '@/pages/BookingList';
@@ -73,6 +77,26 @@ export default function App() {
 
           <Route path="/login" element={<CenteredPage><DriverLogin /></CenteredPage>} />
           <Route path="/signup" element={<CenteredPage><DriverSignup /></CenteredPage>} />
+          <Route
+            path="/forgot-password"
+            element={
+              <CenteredPage>
+                <Suspense fallback={<Center py="xl"><Loader size="sm" /></Center>}>
+                  <ForgotPassword />
+                </Suspense>
+              </CenteredPage>
+            }
+          />
+          <Route
+            path="/reset-password"
+            element={
+              <CenteredPage>
+                <Suspense fallback={<Center py="xl"><Loader size="sm" /></Center>}>
+                  <ResetPassword />
+                </Suspense>
+              </CenteredPage>
+            }
+          />
 
           {/* 客人端（無需登入）*/}
           <Route path="/driver/:driverId" element={<DriverPublic />} />

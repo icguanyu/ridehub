@@ -15,6 +15,7 @@
     "@mantine/form": "^7.17.8",
     "@mantine/hooks": "^7.17.8",
     "@mantine/notifications": "^7.17.8",
+    "@supabase/supabase-js": "^2.109.0",
     "@tanstack/react-query": "^5.102.7",
     "axios": "^1.20.0",
     "dayjs": "^1.11.23",
