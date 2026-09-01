@@ -56,7 +56,7 @@ export default function AvatarUpload({ url, name, onUpload, onRemove, busy = fal
 
   return (
     <Group wrap="nowrap">
-      <Avatar src={preview || url || null} name={name || undefined} size={72} radius="50%" color="teal" />
+      <Avatar src={preview || url || null} name={name ? name[0] : undefined} size={72} radius="50%" color="teal" />
       <Stack gap={6}>
         <Group gap="xs">
           <Button size="xs" variant="light" loading={pending} onClick={() => inputRef.current?.click()}>
