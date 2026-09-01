@@ -10,6 +10,7 @@ import {
   Group,
   Button,
   Divider,
+  Avatar,
 } from '@mantine/core';
 import { QRCodeCanvas } from 'qrcode.react';
 import { usePublicDriver } from '@/hooks/useCustomer';
@@ -41,8 +42,17 @@ export default function DriverPublic() {
           <Stack>
             <Card radius="xl" p="lg">
               <Stack gap="sm">
-                <Group justify="space-between">
-                  <Title order={3}>{data.name}</Title>
+                <Group justify="space-between" wrap="nowrap">
+                  <Group gap="sm" wrap="nowrap">
+                    <Avatar
+                      src={data.avatarUrl || null}
+                      name={data.name}
+                      size={56}
+                      radius="50%"
+                      color="teal"
+                    />
+                    <Title order={3}>{data.name}</Title>
+                  </Group>
                   {data.isVerified && (
                     <Badge color="teal" variant="light">
                       已驗證

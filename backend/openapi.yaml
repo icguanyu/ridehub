@@ -248,6 +248,50 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
 
+  /drivers/{driverId}/avatar:
+    put:
+      tags: [Driver]
+      summary: 上傳／更換大頭貼（本人）
+      description: |
+        `multipart/form-data`，欄位名 `file`，接受 JPG / PNG / WebP。
+        前端會先縮到 512px、壓到約 300KB 再上傳；後端硬上限 1MB。
+        舊圖會在更新後自動刪除。
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/DriverId'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DriverPrivate' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    delete:
+      tags: [Driver]
+      summary: 移除大頭貼（本人）
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/DriverId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DriverPrivate' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
   /drivers/{driverId}/bind-line:
     post:
       tags: [Driver]
@@ -1151,6 +1195,7 @@ components:
         name: { type: string }
         phone: { type: string }
         email: { type: string, nullable: true }
+        avatarUrl: { type: string, nullable: true, description: 大頭貼公開 URL（無則 null） }
         lineId: { type: string, nullable: true }
         serviceDescription: { type: string, nullable: true }
         serviceAreas: { type: string, nullable: true }
@@ -1174,6 +1219,7 @@ components:
       properties:
         id: { type: string, format: uuid }
         name: { type: string }
+        avatarUrl: { type: string, nullable: true, description: 大頭貼公開 URL（無則 null） }
         serviceDescription: { type: string, nullable: true }
         serviceAreas: { type: string, nullable: true }
         carType: { type: string, nullable: true }

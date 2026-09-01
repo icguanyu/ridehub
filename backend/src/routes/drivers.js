@@ -7,6 +7,7 @@ import {
 } from '../controllers/authController.js';
 import { requireDriverAuth, requireSelf } from '../middlewares/auth.js';
 import { authLimiter } from '../middlewares/rateLimit.js';
+import { uploadAvatar } from '../middlewares/upload.js';
 import {
   getMe,
   updateProfile,
@@ -23,6 +24,8 @@ import {
   getPublicProfile,
   distancePreview,
   distancePreviewValidator,
+  updateAvatar,
+  deleteAvatar,
 } from '../controllers/driverController.js';
 import { createLinkCode } from '../controllers/lineController.js';
 import {
@@ -44,6 +47,9 @@ driversRouter.use('/:driverId', requireDriverAuth, requireSelf);
 
 driversRouter.get('/:driverId', getMe);
 driversRouter.put('/:driverId', updateProfileValidator, updateProfile);
+
+driversRouter.put('/:driverId/avatar', uploadAvatar, updateAvatar);
+driversRouter.delete('/:driverId/avatar', deleteAvatar);
 
 driversRouter.post('/:driverId/bind-line', bindLineValidator, bindLine);
 driversRouter.post('/:driverId/line/link-code', createLinkCode);

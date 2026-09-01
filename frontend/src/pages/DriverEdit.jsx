@@ -17,8 +17,16 @@ import {
 import { QRCodeCanvas } from 'qrcode.react';
 import { useForm } from '@mantine/form';
 import { useCurrentDriverId } from '@/hooks/useAuth';
-import { useDriver, useUpdateDriver, useAvailability, useUpdateAvailability } from '@/hooks/useDriver';
+import {
+  useDriver,
+  useUpdateDriver,
+  useAvailability,
+  useUpdateAvailability,
+  useUpdateAvatar,
+  useDeleteAvatar,
+} from '@/hooks/useDriver';
 import { useFuelPrices } from '@/hooks/useFuelPrices';
+import AvatarUpload from '@/components/AvatarUpload';
 import LineBindingCard from '@/components/LineBindingCard';
 import Spinner from '@/components/Spinner';
 import { ENERGY_TYPE_OPTIONS, energyFieldLabels } from '@/lib/energy';
@@ -30,6 +38,8 @@ export default function DriverEdit() {
   const driverId = useCurrentDriverId();
   const { data, isLoading } = useDriver(driverId);
   const update = useUpdateDriver(driverId);
+  const avatar = useUpdateAvatar(driverId);
+  const removeAvatar = useDeleteAvatar(driverId);
   const fuel = useFuelPrices();
   const { data: avail, isLoading: availLoading } = useAvailability(driverId);
   const updateAvail = useUpdateAvailability(driverId);
@@ -128,6 +138,13 @@ export default function DriverEdit() {
         <form onSubmit={submit}>
           <Stack>
             <Title order={4}>服務資訊</Title>
+            <AvatarUpload
+              url={data?.avatarUrl}
+              name={data?.name}
+              busy={avatar.isPending || removeAvatar.isPending}
+              onUpload={(file) => avatar.mutateAsync(file)}
+              onRemove={() => removeAvatar.mutateAsync()}
+            />
             <TextInput label="姓名" {...form.getInputProps('name')} />
             <Textarea
               label="服務介紹"

@@ -28,6 +28,36 @@ export function useUpdateDriver(driverId) {
   });
 }
 
+export function useUpdateAvatar(driverId) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (file) => {
+      const fd = new FormData();
+      fd.append('file', file);
+      const { data } = await api.put(`/drivers/${driverId}/avatar`, fd);
+      return data;
+    },
+    onSuccess: (data) => {
+      qc.setQueryData(['driver', driverId], data);
+      qc.invalidateQueries({ queryKey: ['public-driver', driverId] });
+    },
+  });
+}
+
+export function useDeleteAvatar(driverId) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const { data } = await api.delete(`/drivers/${driverId}/avatar`);
+      return data;
+    },
+    onSuccess: (data) => {
+      qc.setQueryData(['driver', driverId], data);
+      qc.invalidateQueries({ queryKey: ['public-driver', driverId] });
+    },
+  });
+}
+
 export function useBindLine(driverId) {
   const qc = useQueryClient();
   return useMutation({

@@ -15,6 +15,7 @@ import {
 import { listDriverBookings } from '../services/bookingService.js';
 import { getDriverStats } from '../services/statsService.js';
 import { getDrivingDistance } from '../services/mapsService.js';
+import { uploadDriverAvatar, removeStoredFile } from '../services/storageService.js';
 import { driverPrivate, driverPublic } from '../serializers/driver.js';
 import { bookingItem } from '../serializers/booking.js';
 
@@ -79,6 +80,24 @@ export const updateProfile = asyncHandler(async (req, res) => {
     if (req.body[k] !== undefined) patch[col] = req.body[k];
   }
   const driver = await updateDriver(req.params.driverId, patch);
+  res.json(driverPrivate(driver));
+});
+
+// ── PUT /drivers/:driverId/avatar（multipart，欄位名 file）──
+export const updateAvatar = asyncHandler(async (req, res) => {
+  if (!req.file) throw ApiError.badRequest('請選擇一張圖片');
+  const before = await getDriverById(req.params.driverId);
+  const path = await uploadDriverAvatar(req.params.driverId, req.file);
+  const driver = await updateDriver(req.params.driverId, { avatar_path: path });
+  await removeStoredFile(before.avatar_path); // 換圖後刪掉舊檔
+  res.json(driverPrivate(driver));
+});
+
+// ── DELETE /drivers/:driverId/avatar ──
+export const deleteAvatar = asyncHandler(async (req, res) => {
+  const before = await getDriverById(req.params.driverId);
+  const driver = await updateDriver(req.params.driverId, { avatar_path: null });
+  await removeStoredFile(before.avatar_path);
   res.json(driverPrivate(driver));
 });
 

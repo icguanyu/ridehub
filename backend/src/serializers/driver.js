@@ -1,4 +1,5 @@
 // 把 DB 的 snake_case 欄位轉成 API 的 camelCase。
+import { avatarPublicUrl } from '../services/storageService.js';
 
 export function driverSummary(row) {
   return { id: row.id, name: row.name, phone: row.phone };
@@ -10,6 +11,7 @@ export function driverPrivate(row) {
     name: row.name,
     phone: row.phone,
     email: row.email,
+    avatarUrl: avatarPublicUrl(row.avatar_path),
     lineId: row.line_id,
     serviceDescription: row.service_description,
     serviceAreas: row.service_areas,
@@ -36,6 +38,7 @@ export function driverPublic(row) {
   return {
     id: row.id,
     name: row.name,
+    avatarUrl: avatarPublicUrl(row.avatar_path),
     serviceDescription: row.service_description,
     serviceAreas: row.service_areas,
     carType: row.car_type,
