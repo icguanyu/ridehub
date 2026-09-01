@@ -48,8 +48,13 @@ function TripCard({ booking, showNav, showContact, showComplete, onComplete, bus
   const showMin = b.estimatedDurationMin != null ? b.estimatedDurationMin * rtMult : null;
 
   const openNav = () => {
-    const q = encodeURIComponent(b.pickupLocation);
-    window.open(`https://www.google.com/maps/search/?api=1&query=${q}`, '_blank', 'noopener,noreferrer');
+    const origin = encodeURIComponent(b.pickupLocation);
+    const destination = encodeURIComponent(b.destination);
+    window.open(
+      `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&travelmode=driving`,
+      '_blank',
+      'noopener,noreferrer',
+    );
   };
 
   return (
