@@ -25,7 +25,7 @@ const schema = z.object({
   SUPABASE_ANON_KEY: z.string().min(1),
   SUPABASE_SERVICE_KEY: z.string().min(1),
 
-  JWT_SECRET: z.string().min(16, 'JWT_SECRET 至少 16 字元'),
+  JWT_SECRET: z.string().min(32, 'JWT_SECRET 至少 32 字元（正式環境請用 48+ 字元隨機值）'),
   JWT_EXPIRY: z.string().default('7d'),
 
   // superadmin：允許登入 /admin 的 email（逗號分隔）。空 = 停用 admin 後台
