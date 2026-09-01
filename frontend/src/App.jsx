@@ -10,7 +10,6 @@ import DriverLogin from '@/pages/auth/DriverLogin';
 import DriverSignup from '@/pages/auth/DriverSignup';
 import DriverDashboard from '@/pages/DriverDashboard';
 import DriverEdit from '@/pages/DriverEdit';
-import DriverAvailability from '@/pages/DriverAvailability';
 import BookingList from '@/pages/BookingList';
 import BookingDetail from '@/pages/BookingDetail';
 import NewBooking from '@/pages/NewBooking';
@@ -94,7 +93,6 @@ export default function App() {
           <Route path="bookings/:bookingId" element={<BookingDetail />} />
           <Route path="stats" element={<DriverStats />} />
           <Route path="edit" element={<DriverEdit />} />
-          <Route path="availability" element={<DriverAvailability />} />
         </Route>
       </Routes>
     </>

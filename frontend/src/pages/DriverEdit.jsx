@@ -17,7 +17,7 @@ import {
 import { QRCodeCanvas } from 'qrcode.react';
 import { useForm } from '@mantine/form';
 import { useCurrentDriverId } from '@/hooks/useAuth';
-import { useDriver, useUpdateDriver } from '@/hooks/useDriver';
+import { useDriver, useUpdateDriver, useAvailability, useUpdateAvailability } from '@/hooks/useDriver';
 import { useFuelPrices } from '@/hooks/useFuelPrices';
 import LineBindingCard from '@/components/LineBindingCard';
 import Spinner from '@/components/Spinner';
@@ -31,6 +31,18 @@ export default function DriverEdit() {
   const { data, isLoading } = useDriver(driverId);
   const update = useUpdateDriver(driverId);
   const fuel = useFuelPrices();
+  const { data: avail, isLoading: availLoading } = useAvailability(driverId);
+  const updateAvail = useUpdateAvailability(driverId);
+
+  const availForm = useForm({ initialValues: { maxDailyBookings: 10 } });
+
+  useEffect(() => {
+    if (avail) {
+      availForm.setValues({ maxDailyBookings: avail.maxDailyBookings ?? 10 });
+      availForm.resetDirty();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [avail]);
 
   const validatePrice = (v) => {
     if (v === '' || v === null || v === undefined) return null;
@@ -230,6 +242,33 @@ export default function DriverEdit() {
       </Card>
 
       <LineBindingCard driverId={driverId} />
+
+      <Card withBorder radius="md" p="lg">
+        <form onSubmit={availForm.onSubmit((v) => {
+          updateAvail.mutate({ maxDailyBookings: Number(v.maxDailyBookings) }, {
+            onSuccess: () => notifyOk('時間設定已更新'),
+            onError: (e) => notifyErr(e),
+          });
+        })}>
+          <Stack>
+            <Title order={4}>時間設定</Title>
+            {!availLoading && (
+              <Text size="sm" c="dimmed">
+                今日已接受預約：{avail?.bookedTodayCount ?? 0} / {avail?.maxDailyBookings ?? '—'}
+              </Text>
+            )}
+            <NumberInput
+              label="每日最多接單數"
+              min={1}
+              max={100}
+              {...availForm.getInputProps('maxDailyBookings')}
+            />
+            <Button type="submit" loading={updateAvail.isPending}>
+              儲存
+            </Button>
+          </Stack>
+        </form>
+      </Card>
 
       <Card withBorder radius="md" p="lg">
         <Stack gap="xs">

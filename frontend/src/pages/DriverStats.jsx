@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Stack, Title, Group, ActionIcon, Text, Box } from '@mantine/core';
+import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
 import { useCurrentDriverId } from '@/hooks/useAuth';
 import { useDriverStats } from '@/hooks/useStats';
 import Spinner from '@/components/Spinner';
@@ -66,7 +67,7 @@ export default function DriverStats() {
           aria-label="上個月"
           onClick={() => setMonth((m) => shiftMonth(m, -1))}
         >
-          ‹
+          <IconChevronLeft size={18} />
         </ActionIcon>
         <Text fw={700} style={{ fontFamily: "'Outfit', sans-serif", fontSize: 18 }}>
           {label(month)}
@@ -78,7 +79,7 @@ export default function DriverStats() {
           disabled={atCurrent}
           onClick={() => setMonth((m) => shiftMonth(m, 1))}
         >
-          ›
+          <IconChevronRight size={18} />
         </ActionIcon>
       </Group>
 
@@ -93,7 +94,7 @@ export default function DriverStats() {
           </Group>
           <Group grow>
             <Metric title="總預約數" value={data?.totalBookings ?? 0} />
-            <Metric title="平均評分" value={data?.avgRating ? data.avgRating.toFixed(1) : '—'} />
+            <Metric title="平均評分(敬請期待)" value={data?.avgRating ? data.avgRating.toFixed(1) : '—'} />
           </Group>
         </Stack>
       )}

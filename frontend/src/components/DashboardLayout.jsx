@@ -34,16 +34,6 @@ function IconCard({ active }) {
   );
 }
 
-function IconClock({ active }) {
-  const c = active ? '#0F3D2E' : '#4A6152';
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <circle cx="12" cy="12" r="10" />
-      <path d="M12 6v6l4 2" />
-    </svg>
-  );
-}
-
 function IconChart({ active }) {
   const c = active ? '#0F3D2E' : '#4A6152';
   return (
@@ -80,7 +70,6 @@ const tabs = [
   { value: '/dashboard/bookings', label: '預約', Icon: IconCalendar },
   { value: '/dashboard/stats', label: '統計', Icon: IconChart },
   { value: '/dashboard/edit', label: '服務', Icon: IconCard },
-  { value: '/dashboard/availability', label: '時間', Icon: IconClock },
 ];
 
 function activeTab(pathname) {

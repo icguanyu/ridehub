@@ -3,7 +3,9 @@
     "allow": [
       "Bash(python3 -c ' *)",
       "Read(//c/Users/user/.claude/projects/c--Users-user-Desktop-ridehub/**)",
-      "Read(//c/Users/user/.claude/projects/**)"
+      "Read(//c/Users/user/.claude/projects/**)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\user\\\\Desktop\\\\ridehub\\\\frontend\\\\src\" -Directory)",
+      "Bash(Select-Object -ExpandProperty Name)"
     ]
   }
 }
