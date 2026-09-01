@@ -3,6 +3,7 @@ Allow: /
 Disallow: /driver/
 Disallow: /booking/
 Disallow: /dashboard
+Disallow: /admin
 
 # Replace with your production domain after deploy
 Sitemap: https://ridehub-2h3.pages.dev/sitemap.xml

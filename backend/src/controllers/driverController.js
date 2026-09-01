@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { validate } from '../middlewares/validate.js';
+import { ApiError } from '../utils/ApiError.js';
 import { nameField } from '../utils/validators.js';
 import { currentMonth } from '../utils/dates.js';
 import { BOOKING_STATUS_VALUES, ENERGY_TYPES } from '../constants.js';
@@ -31,6 +32,7 @@ export const getMe = asyncHandler(async (req, res) => {
 // ── GET /drivers/:driverId/public（無需登入）──
 export const getPublicProfile = asyncHandler(async (req, res) => {
   const driver = await getDriverById(req.params.driverId);
+  if (driver.suspended_at) throw ApiError.notFound('找不到司機');
   res.json(driverPublic(driver));
 });
 

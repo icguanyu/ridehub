@@ -24,6 +24,7 @@ tags:
   - name: Booking
   - name: Line
   - name: Misc
+  - name: Admin
 
 security: []
 
@@ -912,6 +913,165 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Error' }
+
+  /admin/auth/login:
+    post:
+      tags: [Admin]
+      summary: superadmin 登入
+      description: email 需在 ADMIN_EMAILS 且為 Supabase Auth 既有帳號。回 12 小時的 admin token。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token: { type: string }
+                  email: { type: string }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /admin/overview:
+    get:
+      tags: [Admin]
+      summary: 平台總覽（本月）
+      description: 司機數、本月活躍司機、本月預約數與依狀態分佈、GMV（成交價總和）。
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: month
+          in: query
+          schema: { type: string, pattern: '^\d{4}-\d{2}$' }
+      responses:
+        '200':
+          description: OK
+          content: { application/json: { schema: { type: object } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /admin/drivers:
+    get:
+      tags: [Admin]
+      summary: 司機列表（含預約數、最後預約日、驗證/停權狀態）
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: search
+          in: query
+          schema: { type: string }
+          description: 比對 name / phone / email
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: pageSize
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+      responses:
+        '200':
+          description: OK
+          content: { application/json: { schema: { type: object } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /admin/drivers/{driverId}:
+    get:
+      tags: [Admin]
+      summary: 單一司機（profile + 本月統計 + 近 20 筆預約）
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/DriverId'
+      responses:
+        '200':
+          description: OK
+          content: { application/json: { schema: { type: object } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /admin/drivers/{driverId}/verify:
+    put:
+      tags: [Admin]
+      summary: 設定司機已驗證
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/DriverId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [verified]
+              properties: { verified: { type: boolean } }
+      responses:
+        '200':
+          description: OK
+          content: { application/json: { schema: { type: object } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /admin/drivers/{driverId}/suspend:
+    put:
+      tags: [Admin]
+      summary: 停權 / 解除停權司機
+      description: 停權後該司機無法登入、公開頁回 404、無法再被客人預約。
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/DriverId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [suspended]
+              properties:
+                suspended: { type: boolean }
+                reason: { type: string, maxLength: 500 }
+      responses:
+        '200':
+          description: OK
+          content: { application/json: { schema: { type: object } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /admin/bookings:
+    get:
+      tags: [Admin]
+      summary: 全站預約（跨司機，可篩狀態 / 司機 / 月份）
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string, enum: [pending, quoted, accepted, rejected, completed, cancelled] }
+        - name: driverId
+          in: query
+          schema: { type: string, format: uuid }
+        - name: month
+          in: query
+          schema: { type: string, pattern: '^\d{4}-\d{2}$' }
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: pageSize
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+      responses:
+        '200':
+          description: OK
+          content: { application/json: { schema: { type: object } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
 
   /line/webhook:
     post:

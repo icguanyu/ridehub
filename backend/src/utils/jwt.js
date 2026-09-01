@@ -8,3 +8,8 @@ export function signDriverToken(driverId, userId) {
     expiresIn: config.jwt.expiry,
   });
 }
+
+// 簽發 superadmin token。role=admin，12 小時。
+export function signAdminToken(email) {
+  return jwt.sign({ role: 'admin', email }, config.jwt.secret, { expiresIn: '12h' });
+}

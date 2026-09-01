@@ -28,6 +28,9 @@ const schema = z.object({
   JWT_SECRET: z.string().min(16, 'JWT_SECRET 至少 16 字元'),
   JWT_EXPIRY: z.string().default('7d'),
 
+  // superadmin：允許登入 /admin 的 email（逗號分隔）。空 = 停用 admin 後台
+  ADMIN_EMAILS: z.string().optional().default(''),
+
   LINE_CHANNEL_ACCESS_TOKEN: z.string().optional().default(''),
   LINE_CHANNEL_SECRET: z.string().optional().default(''),
   LINE_ADD_FRIEND_URL: z.string().optional().default(''), // 官方帳號加好友連結（lin.ee / line.me）
@@ -66,6 +69,10 @@ export const config = {
     secret: env.JWT_SECRET,
     expiry: env.JWT_EXPIRY,
   },
+
+  adminEmails: env.ADMIN_EMAILS.split(',')
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean),
 
   googleMapsApiKey: env.GOOGLE_MAPS_API_KEY,
 

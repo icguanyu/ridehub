@@ -25,6 +25,7 @@ export function driverPrivate(row) {
     energyConsumption: row.energy_consumption ?? null,
     energyUnitPrice: row.energy_unit_price ?? null,
     isVerified: row.is_verified,
+    suspendedAt: row.suspended_at ?? null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

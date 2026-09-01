@@ -140,6 +140,7 @@ export async function createBooking(input) {
   } = input;
 
   const driver = await getDriverById(driverId); // 不存在 → 404
+  if (driver.suspended_at) throw ApiError.notFound('找不到司機');
   const isRoundTrip = tripType === TRIP_TYPE.ROUND_TRIP;
 
   assertTripDates({ bookingDate, bookingTime, returnDate, returnTime, isRoundTrip });

@@ -58,6 +58,7 @@ export async function loginDriver({ phone, password }) {
     .maybeSingle();
   if (error) throw error;
   if (!driver || !driver.email) throw ApiError.unauthorized('手機或密碼錯誤');
+  if (driver.suspended_at) throw ApiError.forbidden('此帳號已停權，請聯絡平台');
 
   const { data: session, error: signInErr } = await supabaseAnon.auth.signInWithPassword({
     email: driver.email,

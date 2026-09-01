@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Route, Routes, Outlet, useLocation, Link } from 'react-router-dom';
 import { Center, Stack, Box } from '@mantine/core';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import AdminRoute from '@/components/AdminRoute';
 import DashboardLayout from '@/components/DashboardLayout';
 import SiteFooter from '@/components/SiteFooter';
 import Wordmark from '@/components/Wordmark';
@@ -22,6 +23,13 @@ import MyBookings from '@/pages/MyBookings';
 import PrivacyPolicy from '@/pages/legal/PrivacyPolicy';
 import Disclaimer from '@/pages/legal/Disclaimer';
 import NotFound from '@/pages/NotFound';
+
+import AdminLayout from '@/pages/admin/AdminLayout';
+import AdminLogin from '@/pages/admin/AdminLogin';
+import AdminOverview from '@/pages/admin/AdminOverview';
+import AdminDrivers from '@/pages/admin/AdminDrivers';
+import AdminDriverDetail from '@/pages/admin/AdminDriverDetail';
+import AdminBookings from '@/pages/admin/AdminBookings';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -93,6 +101,22 @@ export default function App() {
           <Route path="bookings/:bookingId" element={<BookingDetail />} />
           <Route path="stats" element={<DriverStats />} />
           <Route path="edit" element={<DriverEdit />} />
+        </Route>
+
+        {/* superadmin 後台 */}
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <AdminLayout />
+            </AdminRoute>
+          }
+        >
+          <Route index element={<AdminOverview />} />
+          <Route path="drivers" element={<AdminDrivers />} />
+          <Route path="drivers/:driverId" element={<AdminDriverDetail />} />
+          <Route path="bookings" element={<AdminBookings />} />
         </Route>
       </Routes>
     </>
