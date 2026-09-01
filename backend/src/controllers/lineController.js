@@ -58,7 +58,13 @@ async function handleEvent(event) {
   }
 
   if (event.type === 'message' && event.message?.type === 'text') {
-    const text = event.message.text;
+    const text = String(event.message.text ?? '');
+    // 只有「長得像綁定碼」的訊息才走綁定流程；其餘一律不由 bot 回覆，
+    // 交給 LINE 官方帳號的「聊天」功能 / 真人客服處理。
+    // 綁定碼字元集：ABCDEFGHJKLMNPQRSTUVWXYZ23456789（見 lineLinkService）
+    const looksLikeCode = /^[A-HJ-NP-Z2-9]{6}$/.test(text.trim().toUpperCase());
+    if (!looksLikeCode) return;
+
     let driver = null;
     try {
       driver = await bindByLinkCode(text, userId);
