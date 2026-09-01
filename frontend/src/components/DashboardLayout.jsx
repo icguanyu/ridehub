@@ -44,6 +44,18 @@ function IconClock({ active }) {
   );
 }
 
+function IconChart({ active }) {
+  const c = active ? '#0F3D2E' : '#4A6152';
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M3 3v18h18" />
+      <rect x="7" y="13" width="3" height="5" rx="0.5" />
+      <rect x="12.5" y="9" width="3" height="9" rx="0.5" />
+      <rect x="18" y="6" width="3" height="12" rx="0.5" />
+    </svg>
+  );
+}
+
 function IconHome() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4A6152" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -66,6 +78,7 @@ function IconLogout() {
 const tabs = [
   { value: '/dashboard', label: '總覽', Icon: IconCar },
   { value: '/dashboard/bookings', label: '預約', Icon: IconCalendar },
+  { value: '/dashboard/stats', label: '統計', Icon: IconChart },
   { value: '/dashboard/edit', label: '服務', Icon: IconCard },
   { value: '/dashboard/availability', label: '時間', Icon: IconClock },
 ];
@@ -149,7 +162,7 @@ export default function DashboardLayout() {
                   flexDirection: 'column',
                   alignItems: 'center',
                   gap: 3,
-                  padding: '6px 16px',
+                  padding: '6px 10px',
                   borderRadius: 10,
                 }}
               >

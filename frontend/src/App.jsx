@@ -14,6 +14,7 @@ import DriverAvailability from '@/pages/DriverAvailability';
 import BookingList from '@/pages/BookingList';
 import BookingDetail from '@/pages/BookingDetail';
 import NewBooking from '@/pages/NewBooking';
+import DriverStats from '@/pages/DriverStats';
 import DriverPublic from '@/pages/DriverPublic';
 import CustomerBooking from '@/pages/CustomerBooking';
 import BookingConfirmation from '@/pages/BookingConfirmation';
@@ -91,6 +92,7 @@ export default function App() {
           <Route path="bookings" element={<BookingList />} />
           <Route path="bookings/new" element={<NewBooking />} />
           <Route path="bookings/:bookingId" element={<BookingDetail />} />
+          <Route path="stats" element={<DriverStats />} />
           <Route path="edit" element={<DriverEdit />} />
           <Route path="availability" element={<DriverAvailability />} />
         </Route>
