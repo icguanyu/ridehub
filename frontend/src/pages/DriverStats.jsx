@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Stack, Title, Group, ActionIcon, Text, Box, Button } from '@mantine/core';
-import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
 import { useCurrentDriverId } from '@/hooks/useAuth';
 import { useDriverStats } from '@/hooks/useStats';
 import Spinner from '@/components/Spinner';
@@ -18,6 +17,24 @@ function shiftMonth(ym, delta) {
 function label(ym) {
   const [y, m] = ym.split('-');
   return `${y} 年 ${Number(m)} 月`;
+}
+
+function Chevron({ dir }) {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d={dir === 'left' ? 'M15 18l-6-6 6-6' : 'M9 18l6-6-6-6'} />
+    </svg>
+  );
 }
 
 function Metric({ title, value, accent }) {
@@ -81,7 +98,7 @@ export default function DriverStats() {
             aria-label="上個月"
             onClick={() => setDisplayMonth((m) => shiftMonth(m, -1))}
           >
-            <IconChevronLeft size={18} />
+            <Chevron dir="left" />
           </ActionIcon>
           <Text fw={700} style={{ fontFamily: "'Outfit', sans-serif", fontSize: 18 }}>
             {label(displayMonth)}
@@ -93,7 +110,7 @@ export default function DriverStats() {
             disabled={atCurrent}
             onClick={() => setDisplayMonth((m) => shiftMonth(m, 1))}
           >
-            <IconChevronRight size={18} />
+            <Chevron dir="right" />
           </ActionIcon>
         </Group>
         {notCurrentMonth && (
