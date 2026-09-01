@@ -14,6 +14,7 @@ import {
   Anchor,
   SegmentedControl,
   Input,
+  Checkbox,
 } from '@mantine/core';
 import { TimeInput } from '@mantine/dates';
 import { useForm } from '@mantine/form';
@@ -51,6 +52,7 @@ export default function CustomerBooking() {
       customerName: '',
       customerPhone: '',
       customerLineId: '',
+      agreedToTerms: false,
       tripType: 'one_way',
       pickupLocation: '',
       destination: '',
@@ -66,6 +68,7 @@ export default function CustomerBooking() {
       customerPhone: (v) => (/^09\d{8}$/.test(v) ? null : '手機格式需為 09xxxxxxxx'),
       pickupLocation: (v) => (v.trim() ? null : '請輸入上車地點'),
       destination: (v) => (v.trim() ? null : '請輸入目的地'),
+      agreedToTerms: (v) => (v ? null : '請閱讀並勾選同意後才能送出'),
       bookingDate: (v) => (v ? null : '請選擇日期'),
       bookingTime: (v) => (v ? null : '請選擇時間'),
       returnDate: (v, values) =>
@@ -230,21 +233,26 @@ export default function CustomerBooking() {
                 </Card>
               )}
 
+              <Checkbox
+                {...form.getInputProps('agreedToTerms', { type: 'checkbox' })}
+                size="xs"
+                label={
+                  <Text size="xs" c="dimmed">
+                    我已閱讀並同意{' '}
+                    <Anchor component={Link} to="/disclaimer" target="_blank" inherit>
+                      使用須知
+                    </Anchor>{' '}
+                    與{' '}
+                    <Anchor component={Link} to="/privacy" target="_blank" inherit>
+                      隱私說明
+                    </Anchor>
+                    ，了解 RideHub 僅為免費媒合工具，乘車安全與費用由我與司機自行負責。
+                  </Text>
+                }
+              />
               <Button type="submit" size="md" loading={createBooking.isPending} fullWidth>
                 確認預約
               </Button>
-              <Text size="xs" c="dimmed" ta="center">
-                送出即表示你了解 RideHub 只是免費媒合工具，乘車安全與費用由你和司機自行負責。
-                詳見{' '}
-                <Anchor component={Link} to="/disclaimer" target="_blank" inherit>
-                  使用須知
-                </Anchor>{' '}
-                與{' '}
-                <Anchor component={Link} to="/privacy" target="_blank" inherit>
-                  隱私說明
-                </Anchor>
-                。
-              </Text>
               <Anchor
                 size="xs"
                 ta="center"

@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
-import { Card, TextInput, PasswordInput, Button, Stack, Title, Text, Anchor } from '@mantine/core';
+import { Card, TextInput, PasswordInput, Button, Stack, Title, Text, Anchor, Checkbox } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useRegister } from '@/hooks/useAuth';
 import { useAuthStore } from '@/store/authStore';
@@ -16,12 +16,13 @@ export default function DriverSignup() {
   }, [token, navigate]);
 
   const form = useForm({
-    initialValues: { name: '', phone: '', email: '', password: '' },
+    initialValues: { name: '', phone: '', email: '', password: '', agreedToTerms: false },
     validate: {
       name: (v) => (v.trim() ? null : '請輸入姓名'),
       phone: (v) => (/^09\d{8}$/.test(v) ? null : '手機格式需為 09xxxxxxxx'),
       email: (v) => (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ? null : 'email 格式錯誤'),
       password: (v) => (v.length >= 8 ? null : '密碼至少 8 碼'),
+      agreedToTerms: (v) => (v ? null : '請閱讀並勾選同意後才能註冊'),
     },
   });
 
@@ -53,6 +54,23 @@ export default function DriverSignup() {
             {...form.getInputProps('email')}
           />
           <PasswordInput label="密碼" description="至少 8 碼" {...form.getInputProps('password')} />
+          <Checkbox
+            {...form.getInputProps('agreedToTerms', { type: 'checkbox' })}
+            size="xs"
+            label={
+              <Text size="xs" c="dimmed">
+                我已閱讀並同意{' '}
+                <Anchor component={Link} to="/disclaimer" target="_blank" inherit>
+                  使用須知
+                </Anchor>{' '}
+                與{' '}
+                <Anchor component={Link} to="/privacy" target="_blank" inherit>
+                  隱私說明
+                </Anchor>
+                ，並確認我已年滿 18 歲。
+              </Text>
+            }
+          />
           <Button type="submit" loading={register.isPending} fullWidth>
             建立帳號
           </Button>
