@@ -47,9 +47,11 @@ export default function DriverLogin() {
           <Button type="submit" loading={login.isPending} fullWidth>
             登入
           </Button>
+          {/* 忘記密碼暫時隱藏 —— 需網域 + SMTP
           <Anchor component={Link} to="/forgot-password" size="sm" ta="center">
             忘記密碼？
           </Anchor>
+          */}
           <Text size="sm" c="dimmed" ta="center">
             還沒有帳號？{' '}
             <Anchor component={Link} to="/signup">
