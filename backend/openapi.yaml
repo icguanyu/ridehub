@@ -1332,6 +1332,7 @@ components:
         maxPassengers: { type: integer, description: 可載客人數上限 }
         passengerInsuranceWan: { type: integer, nullable: true, description: 乘客責任險保額（萬元） }
         isVerified: { type: boolean }
+        lineLinked: { type: boolean, description: 司機已綁定 LINE 通知（僅布林，不含 LINE ID） }
         trustLevel: { type: string, enum: [red, yellow, green] }
         photoVerified: { type: boolean, description: 真人大頭照已通過平台審核 }
 

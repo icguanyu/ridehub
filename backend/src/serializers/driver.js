@@ -50,6 +50,8 @@ export function driverPublic(row) {
     maxPassengers: row.max_passengers,
     passengerInsuranceWan: row.passenger_insurance_wan ?? null,
     isVerified: row.is_verified,
+    // 只回布林值，不外洩司機的 LINE User ID
+    lineLinked: Boolean(row.line_id),
     // 目前 green == 真人大頭照已通過平台審核（未來加證件審核後語意會擴大）
     trustLevel: row.trust_level ?? 'red',
     photoVerified: (row.trust_score ?? 0) >= 1,

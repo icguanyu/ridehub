@@ -53,7 +53,7 @@ export default function DriverPublic() {
                     />
                     <Title order={3}>{data.name}</Title>
                   </Group>
-                  <Group gap={6} wrap="nowrap">
+                  <Group gap={6} wrap="wrap" justify="flex-end">
                     {data.isVerified && (
                       <Badge color="teal" variant="light">
                         已驗證
@@ -62,6 +62,11 @@ export default function DriverPublic() {
                     {data.photoVerified && (
                       <Badge color="green" variant="light" size="sm">
                         ✓ 真人大頭照
+                      </Badge>
+                    )}
+                    {data.lineLinked && (
+                      <Badge color="green" variant="light" size="sm">
+                        LINE 已連動
                       </Badge>
                     )}
                   </Group>
