@@ -71,6 +71,7 @@ export function bookingWithDriver(row) {
     id: row.id,
     status: row.status,
     tripType: row.trip_type,
+    driverId: row.driver_id,
     customerName: row.customer_name,
     customerPhone: row.customer_phone,
     pickupLocation: row.pickup_location,

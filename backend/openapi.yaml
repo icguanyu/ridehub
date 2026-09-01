@@ -1244,6 +1244,7 @@ components:
           type: string
           enum: [pending, quoted, accepted, rejected, completed, cancelled]
         tripType: { type: string, enum: [one_way, round_trip] }
+        driverId: { type: string, format: uuid }
         customerName: { type: string }
         customerPhone: { type: string }
         pickupLocation: { type: string }

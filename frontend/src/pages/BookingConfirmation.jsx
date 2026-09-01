@@ -148,6 +148,22 @@ export default function BookingConfirmation() {
               </Card>
             )}
 
+            {!isDeleted && b.status === 'completed' && b.driverId && (
+              <Card radius="lg" p="lg">
+                <Stack gap="sm">
+                  <Text size="sm">下次還想找{b.driverName ? ` ${b.driverName} ` : '這位司機'}嗎？</Text>
+                  <Button
+                    component={Link}
+                    to={`/driver/${b.driverId}/book`}
+                    size="md"
+                    fullWidth
+                  >
+                    再次預約
+                  </Button>
+                </Stack>
+              </Card>
+            )}
+
             {!isDeleted && b.status === 'accepted' && (
               <Card radius="lg" p="lg" style={{ background: '#0F3D2E' }}>
                 <Stack gap={6}>
