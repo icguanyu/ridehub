@@ -50,10 +50,14 @@ async function handleEvent(event) {
   const userId = event?.source?.userId;
 
   if (event.type === 'follow') {
-    await replyText(
-      event.replyToken,
-      '歡迎加入 RideHub！\n請到司機後台「LINE 通知」產生綁定碼，再把代碼傳給我即可開始收預約通知。',
-    );
+    const lines = [
+      '歡迎加入 RideHub！',
+      '',
+      '・司機：把後台「LINE 通知」產生的 6 碼綁定碼傳給我，即可開始收預約通知。',
+      '・乘客：有問題直接留言，我們會盡快回覆。',
+    ];
+    if (config.webUrl) lines.push(`　查詢我的行程：${config.webUrl}/my-bookings`);
+    await replyText(event.replyToken, lines.join('\n'));
     return;
   }
 

@@ -59,6 +59,11 @@ export const config = {
   timezone: env.APP_TIMEZONE,
   corsOrigins: env.CORS_ORIGINS.split(',').map((s) => s.trim()).filter(Boolean),
 
+  // 對外前端網址（取第一個非 localhost 的 CORS 來源），供 LINE 訊息等組連結用
+  get webUrl() {
+    return this.corsOrigins.find((o) => !o.includes('localhost')) ?? null;
+  },
+
   supabase: {
     url: env.SUPABASE_URL,
     anonKey: env.SUPABASE_ANON_KEY,
