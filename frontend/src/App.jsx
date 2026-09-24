@@ -5,7 +5,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import AdminRoute from '@/components/AdminRoute';
 import DashboardLayout from '@/components/DashboardLayout';
 import SiteFooter from '@/components/SiteFooter';
-import Wordmark from '@/components/Wordmark';
+import Wordmark from '@/components/wordmark';
 
 import DriverLogin from '@/pages/auth/DriverLogin';
 import DriverSignup from '@/pages/auth/DriverSignup';
